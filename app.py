@@ -942,6 +942,13 @@ def create_app(test_config=None) -> Flask:
             symptoms = (request.form.get("symptoms") or "").strip()
             severity = (request.form.get("severity") or "Moderate").strip()
             notes = (request.form.get("farmer_notes") or "").strip()
+            try:
+                duration = int(request.form['duration_days']) if request.form.get('duration_days') else None
+                affected_area = float(request.form['affected_area_pct']) if request.form.get('affected_area_pct') else None
+                if not symptoms or (duration is not None and not 1 <= duration <= 100) or (affected_area is not None and not 1 <= affected_area <= 100):
+                    raise ValueError
+            except ValueError:
+                return render_template('error.html', message='Enter symptoms and valid duration or affected area values.'), 400
 
             saved_filename = None
             image_bytes = None
@@ -989,10 +996,10 @@ def create_app(test_config=None) -> Flask:
             rep_cursor = get_db().execute(
                 """
                 INSERT INTO disease_reports
-                (farm_id, crop_cycle_id, crop, plant_part, problem_category, symptoms, severity, image_path, status)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'screened')
+                (farm_id, crop_cycle_id, crop, plant_part, problem_category, symptoms, severity, image_path, duration_days, affected_area_pct, farmer_notes, status)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'REPORTED')
                 """,
-                (farm["id"] if farm else 0, cycle["id"] if cycle else None, crop, plant_part, category, symptoms, severity, saved_filename),
+                (farm["id"] if farm else 0, cycle["id"] if cycle else None, crop, plant_part, category, symptoms, severity, saved_filename, duration, affected_area, notes),
             )
             report_id = rep_cursor.lastrowid
 
@@ -1008,7 +1015,7 @@ def create_app(test_config=None) -> Flask:
             )
             get_db().commit()
 
-            flash("AI diagnostic screening completed successfully.", "success")
+            flash("Symptom report saved. Expert inspection is needed for diagnosis.", "success")
             return redirect(url_for("disease_result_page", report_id=report_id))
 
         past_reports = get_past_problem_reports(farm["id"] if farm else 0, get_db())

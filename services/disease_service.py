@@ -319,7 +319,7 @@ def analyze_crop_issue(
     return {
         "supported_by_image_ai": False,
         "primary_diagnosis": {
-            "condition": "Diagnosis unavailable ? expert inspection needed",
+            "condition": "Diagnosis unavailable; expert inspection needed",
             "confidence": None,
             "risk_level": "UNASSESSED",
             "weather_context": "Symptoms recorded for review; no validated disease classifier is installed.",

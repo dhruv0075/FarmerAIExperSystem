@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 
-{% block title %}Diagnostic Screening Result — AgriWise AI{% endblock %}
+{% block title %}Crop Problem Report — AgriWise AI{% endblock %}
 
 {% block content %}
 <div class="container-fluid px-0" style="max-width: 920px;">
   <!-- Header -->
   <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
     <div>
-      <h2 class="h3 fw-bold mb-1"><i class="fa-solid fa-microscope text-danger me-2"></i>Diagnostic Screening Dossier</h2>
+      <h2 class="h3 fw-bold mb-1"><i class="fa-solid fa-microscope text-danger me-2"></i>Crop Problem Report</h2>
       <p class="text-muted small mb-0">Farmer symptom record for expert review. Image diagnosis is unavailable.</p>
     </div>
     <div>
@@ -32,24 +32,20 @@
       <div class="row align-items-center g-4">
         <div class="col-md-8">
           <div class="d-flex align-items-center gap-2 mb-2">
-            <span class="badge bg-danger text-uppercase px-2 py-1">Screening Result</span>
+            <span class="badge bg-danger text-uppercase px-2 py-1">Symptom Record</span>
             <span class="badge bg-light text-dark border">Crop: {{ report.crop }}</span>
             <span class="badge bg-light text-dark border">Part: {{ report.plant_part }}</span>
           </div>
-          <h3 class="fw-bold mb-2 text-dark">{{ diagnosis.primary_diagnosis.condition }}</h3>
+          <h3 class="fw-bold mb-2 text-dark">Diagnosis unavailable; expert inspection needed</h3>
           <p class="text-secondary small mb-3">{{ diagnosis.primary_diagnosis.weather_context }}</p>
 
-          <div class="d-flex gap-3 align-items-center">
-            <div>
-              <span class="text-muted small d-block">Screening Confidence:</span>
-              <strong class="fs-5 text-success">{{ diagnosis.primary_diagnosis.confidence if diagnosis.primary_diagnosis.confidence is not none else 'Not available' }}</strong>
-            </div>
-            <div class="border-start ps-3">
-              <span class="text-muted small d-block">Pathogen Risk Level:</span>
-              <span class="badge bg-{{ 'danger' if diagnosis.primary_diagnosis.risk_level in ['HIGH', 'CRITICAL'] else 'warning text-dark' }} px-2 py-1">
-                {{ diagnosis.primary_diagnosis.risk_level }}
-              </span>
-            </div>
+          <div class="small">
+            <strong>Reported symptoms:</strong>
+            <p style="white-space: pre-wrap;">{{ report.symptoms }}</p>
+            <span class="text-muted">Farmer-reported severity: {{ report.severity }}</span>
+            {% if report.farmer_notes %}
+              <p class="mt-2 mb-0"><strong>Farmer notes:</strong> {{ report.farmer_notes }}</p>
+            {% endif %}
           </div>
         </div>
 
@@ -58,12 +54,12 @@
           {% if report.image_path %}
             <img src="{{ url_for('disease_image', report_id=report.id) }}" alt="Plant Leaf Specimen" class="img-fluid rounded-3 shadow-sm mb-2" style="max-height: 180px; object-fit: cover;">
             <div class="small text-muted" style="font-size:0.75rem;">
-              Necrotic Area: <strong>{{ diagnosis.image_analysis.necrotic_lesion_pct or 'N/A' }}%</strong> &bull; Chlorosis: <strong>{{ diagnosis.image_analysis.chlorosis_yellow_pct or 'N/A' }}%</strong>
+              Photo saved with this report. It has not been analyzed by a disease model.
             </div>
           {% else %}
             <div class="p-4 bg-light rounded-3 text-muted border text-center">
               <i class="fa-regular fa-image fs-1 mb-2"></i>
-              <div class="small">No image provided; screening based on reported symptoms & weather.</div>
+              <div class="small">No image provided. Your reported symptoms are saved for reference.</div>
             </div>
           {% endif %}
         </div>
@@ -96,7 +92,7 @@
     <div class="col-md-6">
       <div class="card shadow-sm border-0 h-100">
         <div class="card-header bg-white py-3">
-          <h5 class="mb-0 fw-bold"><i class="fa-solid fa-hand-holding-medical text-success me-2"></i>Integrated Pest Management (IPM)</h5>
+          <h5 class="mb-0 fw-bold"><i class="fa-solid fa-hand-holding-medical text-success me-2"></i>Next Steps</h5>
         </div>
         <div class="card-body p-3">
           <ul class="list-unstyled mb-0">
@@ -109,34 +105,11 @@
           </ul>
         </div>
         <div class="card-footer bg-light p-2 text-center text-muted small" style="font-size:0.75rem;">
-          <i class="fa-solid fa-shield-halved me-1 text-success"></i>AgriWise strictly adheres to ICAR safe dosage standards.
+          <i class="fa-solid fa-shield-halved me-1 text-success"></i>Treatment requires confirmation of the cause by a qualified local expert.
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Differential Diagnosis / Alternatives -->
-  {% if diagnosis.alternatives %}
-    <div class="card shadow-sm border-0 mb-4">
-      <div class="card-header bg-white py-3">
-        <h5 class="mb-0 fw-bold"><i class="fa-solid fa-code-branch text-muted me-2"></i>Alternative Differential Possibilities</h5>
-      </div>
-      <div class="card-body p-0">
-        <div class="list-group list-group-flush">
-          {% for alt in diagnosis.alternatives %}
-            <div class="list-group-item p-3 d-flex justify-content-between align-items-center">
-              <div>
-                <strong>{{ alt.condition }}</strong>
-                <small class="text-muted d-block">Secondary probability match based on symptom overlaps.</small>
-              </div>
-              <div class="text-end">
-                <span class="badge bg-secondary-subtle text-secondary">{{ alt.confidence }}% match</span>
-              </div>
-            </div>
-          {% endfor %}
-        </div>
-      </div>
-    </div>
-  {% endif %}
 </div>
 {% endblock %}

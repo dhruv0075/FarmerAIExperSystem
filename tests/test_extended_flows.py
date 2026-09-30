@@ -33,6 +33,19 @@ def test_expense_and_sale_persist_in_existing_schema(tmp_path):
 
 
 def test_problem_report_persists(tmp_path):
-    _, client, _ = setup_client(tmp_path)
-    response = client.post('/report-problem', data={'crop': 'rice', 'symptoms': 'yellow leaves'}, follow_redirects=True)
+    _, client, db = setup_client(tmp_path)
+    response = client.post('/report-problem', data={'crop': 'rice', 'symptoms': 'yellow leaves', 'farmer_notes': 'First noticed yesterday'}, follow_redirects=True)
     assert response.status_code == 200
+    assert b'yellow leaves' in response.data
+    assert b'First noticed yesterday' in response.data
+    assert b'Screening Confidence' not in response.data
+    assert b'screening completed successfully' not in response.data
+    with sqlite3.connect(db) as conn:
+        assert conn.execute('SELECT duration_days, affected_area_pct, status FROM disease_reports').fetchone() == (None, None, 'REPORTED')
+
+
+def test_problem_report_rejects_missing_symptoms(tmp_path):
+    _, client, db = setup_client(tmp_path)
+    assert client.post('/report-problem', data={'crop': 'rice', 'symptoms': ' '}).status_code == 400
+    with sqlite3.connect(db) as conn:
+        assert conn.execute('SELECT COUNT(*) FROM disease_reports').fetchone()[0] == 0
