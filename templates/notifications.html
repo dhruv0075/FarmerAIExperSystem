@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Notifications & Alerts — AgriWise AI{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0" style="max-width: 860px;">
+  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+      <h2 class="h3 fw-bold mb-1"><i class="fa-regular fa-bell text-success me-2"></i>Notifications & Critical Alerts</h2>
+      <p class="text-muted small mb-0">System alerts, overdue task warnings, extreme weather triggers, and market opportunities.</p>
+    </div>
+    {% if notifications %}
+      <form method="POST" action="{{ url_for('mark_all_notifications_read') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <button type="submit" class="btn btn-outline-secondary btn-sm">
+          <i class="fa-solid fa-check-double me-1"></i>Mark All Read
+        </button>
+      </form>
+    {% endif %}
+  </div>
+
+  <div class="card shadow-sm border-0 mb-4">
+    <div class="card-body p-0">
+      {% if notifications %}
+        <div class="list-group list-group-flush">
+          {% for n in notifications %}
+            <div class="list-group-item p-3 d-flex justify-content-between align-items-center {% if not n.is_read %}bg-light border-start border-4 border-success{% endif %}">
+              <div class="d-flex align-items-start gap-3">
+                <div class="stat-icon {{ 'red' if n.notification_type == 'OVERDUE' else ('orange' if n.notification_type == 'WEATHER' else 'green') }} flex-shrink-0" style="width:36px; height:36px; font-size:1rem;">
+                  {% if n.notification_type == 'OVERDUE' %}
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                  {% elif n.notification_type == 'WEATHER' %}
+                    <i class="fa-solid fa-cloud-bolt"></i>
+                  {% elif n.notification_type == 'MARKET' %}
+                    <i class="fa-solid fa-shop"></i>
+                  {% else %}
+                    <i class="fa-solid fa-bell"></i>
+                  {% endif %}
+                </div>
+                <div>
+                  <div class="d-flex align-items-center gap-2 mb-1">
+                    <strong class="text-dark">{{ n.title }}</strong>
+                    {% if not n.is_read %}
+                      <span class="badge bg-success" style="font-size:0.6rem;">New</span>
+                    {% endif %}
+                  </div>
+                  <p class="text-secondary small mb-1">{{ n.message }}</p>
+                  <small class="text-muted font-sans" style="font-size:0.75rem;">{{ n.created_at }}</small>
+                </div>
+              </div>
+
+              <div class="d-flex align-items-center gap-2">
+                {% if n.link_url %}
+                  <a href="{{ n.link_url }}" class="btn btn-sm btn-outline-primary" style="font-size:0.75rem;">View</a>
+                {% endif %}
+                {% if not n.is_read %}
+                  <form method="POST" action="{{ url_for('mark_notification_read_route', notification_id=n.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <button type="submit" class="btn btn-sm btn-light border text-muted" title="Mark as read">
+                      <i class="fa-solid fa-check"></i>
+                    </button>
+                  </form>
+                {% endif %}
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="p-5 text-center text-muted">
+          <i class="fa-regular fa-bell-slash fs-1 mb-3 text-secondary"></i>
+          <h5 class="fw-bold">No Notifications</h5>
+          <p class="mb-0 small">You are all caught up! Automated advisories, weather warnings, and task reminders will appear here.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

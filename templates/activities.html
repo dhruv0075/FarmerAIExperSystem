@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% block title %}AgriWise AI | Farm Activities{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
+  <div>
+    <p class="eyebrow mb-1">Closed-loop decision support</p>
+    <h1 class="h2 mb-1">Farm Activities</h1>
+    <p class="text-muted mb-0">Recommendations stay pending until you confirm what happened.</p>
+  </div>
+  <span class="badge text-bg-light border">{{ farm.farm_name if farm else 'Farm not configured' }}</span>
+</div>
+
+<section class="content-section mb-4" aria-labelledby="activity-filters">
+  <h2 id="activity-filters" class="h5 mb-3">Filter activity log</h2>
+  <form class="row g-2 align-items-end" method="get"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <div class="col-sm-6 col-lg-2"><label class="form-label" for="status">Status</label><select class="form-select" id="status" name="status"><option value="">All</option>{% for value in ['pending','completed','skipped','overdue'] %}<option value="{{ value }}" {{ 'selected' if filters.get('status') == value else '' }}>{{ value|title }}</option>{% endfor %}</select></div>
+    <div class="col-sm-6 col-lg-2"><label class="form-label" for="type">Activity type</label><select class="form-select" id="type" name="type"><option value="">All</option>{% for value in ['Irrigation','Fertilizer','Field inspection','Harvest','Weather','Disease Risk'] %}<option value="{{ value }}" {{ 'selected' if filters.get('type') == value else '' }}>{{ value }}</option>{% endfor %}</select></div>
+    <div class="col-sm-6 col-lg-2"><label class="form-label" for="crop">Crop</label><input class="form-control" id="crop" name="crop" value="{{ filters.get('crop', '') }}" placeholder="Exact crop name"></div>
+    <div class="col-sm-6 col-lg-2"><label class="form-label" for="from">Recommended from</label><input class="form-control" id="from" name="from" type="date" value="{{ filters.get('from', '') }}"></div>
+    <div class="col-sm-6 col-lg-2"><label class="form-label" for="to">Recommended to</label><input class="form-control" id="to" name="to" type="date" value="{{ filters.get('to', '') }}"></div>
+    <div class="col-sm-6 col-lg-2 d-flex gap-2"><button class="btn btn-success" type="submit">Apply</button><a class="btn btn-outline-secondary" href="{{ url_for('activities_page') }}">Reset</a></div>
+  </form>
+</section>
+
+<details class="content-section mb-4">
+  <summary class="h5 mb-0">Add a farm activity</summary>
+  <form class="row g-3 mt-1" method="post" action="{{ url_for('create_activity') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <div class="col-md-4"><label class="form-label" for="activity-title">Activity name</label><input class="form-control" id="activity-title" name="title" required maxlength="160"></div>
+    <div class="col-md-3"><label class="form-label" for="activity-type">Type</label><select class="form-select" id="activity-type" name="activity_type"><option>Field inspection</option><option>Irrigation</option><option>Fertilizer</option><option>Harvest</option><option>Weather</option></select></div>
+    <div class="col-md-2"><label class="form-label" for="activity-due">Due date</label><input class="form-control" id="activity-due" name="due_date" type="date" value="{{ today if today is defined else '' }}"></div>
+    <div class="col-md-3"><label class="form-label" for="activity-description">Details</label><input class="form-control" id="activity-description" name="description" maxlength="500"></div>
+    <div class="col-12"><button class="btn btn-success" type="submit">Add as pending</button></div>
+  </form>
+</details>
+
+<section class="content-section" aria-label="Activities">
+  {% if activities %}
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead><tr><th>Activity</th><th>Crop / stage</th><th>Due</th><th>Priority</th><th>Status</th><th>Farmer confirmation</th></tr></thead>
+      <tbody>
+      {% for item in activities %}
+        <tr>
+          <td><strong>{{ item.title }}</strong><div class="small text-muted">{{ item.activity_type }}{% if item.description %} · {{ item.description }}{% endif %}</div>{% if item.reason %}<div class="small mt-1">Reason: {{ item.reason }}</div>{% endif %}</td>
+          <td>{{ item.crop_name or 'Not linked' }}<div class="small text-muted">{{ item.crop_stage or 'Stage not recorded' }}</div></td>
+          <td>{{ item.due_date }}<div class="small text-muted">Recommended {{ item.recommended_date }}</div></td>
+          <td>{{ item.priority|title }}</td>
+          <td><span class="badge {{ 'text-bg-danger' if item.display_status == 'OVERDUE' else 'text-bg-success' if item.status == 'COMPLETED' else 'text-bg-secondary' if item.status == 'SKIPPED' else 'text-bg-warning' }}">{{ item.display_status|title }}</span>{% if item.completed_at %}<div class="small text-muted mt-1">{{ item.completed_at[:16] }}</div>{% endif %}</td>
+          <td>
+            <form class="d-flex flex-column gap-2" method="post" action="{{ url_for('update_activity_status', activity_id=item.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+              <input class="form-control form-control-sm" name="farmer_note" maxlength="1000" value="{{ item.farmer_note or '' }}" placeholder="Optional note" aria-label="Farmer note">
+              <div class="d-flex flex-wrap gap-1">
+                <button class="btn btn-sm btn-success" name="status" value="COMPLETED" type="submit">Completed</button>
+                <button class="btn btn-sm btn-outline-secondary" name="status" value="SKIPPED" type="submit">Skipped</button>
+                <input type="date" name="rescheduled_date" aria-label="New due date" class="form-control form-control-sm">
+                <button class="btn btn-sm btn-outline-primary" name="status" value="RESCHEDULED" type="submit">Reschedule</button>
+                {% if item.status != 'PENDING' %}<button class="btn btn-sm btn-outline-warning" name="status" value="PENDING" type="submit">Pending</button>{% endif %}
+              </div>
+            </form>
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+    <div class="empty-state"><i class="fa-solid fa-clipboard-check" aria-hidden="true"></i><h2 class="h5 mt-3">No activities match this view</h2><p class="text-muted mb-0">Generate advisories or add an activity to start a confirmed farm-action history.</p></div>
+  {% endif %}
+</section>
+{% endblock %}

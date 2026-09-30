@@ -1,0 +1,26 @@
+# Single instance/worker preserves the process-wide market refresh lock.
+# This uses a paid service and persistent disk. Review pricing before creating it.
+services:
+  - type: web
+    name: agriwise-ai
+    runtime: python
+    plan: starter
+    numInstances: 1
+    buildCommand: pip install -r requirements-production.txt
+    startCommand: gunicorn --workers 1 --threads 4 --timeout 120 --bind 0.0.0.0:$PORT app:app
+    healthCheckPath: /healthz
+    disk:
+      name: agriwise-data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: AGRIWISE_ENV
+        value: production
+      - key: AGRIWISE_DATA_DIR
+        value: /var/data
+      - key: AGRIWISE_SECURE_COOKIES
+        value: "true"
+      - key: AGRIWISE_SECRET_KEY
+        generateValue: true
+      - key: DATA_GOV_IN_API_KEY
+        sync: false

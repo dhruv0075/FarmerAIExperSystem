@@ -1,0 +1,224 @@
+[
+  {
+    "name": "Kisan Seva Kendra & Fertilizer Hub",
+    "category": "FERTILIZER",
+    "seller_name": "Ramesh Patil",
+    "address": "Market Yard, Gultekdi, Pune",
+    "district": "Pune",
+    "state": "Maharashtra",
+    "latitude": 18.496,
+    "longitude": 73.869,
+    "contact_phone": "+91 98220 12345",
+    "is_seller_listed": true,
+    "items": [
+      {
+        "item_name": "Neem Coated Urea (46% N)",
+        "brand": "IFFCO",
+        "composition": "N: 46%, P: 0%, K: 0%",
+        "price": 266.5,
+        "unit": "45 kg bag",
+        "stock_status": "In Stock",
+        "price_status": "VERIFIED"
+      },
+      {
+        "item_name": "Di-Ammonium Phosphate (DAP 18:46:0)",
+        "brand": "KRIBHCO",
+        "composition": "N: 18%, P: 46%, K: 0%",
+        "price": 1350.0,
+        "unit": "50 kg bag",
+        "stock_status": "In Stock",
+        "price_status": "VERIFIED"
+      },
+      {
+        "item_name": "Muriate of Potash (MOP 0:0:60)",
+        "brand": "IPL",
+        "composition": "N: 0%, P: 0%, K: 60%",
+        "price": 1650.0,
+        "unit": "50 kg bag",
+        "stock_status": "In Stock",
+        "price_status": "VERIFIED"
+      },
+      {
+        "item_name": "Single Super Phosphate (SSP 16% P)",
+        "brand": "Mahadhan",
+        "composition": "N: 0%, P: 16%, K: 0%, S: 11%",
+        "price": 520.0,
+        "unit": "50 kg bag",
+        "stock_status": "In Stock",
+        "price_status": "VERIFIED"
+      }
+    ]
+  },
+  {
+    "name": "Maha Agri Seeds & Bio-Inputs",
+    "category": "SEED",
+    "seller_name": "Suresh Deshmukh",
+    "address": "Station Road, Hadapsar, Pune",
+    "district": "Pune",
+    "state": "Maharashtra",
+    "latitude": 18.5089,
+    "longitude": 73.926,
+    "contact_phone": "+91 98221 23456",
+    "is_seller_listed": true,
+    "items": [
+      {
+        "item_name": "Certified Paddy Seed (Indrayani)",
+        "brand": "Mahabeej",
+        "composition": "Certified F1",
+        "price": 1150.0,
+        "unit": "25 kg bag",
+        "stock_status": "In Stock",
+        "price_status": "VERIFIED"
+      },
+      {
+        "item_name": "Hybrid Maize Seed (Pioneer P3396)",
+        "brand": "Corteva",
+        "composition": "Hybrid F1",
+        "price": 980.0,
+        "unit": "4 kg bag",
+        "stock_status": "In Stock",
+        "price_status": "VERIFIED"
+      },
+      {
+        "item_name": "Chickpea Seed (Digvijay)",
+        "brand": "Mahabeej",
+        "composition": "Certified Breeder Seed",
+        "price": 2800.0,
+        "unit": "30 kg bag",
+        "stock_status": "In Stock",
+        "price_status": "VERIFIED"
+      }
+    ]
+  },
+  {
+    "name": "District Soil & Water Testing Laboratory",
+    "category": "SOIL_TEST",
+    "seller_name": "Dept of Agriculture, Govt of Maharashtra",
+    "address": "College of Agriculture Campus, Shivajinagar, Pune",
+    "district": "Pune",
+    "state": "Maharashtra",
+    "latitude": 18.5314,
+    "longitude": 73.8446,
+    "contact_phone": "+91 20 2553 7033",
+    "is_seller_listed": false,
+    "items": [
+      {
+        "item_name": "Comprehensive Soil Health Card Test (12 Parameters)",
+        "brand": "Govt Lab",
+        "composition": "N, P, K, pH, EC, OC, S, Zn, Fe, Cu, Mn, B",
+        "price": 50.0,
+        "unit": "Per Sample",
+        "stock_status": "Active Service",
+        "price_status": "VERIFIED"
+      },
+      {
+        "item_name": "Irrigation Water Suitability Test",
+        "brand": "Govt Lab",
+        "composition": "pH, EC, SAR, RSC, Chlorides",
+        "price": 40.0,
+        "unit": "Per Sample",
+        "stock_status": "Active Service",
+        "price_status": "VERIFIED"
+      }
+    ]
+  },
+  {
+    "name": "Sahyadri Agro Machinery & Custom Hiring",
+    "category": "EQUIPMENT",
+    "seller_name": "Vikas Shinde",
+    "address": "Saswad Road, Fursungi, Pune",
+    "district": "Pune",
+    "state": "Maharashtra",
+    "latitude": 18.4735,
+    "longitude": 73.9482,
+    "contact_phone": "+91 94220 54321",
+    "is_seller_listed": true,
+    "items": [
+      {
+        "item_name": "Tractor 45HP with Rotavator",
+        "brand": "Mahindra 575",
+        "composition": "Rotavator / Cultivator",
+        "price": 900.0,
+        "unit": "Per Hour",
+        "stock_status": "Available on booking",
+        "price_status": "SELLER_LISTED"
+      },
+      {
+        "item_name": "Multi-Crop Thresher",
+        "brand": "Dashmesh",
+        "composition": "Gram/Soybean/Wheat Threshing",
+        "price": 1200.0,
+        "unit": "Per Hour",
+        "stock_status": "Available on booking",
+        "price_status": "SELLER_LISTED"
+      },
+      {
+        "item_name": "Boom Sprayer for Orchards",
+        "brand": "Aspee",
+        "composition": "500L Tractor Mounted",
+        "price": 600.0,
+        "unit": "Per Hour",
+        "stock_status": "Available on booking",
+        "price_status": "SELLER_LISTED"
+      }
+    ]
+  },
+  {
+    "name": "Maharashtra State Warehousing Cold Storage",
+    "category": "STORAGE",
+    "seller_name": "MSWC Govt Facility",
+    "address": "Khadki Warehouse Complex, Pune",
+    "district": "Pune",
+    "state": "Maharashtra",
+    "latitude": 18.5626,
+    "longitude": 73.834,
+    "contact_phone": "+91 20 2426 1234",
+    "is_seller_listed": false,
+    "items": [
+      {
+        "item_name": "Grain Warehousing (Paddy/Wheat/Pulses)",
+        "brand": "MSWC",
+        "composition": "Moisture Controlled Godown",
+        "price": 12.0,
+        "unit": "Per Bag / Month",
+        "stock_status": "Available Space",
+        "price_status": "VERIFIED"
+      },
+      {
+        "item_name": "Cold Storage (Pomegranate/Grapes/Fruits)",
+        "brand": "MSWC",
+        "composition": "Temperature controlled 0-4\u00b0C",
+        "price": 95.0,
+        "unit": "Per Quintal / Month",
+        "stock_status": "Available Space",
+        "price_status": "VERIFIED"
+      }
+    ]
+  },
+  {
+    "name": "Pune APMC Market Yard",
+    "category": "MANDI",
+    "seller_name": "APMC Board",
+    "address": "Market Yard, Gultekdi, Pune",
+    "district": "Pune",
+    "state": "Maharashtra",
+    "latitude": 18.4984,
+    "longitude": 73.8682,
+    "contact_phone": "+91 20 2426 6601",
+    "is_seller_listed": false,
+    "items": []
+  },
+  {
+    "name": "Nashik APMC Market Yard",
+    "category": "MANDI",
+    "seller_name": "Nashik APMC Board",
+    "address": "Panchavati, Nashik",
+    "district": "Nashik",
+    "state": "Maharashtra",
+    "latitude": 19.9975,
+    "longitude": 73.7898,
+    "contact_phone": "+91 253 251 1234",
+    "is_seller_listed": false,
+    "items": []
+  }
+]

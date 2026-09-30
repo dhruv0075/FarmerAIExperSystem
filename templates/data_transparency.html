@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Data & Model Transparency — AgriWise AI{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0" style="max-width: 960px;">
+  <div class="mb-4">
+    <h2 class="h3 fw-bold mb-1"><i class="fa-solid fa-database text-primary me-2"></i>Data & Model Transparency Dossier</h2>
+    <p class="text-muted small mb-0">Full provenance audit, data sources, update cadences, model assumptions, and limitations of the AgriWise AI decision-support platform.</p>
+  </div>
+
+  <div class="card shadow-sm border-0 mb-4 border-start border-4 border-success">
+    <div class="card-body p-4">
+      <h5 class="fw-bold mb-2">AgriWise Trusted Data Policy</h5>
+      <p class="text-secondary small mb-0">
+        In strict adherence to academic and engineering integrity standards, AgriWise AI enforces zero fabrication of agronomic values, weather predictions, market spot prices, or model metrics. Where live third-party connectivity is unavailable, the system transparently indicates cached observations or unavailable states rather than generating synthetic approximations.
+      </p>
+    </div>
+  </div>
+
+  <!-- Provenance Registry Table -->
+  <div class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-white py-3">
+      <h5 class="mb-0 fw-bold"><i class="fa-solid fa-list-check text-success me-2"></i>Integrated Datasets & API Registry</h5>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead class="table-light small text-uppercase text-muted">
+            <tr>
+              <th>System Module</th>
+              <th>Data Source & Authority</th>
+              <th>Coverage & Cadence</th>
+              <th>Status / Reliability</th>
+              <th>Known Scope Limitations</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong class="d-block">Weather Intelligence</strong></td>
+              <td>Open-Meteo European Weather Numerical Forecast Model</td>
+              <td>Hourly updates; 10-day forecast horizon; global 1-11 km grid resolution.</td>
+              <td><span class="badge badge-provenance badge-live-weather">Live API</span></td>
+              <td><small class="text-muted">Microclimatic valley fog and hyper-local cloudbursts may differ slightly from interpolated grid.</small></td>
+            </tr>
+            <tr>
+              <td><strong class="d-block">Market Intelligence</strong></td>
+              <td>Agmarknet / Directorate of Marketing & Inspection (DMI) — Ministry of Agriculture, Govt of India</td>
+              <td>Daily arrivals & modal prices across authorized APMC mandi yards.</td>
+              <td><span class="badge badge-provenance badge-govt-market">API key required; cached official records only</span></td>
+              <td><small class="text-muted">Reflects regulated market yard auctions; farm-gate private aggregator rates may vary.</small></td>
+            </tr>
+            <tr>
+              <td><strong class="d-block">Crop ML Model</strong></td>
+              <td>Local 2200-row dataset; original collection provenance unverified</td>
+              <td>22 major crops (100 samples/class); N, P, K, pH, rainfall, temperature, humidity.</td>
+              <td><span class="badge badge-provenance badge-ai-forecast">See ML Analytics for measured metrics</span></td>
+              <td><small class="text-muted">Dataset represents optimal agronomic clusters; requires Layer-2 Decision Ranking for real farm water/market fit.</small></td>
+            </tr>
+            <tr>
+              <td><strong class="d-block">Agronomic Knowledge Base</strong></td>
+              <td>Configured agronomic heuristics; exact source references not verified</td>
+              <td>Physiological growth stages, degree-day durations, water requirements, and IPM protocols.</td>
+              <td><span class="badge badge-provenance badge-expert-system">Expert System KB</span></td>
+              <td><small class="text-muted">Stage durations depend on specific hybrid/variety and prevailing seasonal temperatures.</small></td>
+            </tr>
+            <tr>
+              <td><strong class="d-block">Reverse Geocoding</strong></td>
+              <td>OpenStreetMap Nominatim & BigDataCloud Free Client</td>
+              <td>Global administrative boundaries down to village / taluka level.</td>
+              <td><span class="badge bg-light text-dark border">Geo Service</span></td>
+              <td><small class="text-muted">Unsurveyed rural hamlets may resolve to the nearest tehsil or district center.</small></td>
+            </tr>
+            <tr>
+              <td><strong class="d-block">Agri Resources Directory</strong></td>
+              <td>Community-entered listings; generated bundled catalog excluded</td>
+              <td>Soil testing laboratories, cold storage godowns, authorized dealers.</td>
+              <td><span class="badge badge-provenance badge-govt-market">Community Listed</span></td>
+              <td><small class="text-muted">Real-time dealer physical shelf inventory is labeled 'Availability not confirmed' until checked.</small></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Research & viva disclaimer -->
+  <div class="card shadow-sm border-0 mb-4 bg-light">
+    <div class="card-body p-4 text-center">
+      <h6 class="fw-bold mb-1">AIES Academic & Engineering Defense Statement</h6>
+      <p class="small text-muted mb-0">
+        This software implementation serves as an academic research prototype for Third-Year B.Tech Computer Science (Artificial Intelligence and Expert Systems) and as empirical verification for closed-loop agricultural decision support.
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}

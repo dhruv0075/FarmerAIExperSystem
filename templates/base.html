@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}AgriWise AI — Intelligent Farming Decision Platform{% endblock %}</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Source+Serif+4:ital,opsz,wght@0,8..60,500;0,8..60,600;0,8..60,700;1,8..60,600&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap 5.3.3 & Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    
+    <!-- Leaflet CSS for Maps -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    
+    <!-- Custom AgriWise Styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block head %}{% endblock %}
+  </head>
+  <body>
+    <!-- Top Navigation Bar -->
+    <header class="app-navbar d-flex align-items-center justify-content-between">
+      <div class="d-flex align-items-center">
+        {% if session.get('user_id') %}
+          <button class="btn btn-sm btn-outline-secondary d-lg-none me-2" id="sidebarToggle" type="button">
+            <i class="fa-solid fa-bars"></i>
+          </button>
+        {% endif %}
+        <a class="text-decoration-none d-flex align-items-center" href="{{ url_for('index') }}">
+          <div class="brand-badge"><i class="fa-solid fa-seedling"></i></div>
+          <div>
+            <span class="fs-5 fw-bold text-dark font-sans tracking-tight">AgriWise<span class="text-success">AI</span></span>
+            <span class="badge bg-light text-success border border-success-subtle ms-2 d-none d-sm-inline-block font-sans" style="font-size:0.65rem;">Closed-Loop Farm Intelligence</span>
+          </div>
+        </a>
+      </div>
+
+      <!-- Center location badge if farm exists -->
+      {% if g.current_farm %}
+        <div class="d-none d-md-flex align-items-center px-3 py-1 bg-light rounded-pill border border-secondary-subtle small text-secondary">
+          <i class="fa-solid fa-location-dot text-success me-2"></i>
+          <span class="fw-semibold text-dark me-1">{{ g.current_farm.farm_name }}</span>
+          <span>({{ g.current_farm.location_name or 'Location verified' }})</span>
+        </div>
+      {% endif %}
+
+      <!-- Right Profile & Notifications -->
+      <div class="d-flex align-items-center gap-2">
+        {% if session.get('user_id') %}
+          <a href="{{ url_for('notifications_page') }}" class="btn btn-light position-relative rounded-circle p-2 text-secondary" title="Notifications">
+            <i class="fa-regular fa-bell"></i>
+            {% if g.unread_notifications and g.unread_notifications > 0 %}
+              <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size:0.65rem;">
+                {{ g.unread_notifications }}
+              </span>
+            {% endif %}
+          </a>
+
+          <div class="dropdown">
+            <button class="btn btn-light dropdown-toggle d-flex align-items-center gap-2 border" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="fa-regular fa-circle-user text-success fs-5"></i>
+              <span class="d-none d-sm-inline font-sans fw-medium small">{{ g.current_user.name if g.current_user else 'Farmer' }}</span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+              <li><h6 class="dropdown-header">{{ g.current_user.email if g.current_user else '' }}</h6></li>
+              <li><a class="dropdown-item" href="{{ url_for('farm_profile') }}"><i class="fa-solid fa-tractor me-2 text-muted"></i>My Farm Profile</a></li>
+              <li><a class="dropdown-item" href="{{ url_for('settings_page') }}"><i class="fa-solid fa-gear me-2 text-muted"></i>Settings</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item text-danger" href="{{ url_for('logout') }}"><i class="fa-solid fa-right-from-bracket me-2"></i>Logout</a></li>
+            </ul>
+          </div>
+        {% else %}
+          <a href="{{ url_for('login') }}" class="btn btn-sm btn-outline-success fw-medium">Farmer Login</a>
+          <a href="{{ url_for('register') }}" class="btn btn-sm btn-success fw-medium">Create Account</a>
+        {% endif %}
+      </div>
+    </header>
+
+    <!-- App Wrapper -->
+    <div class="app-wrapper">
+      {% if session.get('user_id') %}
+        <!-- Left Sidebar Navigation -->
+        <aside class="app-sidebar" id="appSidebar">
+          <div class="sidebar-nav">
+            
+            <div class="nav-category">Farm Operations</div>
+            <a class="sidebar-link {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">
+              <i class="fa-solid fa-gauge-high"></i> Dashboard
+            </a>
+            <a class="sidebar-link {% if request.endpoint == 'daily_plan_page' %}active{% endif %}" href="{{ url_for('daily_plan_page') }}">
+              <i class="fa-solid fa-clipboard-check text-success"></i> Today's Farm Plan
+            </a>
+            <a class="sidebar-link {% if request.endpoint == 'seven_day_plan_page' %}active{% endif %}" href="{{ url_for('seven_day_plan_page') }}">
+              <i class="fa-regular fa-calendar-days"></i> 7-Day Action Plan
+            </a>
+            <a class="sidebar-link {% if request.endpoint == 'farm_profile' %}active{% endif %}" href="{{ url_for('farm_profile') }}">
+              <i class="fa-solid fa-tractor"></i> My Farm
+            </a>
+            <a class="sidebar-link {% if request.endpoint == 'activities_page' %}active{% endif %}" href="{{ url_for('activities_page') }}">
+              <i class="fa-solid fa-list-check"></i> Farm Activities
+            </a>
+            <a class="sidebar-link {% if request.endpoint == 'lifecycle_page' %}active{% endif %}" href="{{ url_for('lifecycle_page') }}">
+              <i class="fa-solid fa-seedling"></i> Crop Lifecycle
+            </a>
+
+            <div class="nav-category">AI & Intelligence</div>
+            <a class="sidebar-link {% if request.endpoint == 'crop_recommendation' %}active{% endif %}" href="{{ url_for('crop_recommendation') }}">
+              <i class="fa-solid fa-wand-magic-sparkles text-primary"></i> AI Crop Planner
+            </a>
+            <a class="sidebar-link {% if request.endpoint == 'compare_crops_page' %}active{% endif %}" href="{{ url_for('compare_crops_page') }}">
+              <i class="fa-solid fa-code-compare"></i> Compare Crops
+            </a>
+            <a class="sidebar-link {% if request.endpoint == 'profit_planner_page' %}active{% endif %}" href="{{ url_for('profit_planner_page') }}">
+              <i class="fa-solid fa-chart-line text-success"></i> Profit Planner
+            </a>
+            <a class="sidebar-link {% if request.endpoint == 'weather_page' %}active{% endif %}" href="{{ url_for('weather_page') }}">
+              <i class="fa-solid fa-cloud-sun-rain text-info"></i> Weather Intelligence
+            </a>
+            <a class="sidebar-link {% if request.endpoint in ['risk_analysis_page', 'risk_center_page'] %}active{% endif %}" href="{{ url_for('risk_analysis_page') }}">
+              <i class="fa-solid fa-shield-halved text-warning"></i> Risk Center
+            </a>
+            <a class="sidebar-link {% if request.endpoint == 'what_if_page' %}active{% endif %}" href="{{ url_for('what_if_page') }}">
+              <i class="fa-solid fa-sliders"></i> What-If Simulator
+            </a>
+
+            <div class="nav-category">Crop Care & Resources</div>
+            <a class="sidebar-link {% if request.endpoint == 'report_problem_page' %}active{% endif %}" href="{{ url_for('report_problem_page') }}">
+              <i class="fa-solid fa-bug text-danger"></i> Disease & Problem AI
+            </a>
+            <a class="sidebar-link {% if request.endpoint == 'fertilizer_page' %}active{% endif %}" href="{{ url_for('fertilizer_page') }}">
+              <i class="fa-solid fa-vial-circle-check text-success"></i> Nutrition & Fertilizer
+            </a>
+            <a class="sidebar-link {% if request.endpoint == 'resources_page' %}active{% endif %}" href="{{ url_for('resources_page') }}">
+              <i class="fa-solid fa-map-location-dot text-primary"></i> Resources Near Me
+            </a>
+
+            <div class="nav-category">Market & Financials</div>
+            <a class="sidebar-link {% if request.endpoint == 'market_page' %}active{% endif %}" href="{{ url_for('market_page') }}">
+              <i class="fa-solid fa-shop text-success"></i> Market Intelligence
+            </a>
+            <a class="sidebar-link {% if request.endpoint == 'sell_planner_page' %}active{% endif %}" href="{{ url_for('sell_planner_page') }}">
+              <i class="fa-solid fa-scale-balanced text-primary"></i> Sell Planner
+            </a>
+            <a class="sidebar-link {% if request.endpoint == 'expenses_page' %}active{% endif %}" href="{{ url_for('expenses_page') }}">
+              <i class="fa-solid fa-indian-rupee-sign text-warning"></i> Expenses & Profits
+            </a>
+
+            <div class="nav-category">AIES & Research</div>
+            <a class="sidebar-link {% if request.endpoint == 'expert_system_page' %}active{% endif %}" href="{{ url_for('expert_system_page') }}">
+              <i class="fa-solid fa-brain text-purple"></i> Expert System (Viva)
+            </a>
+            <a class="sidebar-link {% if request.endpoint == 'ml_analytics_page' %}active{% endif %}" href="{{ url_for('ml_analytics_page') }}">
+              <i class="fa-solid fa-chart-pie"></i> ML Analytics
+            </a>
+            <a class="sidebar-link {% if request.endpoint == 'data_transparency_page' %}active{% endif %}" href="{{ url_for('data_transparency_page') }}">
+              <i class="fa-solid fa-database"></i> Data & Transparency
+            </a>
+            <a class="sidebar-link {% if request.endpoint == 'research_page' %}active{% endif %}" href="{{ url_for('research_page') }}">
+              <i class="fa-solid fa-book-open"></i> Research Paper
+            </a>
+            <a class="sidebar-link {% if request.endpoint == 'farm_report_page' %}active{% endif %}" href="{{ url_for('farm_report_page') }}">
+              <i class="fa-solid fa-file-invoice"></i> Farm Dossier Report
+            </a>
+
+          </div>
+        </aside>
+      {% endif %}
+
+      <!-- Main Content Container -->
+      <main class="app-content">
+        <!-- Toast / Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class="no-print mb-3">
+              {% for category, message in messages %}
+                <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show shadow-sm" role="alert">
+                  <div class="d-flex align-items-center">
+                    <i class="fa-solid fa-circle-info me-2"></i>
+                    <div>{{ message }}</div>
+                  </div>
+                  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+      </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script>
+      // Sidebar toggle for mobile devices
+      const sidebarToggle = document.getElementById('sidebarToggle');
+      const appSidebar = document.getElementById('appSidebar');
+      if (sidebarToggle && appSidebar) {
+        sidebarToggle.addEventListener('click', () => {
+          appSidebar.classList.toggle('show');
+        });
+      }
+    </script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block scripts %}{% endblock %}
+  </body>
+</html>

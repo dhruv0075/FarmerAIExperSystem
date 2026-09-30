@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block title %}AgriWise AI | Advisories{% endblock %}
+{% block content %}
+<div class="card shadow-sm border-0 rounded-4 p-4">
+  <h2 class="mb-4">Advisories</h2>
+  {% if advisories %}
+    {% for advisory in advisories %}
+      <div class="alert alert-{{ 'danger' if advisory.severity == 'URGENT' else 'warning' if advisory.severity == 'WARNING' else 'info' if advisory.severity == 'INFO' else 'secondary' }} mb-3">
+        <div class="d-flex justify-content-between align-items-center">
+          <h5 class="mb-1">{{ advisory.title }}</h5>
+          <span class="badge bg-light text-dark">{{ advisory.severity }}</span>
+        </div>
+        <div class="small text-uppercase text-muted mb-2">{{ advisory.advisory_type }}</div>
+        <p class="mb-1"><strong>Recommendation:</strong> {{ advisory.message }}</p>
+        <p class="mb-0"><strong>Reason:</strong> {{ advisory.reason }}</p>
+      </div>
+    {% endfor %}
+  {% else %}
+    <p class="text-muted mb-0">No advisories have been generated yet.</p>
+  {% endif %}
+</div>
+{% endblock %}

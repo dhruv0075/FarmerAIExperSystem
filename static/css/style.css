@@ -1,0 +1,367 @@
+/* AgriWise AI — Enterprise Agricultural Decision Support System Styling */
+
+:root {
+  --agri-primary: #198754;
+  --agri-primary-dark: #146c43;
+  --agri-primary-light: #d1e7dd;
+  --agri-accent: #0d6efd;
+  --agri-dark: #1b2e23;
+  --agri-surface: #ffffff;
+  --agri-bg: #f4f7f4;
+  --agri-border: #e2ece3;
+  --agri-text: #212529;
+  --agri-muted: #5c7063;
+  --agri-warning: #ffc107;
+  --agri-danger: #dc3545;
+  --agri-info: #0dcaf0;
+  --sidebar-width: 260px;
+}
+
+body {
+  background-color: var(--agri-bg);
+  color: var(--agri-text);
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Source Serif 4', Georgia, serif;
+  color: var(--agri-dark);
+  font-weight: 600;
+}
+
+.font-sans {
+  font-family: 'DM Sans', sans-serif !important;
+}
+
+/* App Shell Layout */
+.app-wrapper {
+  display: flex;
+  flex: 1;
+  min-height: calc(100vh - 65px);
+}
+
+.app-sidebar {
+  width: var(--sidebar-width);
+  background: #ffffff;
+  border-right: 1px solid var(--agri-border);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  padding-bottom: 2rem;
+}
+
+.sidebar-header {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--agri-border);
+}
+
+.sidebar-nav {
+  padding: 1rem 0.75rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.nav-category {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #8c9e92;
+  padding: 0.75rem 0.75rem 0.35rem 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  padding: 0.55rem 0.75rem;
+  color: #3b5042;
+  text-decoration: none;
+  font-size: 0.88rem;
+  font-weight: 500;
+  border-radius: 8px;
+  transition: all 0.15s ease-in-out;
+  margin-bottom: 2px;
+}
+
+.sidebar-link i {
+  width: 22px;
+  font-size: 1rem;
+  margin-right: 0.65rem;
+  color: #5c7063;
+  transition: color 0.15s ease;
+}
+
+.sidebar-link:hover {
+  background-color: #ebf5ee;
+  color: var(--agri-primary-dark);
+}
+
+.sidebar-link:hover i {
+  color: var(--agri-primary);
+}
+
+.sidebar-link.active {
+  background-color: #e2f4e8;
+  color: var(--agri-primary-dark);
+  font-weight: 600;
+}
+
+.sidebar-link.active i {
+  color: var(--agri-primary);
+}
+
+.app-content {
+  flex: 1;
+  padding: 1.75rem 2rem;
+  background-color: var(--agri-bg);
+  overflow-x: hidden;
+}
+
+/* Top Navbar */
+.app-navbar {
+  background: #ffffff;
+  border-bottom: 1px solid var(--agri-border);
+  padding: 0.75rem 1.5rem;
+  z-index: 1020;
+}
+
+.brand-badge {
+  background: linear-gradient(135deg, #198754 0%, #146c43 100%);
+  color: white;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 0.5rem;
+  box-shadow: 0 2px 6px rgba(20, 108, 67, 0.25);
+}
+
+/* Cards & Surfaces */
+.card {
+  border: 1px solid var(--agri-border);
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.card:hover {
+  box-shadow: 0 4px 12px rgba(25, 135, 84, 0.06);
+}
+
+.card-header {
+  background-color: #ffffff;
+  border-bottom: 1px solid var(--agri-border);
+  padding: 1rem 1.25rem;
+  border-top-left-radius: 14px !important;
+  border-top-right-radius: 14px !important;
+  font-weight: 600;
+}
+
+.stat-widget {
+  padding: 1.25rem;
+  border-radius: 14px;
+  background: #ffffff;
+  border: 1px solid var(--agri-border);
+  display: flex;
+  align-items: center;
+}
+
+.stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  margin-right: 1rem;
+}
+
+.stat-icon.green { background: #e8f7ee; color: #198754; }
+.stat-icon.blue { background: #e8f2fc; color: #0d6efd; }
+.stat-icon.orange { background: #fff4e5; color: #fd7e14; }
+.stat-icon.red { background: #feebeb; color: #dc3545; }
+.stat-icon.purple { background: #f3eafd; color: #6f42c1; }
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--agri-dark);
+}
+
+.stat-label {
+  font-size: 0.8rem;
+  color: var(--agri-muted);
+  font-weight: 500;
+  margin-top: 0.2rem;
+}
+
+/* AgriWise Condition Ring */
+.score-circle {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  margin: 0 auto;
+}
+
+.score-circle.high {
+  background: #e9f8ee;
+  border: 4px solid #198754;
+  color: #146c43;
+}
+
+.score-circle.medium {
+  background: #fff8e8;
+  border: 4px solid #ffc107;
+  color: #9a6d00;
+}
+
+.score-circle.low {
+  background: #fdeeee;
+  border: 4px solid #dc3545;
+  color: #a71d2a;
+}
+
+/* Timeline & Progress */
+.lifecycle-timeline {
+  display: flex;
+  overflow-x: auto;
+  padding: 1rem 0;
+  gap: 0.5rem;
+}
+
+.timeline-step {
+  flex: 1;
+  min-width: 130px;
+  padding: 0.75rem 0.5rem;
+  text-align: center;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border: 1px solid var(--agri-border);
+}
+
+.timeline-step.completed {
+  background-color: #e8f7ee;
+  border-color: #b5e4c6;
+  color: #146c43;
+}
+
+.timeline-step.current {
+  background-color: #198754;
+  border-color: #146c43;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(25, 135, 84, 0.3);
+}
+
+.timeline-step.upcoming {
+  background-color: #f8faf8;
+  color: #88998d;
+}
+
+/* Data Provenance & Badges */
+.badge-provenance {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.3rem 0.6rem;
+  border-radius: 6px;
+}
+
+.badge-live-weather { background-color: #cff4fc; color: #055160; }
+.badge-govt-market { background-color: #d1e7dd; color: #0f5132; }
+.badge-ai-forecast { background-color: #e2d9f3; color: #432874; }
+.badge-expert-system { background-color: #fff3cd; color: #664d03; }
+.badge-farmer-entered { background-color: #e9ecef; color: #495057; }
+.badge-seller-listed { background-color: #f8d7da; color: #842029; }
+
+/* Status Badges */
+.status-pill {
+  display: inline-block;
+  padding: 0.25rem 0.6rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.status-pill.pending { background-color: #fff3cd; color: #856404; }
+.status-pill.completed { background-color: #d4edda; color: #155724; }
+.status-pill.overdue { background-color: #f8d7da; color: #721c24; }
+.status-pill.skipped { background-color: #e2e3e5; color: #383d41; }
+.status-pill.urgent { background-color: #dc3545; color: #ffffff; }
+
+/* Buttons */
+.btn-agri {
+  background-color: var(--agri-primary);
+  border-color: var(--agri-primary);
+  color: #ffffff;
+  font-weight: 500;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+}
+
+.btn-agri:hover {
+  background-color: var(--agri-primary-dark);
+  border-color: var(--agri-primary-dark);
+  color: #ffffff;
+}
+
+/* Modals & Dialogs */
+.modal-content {
+  border-radius: 16px;
+  border: 1px solid var(--agri-border);
+}
+
+/* Print Styling for Farm Intelligence Dossier */
+@media print {
+  .app-sidebar, .app-navbar, .no-print, .btn, footer {
+    display: none !important;
+  }
+  .app-content {
+    padding: 0 !important;
+  }
+  body {
+    background: #ffffff !important;
+  }
+  .card {
+    border: 1px solid #ccc !important;
+    box-shadow: none !important;
+    page-break-inside: avoid;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 991.98px) {
+  .app-sidebar {
+    position: fixed;
+    top: 65px;
+    left: -260px;
+    height: calc(100vh - 65px);
+    z-index: 1030;
+    transition: left 0.25s ease-in-out;
+  }
+  .app-sidebar.show {
+    left: 0;
+    box-shadow: 4px 0 16px rgba(0,0,0,0.1);
+  }
+  .app-content {
+    padding: 1rem;
+  }
+}

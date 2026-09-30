@@ -1,0 +1,561 @@
+{
+  "source": "Agmarknet / Directorate of Marketing & Inspection (DMI) - Government of India",
+  "updated_at": "2026-09-30T10:00:00Z",
+  "markets": [
+    {
+      "name": "Pune APMC",
+      "district": "Pune",
+      "state": "Maharashtra",
+      "latitude": 18.4984,
+      "longitude": 73.8682
+    },
+    {
+      "name": "Nashik APMC",
+      "district": "Nashik",
+      "state": "Maharashtra",
+      "latitude": 19.9975,
+      "longitude": 73.7898
+    },
+    {
+      "name": "Nagpur APMC (Kalamna)",
+      "district": "Nagpur",
+      "state": "Maharashtra",
+      "latitude": 21.1612,
+      "longitude": 79.1378
+    },
+    {
+      "name": "Lasalgaon Mandi",
+      "district": "Nashik",
+      "state": "Maharashtra",
+      "latitude": 20.1472,
+      "longitude": 74.2268
+    },
+    {
+      "name": "Indore APMC",
+      "district": "Indore",
+      "state": "Madhya Pradesh",
+      "latitude": 22.7196,
+      "longitude": 75.8577
+    },
+    {
+      "name": "Surat APMC",
+      "district": "Surat",
+      "state": "Gujarat",
+      "latitude": 21.1702,
+      "longitude": 72.8311
+    },
+    {
+      "name": "Khanna Mandi",
+      "district": "Ludhiana",
+      "state": "Punjab",
+      "latitude": 30.7046,
+      "longitude": 76.2163
+    },
+    {
+      "name": "Hubli APMC",
+      "district": "Dharwad",
+      "state": "Karnataka",
+      "latitude": 15.3647,
+      "longitude": 75.124
+    }
+  ],
+  "commodities": {
+    "rice": {
+      "variety": "Common Paddy / Sona Masoori",
+      "unit": "\u20b9 / Quintal",
+      "prices": {
+        "Pune APMC": {
+          "min": 2250,
+          "max": 2680,
+          "modal": 2450,
+          "date": "2026-09-29",
+          "trend": "Stable"
+        },
+        "Nashik APMC": {
+          "min": 2180,
+          "max": 2550,
+          "modal": 2360,
+          "date": "2026-09-28",
+          "trend": "Slightly Up"
+        },
+        "Nagpur APMC (Kalamna)": {
+          "min": 2300,
+          "max": 2720,
+          "modal": 2510,
+          "date": "2026-09-29",
+          "trend": "Up"
+        },
+        "Hubli APMC": {
+          "min": 2400,
+          "max": 2850,
+          "modal": 2620,
+          "date": "2026-09-29",
+          "trend": "Up"
+        },
+        "Khanna Mandi": {
+          "min": 2200,
+          "max": 2500,
+          "modal": 2380,
+          "date": "2026-09-27",
+          "trend": "Stable"
+        }
+      },
+      "history_30d": [
+        {
+          "date": "2026-09-01",
+          "modal": 2350
+        },
+        {
+          "date": "2026-09-08",
+          "modal": 2380
+        },
+        {
+          "date": "2026-09-15",
+          "modal": 2410
+        },
+        {
+          "date": "2026-09-22",
+          "modal": 2440
+        },
+        {
+          "date": "2026-09-29",
+          "modal": 2450
+        }
+      ]
+    },
+    "maize": {
+      "variety": "Yellow Hybrid",
+      "unit": "\u20b9 / Quintal",
+      "prices": {
+        "Pune APMC": {
+          "min": 1950,
+          "max": 2300,
+          "modal": 2150,
+          "date": "2026-09-29",
+          "trend": "Up"
+        },
+        "Nashik APMC": {
+          "min": 1900,
+          "max": 2240,
+          "modal": 2080,
+          "date": "2026-09-28",
+          "trend": "Stable"
+        },
+        "Indore APMC": {
+          "min": 2020,
+          "max": 2350,
+          "modal": 2200,
+          "date": "2026-09-29",
+          "trend": "Up"
+        },
+        "Hubli APMC": {
+          "min": 1980,
+          "max": 2280,
+          "modal": 2130,
+          "date": "2026-09-29",
+          "trend": "Stable"
+        }
+      },
+      "history_30d": [
+        {
+          "date": "2026-09-01",
+          "modal": 2050
+        },
+        {
+          "date": "2026-09-08",
+          "modal": 2090
+        },
+        {
+          "date": "2026-09-15",
+          "modal": 2110
+        },
+        {
+          "date": "2026-09-22",
+          "modal": 2130
+        },
+        {
+          "date": "2026-09-29",
+          "modal": 2150
+        }
+      ]
+    },
+    "cotton": {
+      "variety": "Medium Long Staple / Shankar-6",
+      "unit": "\u20b9 / Quintal",
+      "prices": {
+        "Nagpur APMC (Kalamna)": {
+          "min": 6900,
+          "max": 7650,
+          "modal": 7320,
+          "date": "2026-09-29",
+          "trend": "Up"
+        },
+        "Surat APMC": {
+          "min": 7100,
+          "max": 7800,
+          "modal": 7480,
+          "date": "2026-09-29",
+          "trend": "Up"
+        },
+        "Indore APMC": {
+          "min": 6850,
+          "max": 7500,
+          "modal": 7200,
+          "date": "2026-09-28",
+          "trend": "Stable"
+        }
+      },
+      "history_30d": [
+        {
+          "date": "2026-09-01",
+          "modal": 7050
+        },
+        {
+          "date": "2026-09-08",
+          "modal": 7120
+        },
+        {
+          "date": "2026-09-15",
+          "modal": 7200
+        },
+        {
+          "date": "2026-09-22",
+          "modal": 7280
+        },
+        {
+          "date": "2026-09-29",
+          "modal": 7350
+        }
+      ]
+    },
+    "chickpea": {
+      "variety": "Desi Chana",
+      "unit": "\u20b9 / Quintal",
+      "prices": {
+        "Pune APMC": {
+          "min": 5400,
+          "max": 6150,
+          "modal": 5850,
+          "date": "2026-09-29",
+          "trend": "Up"
+        },
+        "Indore APMC": {
+          "min": 5500,
+          "max": 6250,
+          "modal": 5920,
+          "date": "2026-09-29",
+          "trend": "Up"
+        },
+        "Nagpur APMC (Kalamna)": {
+          "min": 5350,
+          "max": 6050,
+          "modal": 5780,
+          "date": "2026-09-28",
+          "trend": "Stable"
+        }
+      },
+      "history_30d": [
+        {
+          "date": "2026-09-01",
+          "modal": 5600
+        },
+        {
+          "date": "2026-09-08",
+          "modal": 5680
+        },
+        {
+          "date": "2026-09-15",
+          "modal": 5740
+        },
+        {
+          "date": "2026-09-22",
+          "modal": 5800
+        },
+        {
+          "date": "2026-09-29",
+          "modal": 5850
+        }
+      ]
+    },
+    "banana": {
+      "variety": "Grand Naine (G9)",
+      "unit": "\u20b9 / Quintal",
+      "prices": {
+        "Pune APMC": {
+          "min": 1500,
+          "max": 2200,
+          "modal": 1850,
+          "date": "2026-09-29",
+          "trend": "Stable"
+        },
+        "Nashik APMC": {
+          "min": 1400,
+          "max": 2050,
+          "modal": 1720,
+          "date": "2026-09-28",
+          "trend": "Stable"
+        },
+        "Surat APMC": {
+          "min": 1600,
+          "max": 2350,
+          "modal": 1980,
+          "date": "2026-09-29",
+          "trend": "Up"
+        }
+      },
+      "history_30d": [
+        {
+          "date": "2026-09-01",
+          "modal": 1780
+        },
+        {
+          "date": "2026-09-08",
+          "modal": 1800
+        },
+        {
+          "date": "2026-09-15",
+          "modal": 1830
+        },
+        {
+          "date": "2026-09-22",
+          "modal": 1850
+        },
+        {
+          "date": "2026-09-29",
+          "modal": 1850
+        }
+      ]
+    },
+    "pomegranate": {
+      "variety": "Bhagwa / Sindhuri",
+      "unit": "\u20b9 / Quintal",
+      "prices": {
+        "Pune APMC": {
+          "min": 8500,
+          "max": 14500,
+          "modal": 11500,
+          "date": "2026-09-29",
+          "trend": "Up"
+        },
+        "Nashik APMC": {
+          "min": 8000,
+          "max": 13800,
+          "modal": 10800,
+          "date": "2026-09-28",
+          "trend": "Up"
+        },
+        "Lasalgaon Mandi": {
+          "min": 8200,
+          "max": 14000,
+          "modal": 11100,
+          "date": "2026-09-29",
+          "trend": "Up"
+        }
+      },
+      "history_30d": [
+        {
+          "date": "2026-09-01",
+          "modal": 10200
+        },
+        {
+          "date": "2026-09-08",
+          "modal": 10500
+        },
+        {
+          "date": "2026-09-15",
+          "modal": 10900
+        },
+        {
+          "date": "2026-09-22",
+          "modal": 11200
+        },
+        {
+          "date": "2026-09-29",
+          "modal": 11500
+        }
+      ]
+    },
+    "grapes": {
+      "variety": "Thompson Seedless / Sonaka",
+      "unit": "\u20b9 / Quintal",
+      "prices": {
+        "Nashik APMC": {
+          "min": 6000,
+          "max": 9500,
+          "modal": 7800,
+          "date": "2026-09-29",
+          "trend": "Stable"
+        },
+        "Pune APMC": {
+          "min": 6500,
+          "max": 10200,
+          "modal": 8300,
+          "date": "2026-09-29",
+          "trend": "Up"
+        }
+      },
+      "history_30d": [
+        {
+          "date": "2026-09-01",
+          "modal": 7500
+        },
+        {
+          "date": "2026-09-08",
+          "modal": 7650
+        },
+        {
+          "date": "2026-09-15",
+          "modal": 7700
+        },
+        {
+          "date": "2026-09-22",
+          "modal": 7750
+        },
+        {
+          "date": "2026-09-29",
+          "modal": 7800
+        }
+      ]
+    },
+    "watermelon": {
+      "variety": "Black King / Kiran",
+      "unit": "\u20b9 / Quintal",
+      "prices": {
+        "Pune APMC": {
+          "min": 1100,
+          "max": 1650,
+          "modal": 1380,
+          "date": "2026-09-29",
+          "trend": "Stable"
+        },
+        "Nashik APMC": {
+          "min": 1050,
+          "max": 1550,
+          "modal": 1300,
+          "date": "2026-09-28",
+          "trend": "Stable"
+        },
+        "Surat APMC": {
+          "min": 1200,
+          "max": 1750,
+          "modal": 1450,
+          "date": "2026-09-29",
+          "trend": "Up"
+        }
+      },
+      "history_30d": [
+        {
+          "date": "2026-09-01",
+          "modal": 1320
+        },
+        {
+          "date": "2026-09-08",
+          "modal": 1340
+        },
+        {
+          "date": "2026-09-15",
+          "modal": 1350
+        },
+        {
+          "date": "2026-09-22",
+          "modal": 1370
+        },
+        {
+          "date": "2026-09-29",
+          "modal": 1380
+        }
+      ]
+    },
+    "pigeonpeas": {
+      "variety": "White / Maruti",
+      "unit": "\u20b9 / Quintal",
+      "prices": {
+        "Nagpur APMC (Kalamna)": {
+          "min": 7200,
+          "max": 8500,
+          "modal": 7950,
+          "date": "2026-09-29",
+          "trend": "Up"
+        },
+        "Pune APMC": {
+          "min": 7100,
+          "max": 8400,
+          "modal": 7820,
+          "date": "2026-09-28",
+          "trend": "Up"
+        },
+        "Hubli APMC": {
+          "min": 7300,
+          "max": 8600,
+          "modal": 8050,
+          "date": "2026-09-29",
+          "trend": "Up"
+        }
+      },
+      "history_30d": [
+        {
+          "date": "2026-09-01",
+          "modal": 7600
+        },
+        {
+          "date": "2026-09-08",
+          "modal": 7700
+        },
+        {
+          "date": "2026-09-15",
+          "modal": 7800
+        },
+        {
+          "date": "2026-09-22",
+          "modal": 7900
+        },
+        {
+          "date": "2026-09-29",
+          "modal": 7950
+        }
+      ]
+    },
+    "orange": {
+      "variety": "Nagpur Mandarin",
+      "unit": "\u20b9 / Quintal",
+      "prices": {
+        "Nagpur APMC (Kalamna)": {
+          "min": 3400,
+          "max": 5200,
+          "modal": 4300,
+          "date": "2026-09-29",
+          "trend": "Stable"
+        },
+        "Pune APMC": {
+          "min": 3800,
+          "max": 5800,
+          "modal": 4850,
+          "date": "2026-09-29",
+          "trend": "Up"
+        }
+      },
+      "history_30d": [
+        {
+          "date": "2026-09-01",
+          "modal": 4150
+        },
+        {
+          "date": "2026-09-08",
+          "modal": 4200
+        },
+        {
+          "date": "2026-09-15",
+          "modal": 4250
+        },
+        {
+          "date": "2026-09-22",
+          "modal": 4300
+        },
+        {
+          "date": "2026-09-29",
+          "modal": 4300
+        }
+      ]
+    }
+  }
+}

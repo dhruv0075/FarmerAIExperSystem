@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Settings & Preferences — AgriWise AI{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0" style="max-width: 860px;">
+  <div class="mb-4">
+    <h2 class="h3 fw-bold mb-1"><i class="fa-solid fa-gear text-secondary me-2"></i>Account & System Settings</h2>
+    <p class="text-muted small mb-0">Manage farmer profile credentials, regional language preferences, and notification defaults.</p>
+  </div>
+
+  <!-- Profile Card -->
+  <div class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-white py-3">
+      <h5 class="mb-0 fw-bold"><i class="fa-solid fa-user text-success me-2"></i>Farmer Profile</h5>
+    </div>
+    <div class="card-body p-4">
+      <form method="POST" action="{{ url_for('update_profile') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold">Farmer Full Name</label>
+            <input type="text" class="form-control" name="name" value="{{ user.name }}" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold">Email Address</label>
+            <input type="email" class="form-control" value="{{ user.email }}" disabled>
+            <small class="text-muted" style="font-size:0.75rem;">Email serves as your unique farmer account identifier.</small>
+          </div>
+          <div class="col-12 text-end">
+            <button type="submit" class="btn btn-success btn-sm px-4">Update Profile</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Multilingual & Accessibility Settings -->
+  <div class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-white py-3">
+      <h5 class="mb-0 fw-bold"><i class="fa-solid fa-language text-primary me-2"></i>Regional Language Architecture</h5>
+    </div>
+    <div class="card-body p-4">
+      <div class="row g-3 align-items-center">
+        <div class="col-md-8">
+          <h6 class="fw-bold mb-1">Interface Language</h6>
+          <p class="text-muted small mb-0">AgriWise architecture is structured for i18n localization across English, Marathi (मराठी), and Hindi (हिन्दी).</p>
+        </div>
+        <div class="col-md-4">
+          <select class="form-select form-select-sm" disabled>
+            <option selected>English (Default)</option>
+            <option>मराठी (Marathi — Translation Ready)</option>
+            <option>हिन्दी (Hindi — Translation Ready)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Security Card -->
+  <div class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-white py-3">
+      <h5 class="mb-0 fw-bold"><i class="fa-solid fa-lock text-danger me-2"></i>Security & Data Isolation</h5>
+    </div>
+    <div class="card-body p-4">
+      <p class="small text-secondary mb-3">
+        AgriWise implements cryptographic password hashing (PBKDF2-SHA256) and strict tenant data isolation. Each farmer's soil records, activity logs, financial transactions, and reports are fully isolated by user ID.
+      </p>
+      <a href="{{ url_for('logout') }}" class="btn btn-outline-danger btn-sm">
+        <i class="fa-solid fa-right-from-bracket me-1"></i>Sign Out of Session
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

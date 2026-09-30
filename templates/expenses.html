@@ -1,0 +1,316 @@
+{% extends "base.html" %}
+
+{% block title %}Farm Expenses & Realized Profit — AgriWise AI{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+      <h2 class="h3 fw-bold mb-1"><i class="fa-solid fa-indian-rupee-sign text-warning me-2"></i>Farm Expenses & Financial Tracking</h2>
+      <p class="text-muted small mb-0">Record actual cultivation expenses and sales receipts to compute true financial return and cost efficiency.</p>
+    </div>
+    <div class="d-flex gap-2">
+      <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#addExpenseModal">
+        <i class="fa-solid fa-plus me-1"></i>Add Expense
+      </button>
+      <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addSaleModal">
+        <i class="fa-solid fa-cart-shopping me-1"></i>Record Sale
+      </button>
+    </div>
+  </div>
+
+  <!-- Financial Overview Stats -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-3 col-sm-6">
+      <div class="stat-widget">
+        <div class="stat-icon red"><i class="fa-solid fa-receipt"></i></div>
+        <div>
+          <div class="stat-value text-danger">₹{{ financials.total_actual_cost|int }}</div>
+          <div class="stat-label">Total Actual Costs Logged</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+      <div class="stat-widget">
+        <div class="stat-icon green"><i class="fa-solid fa-hand-holding-dollar"></i></div>
+        <div>
+          <div class="stat-value text-success">₹{{ financials.total_actual_revenue|int }}</div>
+          <div class="stat-label">Realized Sales Revenue</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+      <div class="stat-widget">
+        <div class="stat-icon {{ 'green' if financials.total_actual_profit >= 0 else 'red' }}">
+          <i class="fa-solid fa-scale-balanced"></i>
+        </div>
+        <div>
+          <div class="stat-value {% if financials.total_actual_profit >= 0 %}text-success{% else %}text-danger{% endif %}">
+            ₹{{ financials.total_actual_profit|int }}
+          </div>
+          <div class="stat-label">Net Realized Profit</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+      <div class="stat-widget">
+        <div class="stat-icon purple"><i class="fa-solid fa-wheat-awn"></i></div>
+        <div>
+          <div class="stat-value">{{ financials.total_quantity_sold }} <small class="fs-6">Qtl</small></div>
+          <div class="stat-label">Produce Quantity Sold</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4 mb-4">
+    <!-- Expense Breakdown Table -->
+    <div class="col-lg-6">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+          <h5 class="mb-0 fw-bold"><i class="fa-solid fa-chart-pie text-muted me-2"></i>Expense Category Breakdown</h5>
+          <span class="badge bg-light text-dark border">{{ financials.expense_count }} items</span>
+        </div>
+        <div class="card-body p-0">
+          {% if financials.category_breakdown %}
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead class="table-light small text-uppercase text-muted">
+                  <tr>
+                    <th>Category</th>
+                    <th>Total Amount</th>
+                    <th>Share %</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for item in financials.category_breakdown %}
+                    <tr>
+                      <td class="fw-semibold">{{ item.category }}</td>
+                      <td>₹{{ item.amount|int }}</td>
+                      <td>
+                        <div class="d-flex align-items-center gap-2">
+                          <div class="progress flex-grow-1" style="height: 6px;">
+                            <div class="progress-bar bg-success" style="width: {{ item.percentage }}%;"></div>
+                          </div>
+                          <small class="text-muted" style="width: 40px;">{{ item.percentage }}%</small>
+                        </div>
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <div class="p-4 text-center text-muted">
+              <p class="mb-0">No expenses recorded yet. Click "Add Expense" to track your farming inputs.</p>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Expenses Log -->
+    <div class="col-lg-6">
+      <div class="card shadow-sm border-0 h-100">
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+          <h5 class="mb-0 fw-bold"><i class="fa-solid fa-clock-rotate-left text-muted me-2"></i>Recent Expense Entries</h5>
+        </div>
+        <div class="card-body p-0">
+          {% if expenses %}
+            <div class="list-group list-group-flush">
+              {% for exp in expenses[:6] %}
+                <div class="list-group-item p-3 d-flex justify-content-between align-items-center">
+                  <div>
+                    <span class="badge bg-light text-dark border me-1">{{ exp.category }}</span>
+                    <strong class="d-block mt-1">{{ exp.notes or exp.category }}</strong>
+                    <small class="text-muted">{{ exp.date }} {% if exp.vendor %}&bull; {{ exp.vendor }}{% endif %}</small>
+                  </div>
+                  <div class="text-end">
+                    <span class="fs-6 fw-bold text-danger">-₹{{ exp.amount|int }}</span>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="p-4 text-center text-muted">
+              <p class="mb-0">No recent transactions.</p>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recorded Sales Transactions Table -->
+  <div class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+      <h5 class="mb-0 fw-bold"><i class="fa-solid fa-cart-shopping text-success me-2"></i>Recorded Sales Realizations</h5>
+      <span class="badge bg-light text-dark border">{{ financials.sales_count }} sales</span>
+    </div>
+    <div class="card-body p-0">
+      {% if sales %}
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light small text-uppercase text-muted">
+              <tr>
+                <th>Date</th>
+                <th>Commodity</th>
+                <th>Quantity</th>
+                <th>Price / Unit</th>
+                <th>Total Realized</th>
+                <th>Market / Buyer</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for s in sales %}
+                <tr>
+                  <td>{{ s.sale_date }}</td>
+                  <td class="fw-bold">{{ s.commodity }}</td>
+                  <td>{{ s.quantity_sold }} {{ s.unit }}</td>
+                  <td>₹{{ s.price_per_unit|int }}</td>
+                  <td class="fw-bold text-success">₹{{ s.total_amount|int }}</td>
+                  <td>{{ s.market_name or s.buyer_name or 'Local Trade' }}</td>
+                  <td><small class="text-muted">{{ s.notes or '--' }}</small></td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="p-4 text-center text-muted">
+          <i class="fa-solid fa-hand-holding-dollar fs-3 text-muted mb-2"></i>
+          <p class="mb-0">No sales transactions logged for the current cycle. Click "Record Sale" once harvest output is marketed.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Modal 1: Add Expense -->
+<div class="modal fade" id="addExpenseModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="POST" action="{{ url_for('add_expense') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold"><i class="fa-solid fa-plus text-danger me-2"></i>Add Farm Expense</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Expense Category</label>
+            <select class="form-select" name="category" required>
+              <option value="SEEDS">Seeds & Seed Treatment</option>
+              <option value="FERTILIZER">Fertilizer & Nutrients</option>
+              <option value="PESTICIDES">Crop Protection / Pesticides</option>
+              <option value="LABOR">Labor & Weeding Wages</option>
+              <option value="IRRIGATION">Irrigation & Electricity / Diesel</option>
+              <option value="FUEL">Tractor Fuel / Transport</option>
+              <option value="MACHINERY">Equipment Rental & Implements</option>
+              <option value="STORAGE">Storage & Warehousing</option>
+              <option value="OTHER">Other Operational Expense</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Amount (₹)</label>
+            <input type="number" step="0.01" min="0" class="form-control" name="amount" placeholder="e.g. 1500.00" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Date Incurred</label>
+            <input type="date" class="form-control" name="date" value="{{ today_str }}" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Vendor / Store Name</label>
+            <input type="text" class="form-control" name="vendor" placeholder="e.g. Kisan Seva Kendra">
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Description / Notes</label>
+            <textarea class="form-control" name="notes" rows="2" placeholder="e.g. 2 bags of Neem Coated Urea"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-danger btn-sm px-4">Record Expense</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal 2: Record Sale -->
+<div class="modal fade" id="addSaleModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="POST" action="{{ url_for('add_sale') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold"><i class="fa-solid fa-cart-shopping text-success me-2"></i>Record Harvest Sale</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Commodity Sold</label>
+            <input type="text" class="form-control" name="commodity" value="{{ crop_name }}" required>
+          </div>
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <label class="form-label small fw-semibold">Quantity Sold</label>
+              <input type="number" step="0.1" min="0.1" class="form-control" name="quantity_sold" id="saleQty" placeholder="e.g. 25" required>
+            </div>
+            <div class="col-6">
+              <label class="form-label small fw-semibold">Unit</label>
+              <select class="form-select" name="unit">
+                <option value="Quintal" selected>Quintal</option>
+                <option value="Kg">Kilogram</option>
+                <option value="Ton">Ton</option>
+                <option value="Crates">Crates</option>
+              </select>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Price per Unit (₹)</label>
+            <input type="number" step="0.01" min="0" class="form-control" name="price_per_unit" id="salePrice" placeholder="e.g. 2450.00" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Total Revenue (₹)</label>
+            <input type="number" step="0.01" min="0" class="form-control fw-bold text-success" name="total_amount" id="saleTotal" placeholder="Auto-calculated">
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Market / Buyer Name</label>
+            <input type="text" class="form-control" name="market_name" placeholder="e.g. Pune APMC Market Yard">
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Sale Date</label>
+            <input type="date" class="form-control" name="sale_date" value="{{ today_str }}" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-success btn-sm px-4">Save Sale Record</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Auto-calculate total amount
+  const qtyInput = document.getElementById('saleQty');
+  const priceInput = document.getElementById('salePrice');
+  const totalInput = document.getElementById('saleTotal');
+
+  function updateTotal() {
+    const q = parseFloat(qtyInput.value) || 0;
+    const p = parseFloat(priceInput.value) || 0;
+    if (q > 0 && p > 0) {
+      totalInput.value = (q * p).toFixed(2);
+    }
+  }
+
+  if (qtyInput && priceInput) {
+    qtyInput.addEventListener('input', updateTotal);
+    priceInput.addEventListener('input', updateTotal);
+  }
+</script>
+{% endblock %}

@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+
+{% block title %}Nutrition & Fertilizer Advisor — AgriWise AI{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+      <h2 class="h3 fw-bold mb-1"><i class="fa-solid fa-vial-circle-check text-success me-2"></i>Crop Nutrition & Fertilizer Intelligence</h2>
+      <p class="text-muted small mb-0">Evaluate soil nutrient status against crop demand, avoid weather-triggered leaching losses, and select verified fertilizer alternatives.</p>
+    </div>
+    <div>
+      <a href="{{ url_for('resources_page') }}" class="btn btn-outline-success btn-sm">
+        <i class="fa-solid fa-map-location-dot me-1"></i>Find Nearby Fertilizer Dealers
+      </a>
+    </div>
+  </div>
+
+  <!-- Soil Macronutrient Status Gauges -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-3 col-sm-6">
+      <div class="stat-widget">
+        <div class="stat-icon green"><i class="fa-solid fa-leaf"></i></div>
+        <div>
+          <div class="stat-value">{{ nut_info.soil_analysis.nitrogen.value }} <small class="fs-6">kg/ha</small></div>
+          <div class="stat-label">Nitrogen (N) &bull; <span class="badge bg-{{ 'danger' if nut_info.soil_analysis.nitrogen.status == 'LOW' else 'success' }}">{{ nut_info.soil_analysis.nitrogen.status }}</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+      <div class="stat-widget">
+        <div class="stat-icon blue"><i class="fa-solid fa-seedling"></i></div>
+        <div>
+          <div class="stat-value">{{ nut_info.soil_analysis.phosphorus.value }} <small class="fs-6">kg/ha</small></div>
+          <div class="stat-label">Phosphorus (P) &bull; <span class="badge bg-{{ 'danger' if nut_info.soil_analysis.phosphorus.status == 'LOW' else 'success' }}">{{ nut_info.soil_analysis.phosphorus.status }}</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+      <div class="stat-widget">
+        <div class="stat-icon orange"><i class="fa-solid fa-shield-virus"></i></div>
+        <div>
+          <div class="stat-value">{{ nut_info.soil_analysis.potassium.value }} <small class="fs-6">kg/ha</small></div>
+          <div class="stat-label">Potassium (K) &bull; <span class="badge bg-{{ 'danger' if nut_info.soil_analysis.potassium.status == 'LOW' else 'success' }}">{{ nut_info.soil_analysis.potassium.status }}</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 col-sm-6">
+      <div class="stat-widget">
+        <div class="stat-icon purple"><i class="fa-solid fa-flask"></i></div>
+        <div>
+          <div class="stat-value">{{ nut_info.soil_analysis.ph.value }} <small class="fs-6">pH</small></div>
+          <div class="stat-label">Soil Acidity &bull; <span class="badge bg-success">{{ nut_info.soil_analysis.ph.status }}</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Weather & Timing Advisories Banner -->
+  {% if nut_info.advisories %}
+    {% for adv in nut_info.advisories %}
+      <div class="alert alert-{{ 'warning' if adv.level == 'WARNING' else 'info' }} shadow-sm mb-4 d-flex align-items-center">
+        <i class="fa-solid fa-triangle-exclamation fs-3 me-3 flex-shrink-0"></i>
+        <div>
+          <h6 class="fw-bold mb-1">{{ adv.title }}</h6>
+          <p class="mb-0 small">{{ adv.message }}</p>
+        </div>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <!-- Stage Timing Banner -->
+  <div class="card mb-4 border-start border-4 border-success shadow-sm">
+    <div class="card-body p-3">
+      <div class="d-flex align-items-center gap-2 mb-1">
+        <span class="badge bg-success">Stage Guidance</span>
+        <strong class="text-dark">{{ nut_info.crop_name }} &bull; {{ nut_info.crop_stage }} Stage</strong>
+      </div>
+      <p class="small text-secondary mb-0">{{ nut_info.timing_guidance }}</p>
+    </div>
+  </div>
+
+  <!-- Primary Nutrient Recommendations & Verified Alternatives -->
+  <div class="row g-4 mb-4">
+    {% for rec in nut_info.recommendations %}
+      <div class="col-lg-6">
+        <div class="card shadow-sm border-0 h-100">
+          <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 fw-bold">{{ rec.nutrient }} Recommendation</h5>
+            <span class="badge bg-danger-subtle text-danger">{{ rec.status }}</span>
+          </div>
+          <div class="card-body p-4">
+            <p class="text-muted small mb-3">Observed: <strong>{{ rec.observed_value }}</strong></p>
+
+            <!-- Primary Option -->
+            <div class="p-3 bg-light rounded-3 border border-success-subtle mb-3">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="badge bg-success">Primary Option</span>
+                <span class="small fw-semibold text-muted">{{ rec.primary.composition }}</span>
+              </div>
+              <h5 class="fw-bold text-dark mb-1">{{ rec.primary.name }}</h5>
+              <p class="small text-secondary mb-1"><strong>Best For:</strong> {{ rec.primary.best_for }}</p>
+              <small class="text-muted d-block"><i class="fa-solid fa-circle-info me-1 text-primary"></i>{{ rec.primary.precautions }}</small>
+            </div>
+
+            <!-- Alternative Options -->
+            {% if rec.alternatives %}
+              <div class="mt-3">
+                <span class="text-muted small fw-bold text-uppercase d-block mb-2">Agronomically Sound Alternatives (If Unavailable):</span>
+                {% for alt in rec.alternatives %}
+                  <div class="p-2 rounded border mb-2 small bg-white">
+                    <div class="d-flex justify-content-between">
+                      <strong class="text-dark">{{ alt.name }}</strong>
+                      <span class="badge bg-light text-dark border">{{ alt.composition }}</span>
+                    </div>
+                    <div class="text-secondary mt-1">{{ alt.best_for }}</div>
+                    <small class="text-muted d-block mt-1 font-sans">{{ alt.precautions }}</small>
+                  </div>
+                {% endfor %}
+              </div>
+            {% endif %}
+
+            <div class="alert alert-secondary py-2 small mb-0 mt-3" style="font-size:0.75rem;">
+              <i class="fa-solid fa-scale-balanced me-1 text-success"></i>{{ rec.dosage_note }}
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+  <!-- Organic Supplements Section -->
+  <div class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-white py-3">
+      <h5 class="mb-0 fw-bold"><i class="fa-solid fa-recycle text-success me-2"></i>Soil Organic Carbon & Bio-Supplements</h5>
+    </div>
+    <div class="card-body p-4">
+      <div class="row g-3">
+        {% for org in nut_info.organic_supplements %}
+          <div class="col-md-6">
+            <div class="p-3 bg-light rounded-3 border h-100">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <h6 class="fw-bold mb-0 text-dark">{{ org.name }}</h6>
+                <span class="badge bg-success-subtle text-success">{{ org.category }}</span>
+              </div>
+              <small class="text-muted d-block mb-2">{{ org.composition }}</small>
+              <p class="small text-secondary mb-1">{{ org.best_for }}</p>
+              <small class="text-muted d-block font-sans"><i class="fa-solid fa-check text-success me-1"></i>{{ org.precautions }}</small>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="card-footer bg-light p-3 small text-muted">
+      <i class="fa-solid fa-shield-halved text-success me-1"></i>{{ nut_info.safe_usage_disclaimer }}
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block title %}AgriWise AI | History{% endblock %}
+{% block content %}
+<div class="row g-4">
+  <div class="col-lg-6">
+    <div class="card shadow-sm border-0 rounded-4 p-4 h-100">
+      <h3 class="mb-3">Crop Recommendations</h3>
+      {% if recommendations %}
+        <div class="list-group">
+          {% for item in recommendations %}
+            <div class="list-group-item">
+              <div class="d-flex justify-content-between">
+                <strong>{{ item.recommended_crop }}</strong>
+                <span class="badge bg-success-subtle text-success">{{ item.confidence }}%</span>
+              </div>
+              <small>Farmer-selected crop: <strong>{{ item.selected_crop or 'Not selected' }}</strong></small><br>
+              <small class="text-muted">{{ item.created_at }}</small>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="text-muted mb-0">No recommendations saved yet.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="card shadow-sm border-0 rounded-4 p-4 h-100">
+      <h3 class="mb-3">Crop Cycles</h3>
+      {% if cycles %}
+        <div class="list-group">
+          {% for cycle in cycles %}
+            <div class="list-group-item">
+              <div class="d-flex justify-content-between">
+                <strong>{{ cycle.crop_name }}</strong>
+                <span class="badge bg-info text-dark">{{ cycle.status }}</span>
+              </div>
+              <small class="text-muted">{{ cycle.sowing_date }} - {{ cycle.expected_harvest_date }}</small>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="text-muted mb-0">No crop cycle created yet.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

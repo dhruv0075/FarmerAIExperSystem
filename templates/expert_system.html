@@ -1,0 +1,466 @@
+{% extends 'base.html' %}
+{% block title %}Expert System Inference Engine — AgriWise AI{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+  <!-- Header -->
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+    <div>
+      <span class="badge bg-danger-subtle text-danger px-3 py-1 rounded-pill fw-semibold mb-1">
+        <i class="fa-solid fa-brain me-1"></i>Artificial Intelligence & Expert Systems (AIES)
+      </span>
+      <h1 class="h3 fw-bold mb-1">Forward-Chaining Expert System Engine</h1>
+      <p class="text-muted small mb-0">
+        Deterministic production-rule inference cycle with working memory facts, conflict resolution, and closed-loop farmer feedback.
+      </p>
+    </div>
+    <div>
+      <a href="#simulator" class="btn btn-outline-danger btn-sm">
+        <i class="fa-solid fa-flask-vial me-1"></i>Try Dynamic Viva Simulator
+      </a>
+    </div>
+  </div>
+
+  <!-- Inference Architecture Flowchart -->
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white py-3 border-bottom">
+      <h5 class="mb-0 fw-bold"><i class="fa-solid fa-diagram-project text-danger me-2"></i>Forward-Chaining Inference Architecture</h5>
+    </div>
+    <div class="card-body p-4">
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 text-center">
+        <div class="p-3 border rounded-3 bg-light flex-grow-1" style="min-width: 140px;">
+          <i class="fa-solid fa-database text-primary fs-3 mb-2"></i>
+          <h6 class="fw-bold mb-1 small">1. Assert Facts</h6>
+          <span class="text-muted" style="font-size: 0.72rem;">Sensors, Weather, Soil & Confirmed Actions</span>
+        </div>
+        <div class="text-muted fs-4 d-none d-md-block">&rarr;</div>
+        <div class="p-3 border rounded-3 bg-light flex-grow-1" style="min-width: 140px;">
+          <i class="fa-solid fa-filter text-info fs-3 mb-2"></i>
+          <h6 class="fw-bold mb-1 small">2. Pattern Match</h6>
+          <span class="text-muted" style="font-size: 0.72rem;">Match IF conditions against Knowledge Base</span>
+        </div>
+        <div class="text-muted fs-4 d-none d-md-block">&rarr;</div>
+        <div class="p-3 border rounded-3 bg-light flex-grow-1" style="min-width: 140px;">
+          <i class="fa-solid fa-scale-balanced text-warning fs-3 mb-2"></i>
+          <h6 class="fw-bold mb-1 small">3. Conflict Resolution</h6>
+          <span class="text-muted" style="font-size: 0.72rem;">Prioritize rules (Safety &gt; Lockout &gt; Agronomy)</span>
+        </div>
+        <div class="text-muted fs-4 d-none d-md-block">&rarr;</div>
+        <div class="p-3 border rounded-3 bg-light flex-grow-1" style="min-width: 140px;">
+          <i class="fa-solid fa-bullhorn text-danger fs-3 mb-2"></i>
+          <h6 class="fw-bold mb-1 small">4. Fire Agenda</h6>
+          <span class="text-muted" style="font-size: 0.72rem;">Generate explainable THEN advisories</span>
+        </div>
+        <div class="text-muted fs-4 d-none d-md-block">&rarr;</div>
+        <div class="p-3 border rounded-3 bg-light flex-grow-1" style="min-width: 140px;">
+          <i class="fa-solid fa-circle-check text-success fs-3 mb-2"></i>
+          <h6 class="fw-bold mb-1 small">5. Closed Loop</h6>
+          <span class="text-muted" style="font-size: 0.72rem;">Farmer confirmation updates working memory</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4 mb-4">
+    <!-- LEFT: Working Memory Facts -->
+    <div class="col-lg-5">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+          <h5 class="mb-0 fw-bold"><i class="fa-solid fa-microchip text-primary me-2"></i>Working Memory Facts</h5>
+          <span class="badge bg-primary-subtle text-primary">{{ expert_data.facts|length if expert_data and expert_data.facts else 9 }} Asserted Facts</span>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 small">
+              <thead class="table-light">
+                <tr>
+                  <th>Fact ID</th>
+                  <th>Attribute</th>
+                  <th>Asserted Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>WMF-01</code></td>
+                  <td>Active Crop</td>
+                  <td><strong>{{ expert_data.facts.crop if expert_data else (cycle.crop_name if cycle else 'Not started') }}</strong></td>
+                </tr>
+                <tr>
+                  <td><code>WMF-02</code></td>
+                  <td>Growth Stage</td>
+                  <td><span class="badge bg-light text-dark border">{{ expert_data.facts.crop_stage if expert_data else (cycle.current_stage if cycle else 'Vegetative') }}</span></td>
+                </tr>
+                <tr>
+                  <td><code>WMF-03</code></td>
+                  <td>Ambient Temperature</td>
+                  <td>{{ expert_data.facts.current_temperature_c if expert_data else (weather.temperature or 28.0) }} °C</td>
+                </tr>
+                <tr>
+                  <td><code>WMF-04</code></td>
+                  <td>Relative Humidity</td>
+                  <td>{{ expert_data.facts.current_humidity_pct if expert_data else (weather.humidity or 65.0) }} %</td>
+                </tr>
+                <tr>
+                  <td><code>WMF-05</code></td>
+                  <td>Wind Speed</td>
+                  <td>{{ expert_data.facts.current_wind_speed_kmh if expert_data else (weather.wind_speed or 10.0) }} km/h</td>
+                </tr>
+                <tr>
+                  <td><code>WMF-06</code></td>
+                  <td>Rain Probability</td>
+                  <td>{{ expert_data.facts.current_rain_prob_pct if expert_data else (weather.rain_probability or 10.0) }} %</td>
+                </tr>
+                <tr>
+                  <td><code>WMF-07</code></td>
+                  <td>48h Forecast Rain</td>
+                  <td>{{ expert_data.facts.forecast_rain_next_48h_mm if expert_data else 0.0 }} mm</td>
+                </tr>
+                <tr>
+                  <td><code>WMF-08</code></td>
+                  <td>Soil N / P / K</td>
+                  <td>
+                    {% if expert_data and expert_data.facts %}
+                      {{ expert_data.facts.soil_nitrogen_kgha }} / {{ expert_data.facts.soil_phosphorus_kgha }} / {{ expert_data.facts.soil_potassium_kgha }} kg/ha
+                    {% elif soil %}
+                      {{ soil.nitrogen or '—' }} / {{ soil.phosphorus or '—' }} / {{ soil.potassium or '—' }} kg/ha
+                    {% else %}
+                      Not recorded
+                    {% endif %}
+                  </td>
+                </tr>
+                <tr>
+                  <td><code>WMF-09</code></td>
+                  <td>Measured Moisture</td>
+                  <td>
+                    {% if expert_data and expert_data.facts.soil_moisture_pct is not none %}
+                      {{ expert_data.facts.soil_moisture_pct }} %
+                    {% elif soil and soil.moisture is not none %}
+                      {{ soil.moisture }} %
+                    {% else %}
+                      <em>Sensor unrecorded</em>
+                    {% endif %}
+                  </td>
+                </tr>
+                <tr>
+                  <td><code>WMF-10</code></td>
+                  <td>Last Irrigation Age</td>
+                  <td>
+                    {% if expert_data and expert_data.facts.hours_since_last_irrigation is not none %}
+                      <span class="badge bg-info-subtle text-info">{{ expert_data.facts.hours_since_last_irrigation }}h ago</span>
+                    {% else %}
+                      <span class="text-muted">None confirmed</span>
+                    {% endif %}
+                  </td>
+                </tr>
+                <tr>
+                  <td><code>WMF-11</code></td>
+                  <td>Last Fertilizer Age</td>
+                  <td>
+                    {% if expert_data and expert_data.facts.hours_since_last_fertilizer is not none %}
+                      <span class="badge bg-info-subtle text-info">{{ expert_data.facts.hours_since_last_fertilizer }}h ago</span>
+                    {% else %}
+                      <span class="text-muted">None confirmed</span>
+                    {% endif %}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="p-3 bg-light border-top small text-muted">
+            <i class="fa-solid fa-lock text-success me-1"></i><strong>Closed-Loop Property:</strong> Only completed farmer activities enter working memory as confirmed actions. Pending or skipped activities are never assumed.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Production Rules Evaluated -->
+    <div class="col-lg-7">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+          <h5 class="mb-0 fw-bold"><i class="fa-solid fa-list-check text-success me-2"></i>Production Rules Evaluation Trace</h5>
+          <span class="badge bg-light text-dark border">Forward-Chaining Agenda</span>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 small">
+              <thead class="table-light">
+                <tr>
+                  <th>Rule ID</th>
+                  <th>Rule Name</th>
+                  <th>Condition (IF)</th>
+                  <th>Evaluation Detail</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% if expert_data and expert_data.rules_evaluated %}
+                  {% for r in expert_data.rules_evaluated %}
+                    <tr class="{{ 'table-success' if r.condition_satisfied else '' }}">
+                      <td><code>{{ r.rule_id }}</code></td>
+                      <td><strong>{{ r.name }}</strong></td>
+                      <td><span class="text-muted">{{ r.rule_id }}</span></td>
+                      <td><code>{{ r.evaluation_detail }}</code></td>
+                      <td>
+                        {% if r.condition_satisfied %}
+                          <span class="badge bg-success"><i class="fa-solid fa-check me-1"></i>MATCH</span>
+                        {% else %}
+                          <span class="badge bg-secondary-subtle text-secondary">NO MATCH</span>
+                        {% endif %}
+                      </td>
+                    </tr>
+                  {% endfor %}
+                {% else %}
+                  <tr>
+                    <td><code>RULE_01</code></td>
+                    <td>High Wind Spraying Restriction</td>
+                    <td><code>wind &gt; 25 km/h</code></td>
+                    <td>Evaluated against current wind</td>
+                    <td><span class="badge bg-secondary-subtle text-secondary">Evaluated</span></td>
+                  </tr>
+                  <tr>
+                    <td><code>RULE_03</code></td>
+                    <td>Rain Forecast Irrigation Postponement</td>
+                    <td><code>rain_prob &gt; 70% AND rain &gt; 10mm</code></td>
+                    <td>Weather forecast match</td>
+                    <td><span class="badge bg-secondary-subtle text-secondary">Evaluated</span></td>
+                  </tr>
+                  <tr>
+                    <td><code>RULE_04</code></td>
+                    <td>Recent Irrigation Lockout</td>
+                    <td><code>hours_since_irrigation &lt; 24h</code></td>
+                    <td>Closed-loop activity match</td>
+                    <td><span class="badge bg-secondary-subtle text-secondary">Evaluated</span></td>
+                  </tr>
+                  <tr>
+                    <td><code>RULE_06</code></td>
+                    <td>Fungal Microclimate Disease Risk</td>
+                    <td><code>humidity &gt; 85% AND 16-30°C</code></td>
+                    <td>Microclimate match</td>
+                    <td><span class="badge bg-secondary-subtle text-secondary">Evaluated</span></td>
+                  </tr>
+                {% endif %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Conflict Resolution & Fired Rules -->
+  <div class="row g-4 mb-4">
+    <!-- Conflict Resolution Box -->
+    <div class="col-lg-5">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-white py-3 border-bottom">
+          <h5 class="mb-0 fw-bold"><i class="fa-solid fa-scale-balanced text-warning me-2"></i>Conflict Resolution Strategies</h5>
+        </div>
+        <div class="card-body p-3">
+          {% if expert_data and expert_data.conflict_resolutions %}
+            {% for cr in expert_data.conflict_resolutions %}
+              <div class="p-3 border rounded-3 bg-warning-subtle mb-3">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                  <span class="badge bg-warning text-dark fw-bold">ACTIVE CONFLICT RESOLVED</span>
+                </div>
+                <strong class="d-block small mb-1">{{ cr.conflict }}</strong>
+                <p class="text-muted small mb-2"><strong>Strategy:</strong> {{ cr.resolution_principle }}</p>
+                <div class="p-2 bg-white rounded-2 border small">
+                  <strong>Outcome:</strong> {{ cr.chosen_action }}
+                </div>
+              </div>
+            {% endfor %}
+          {% else %}
+            <div class="p-3 bg-light rounded-3 border small">
+              <strong class="d-block mb-1 text-success"><i class="fa-solid fa-shield-check me-1"></i>No Active Rule Conflicts</strong>
+              <p class="text-muted mb-0">
+                When multiple rules compete (e.g., Soil Dry [RULE_05] vs Recent Irrigation [RULE_04] vs Incoming Rain [RULE_03]), the engine applies <strong>Priority Ordering</strong> (Safety &gt; Weather Lockout &gt; Physiological Need) and <strong>Recency Refractory Periods</strong> to prevent over-intervention.
+              </p>
+            </div>
+          {% endif %}
+          <div class="mt-3">
+            <h6 class="fw-bold small mb-2">Conflict Resolution Hierarchy:</h6>
+            <ol class="small text-muted ps-3 mb-0">
+              <li><strong>Physical & Chemical Safety:</strong> High wind locks out foliar spraying.</li>
+              <li><strong>Natural Moisture Priority:</strong> Impending rainfall supersedes manual irrigation.</li>
+              <li><strong>Closed-Loop Refractory:</strong> Confirmed completed operations lock out duplicate applications.</li>
+              <li><strong>Agronomic Need:</strong> Baseline nutrient and moisture replenishment.</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Fired Rules & Deduced Advisories -->
+    <div class="col-lg-7">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+          <h5 class="mb-0 fw-bold"><i class="fa-solid fa-bullhorn text-danger me-2"></i>Fired Rules & Deduced Advisories</h5>
+          <span class="badge bg-success-subtle text-success">THEN Conclusions</span>
+        </div>
+        <div class="card-body p-3">
+          {% if rules and rules|length > 0 %}
+            <div class="d-flex flex-column gap-3">
+              {% for adv in rules %}
+                <div class="p-3 border rounded-3 bg-light border-start border-4 border-{{ 'danger' if adv.severity in ['URGENT', 'CRITICAL'] else ('warning' if adv.severity == 'WARNING' else ('info' if adv.severity == 'CAUTION' else 'success')) }}">
+                  <div class="d-flex justify-content-between align-items-start mb-1">
+                    <strong class="text-dark">{{ adv.title }}</strong>
+                    <span class="badge bg-{{ 'danger' if adv.severity in ['URGENT', 'CRITICAL'] else ('warning text-dark' if adv.severity == 'WARNING' else 'info') }}">
+                      {{ adv.severity }}
+                    </span>
+                  </div>
+                  <p class="text-secondary small mb-2">{{ adv.recommendation or adv.message }}</p>
+                  {% if adv.reason %}
+                    <div class="p-2 bg-white rounded border small text-muted">
+                      <strong>Derivation / Evidence:</strong> {{ adv.reason }}
+                    </div>
+                  {% endif %}
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="p-4 text-center text-muted">
+              <i class="fa-regular fa-circle-check fs-2 text-success mb-2"></i>
+              <p class="mb-0 small">No active advisories generated. Field conditions are in physiological equilibrium.</p>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dynamic Viva / Examiner Interactive Simulator -->
+  <div class="card border-0 shadow-sm mb-4" id="simulator">
+    <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+      <div>
+        <h5 class="mb-0 fw-bold"><i class="fa-solid fa-flask-vial text-danger me-2"></i>Dynamic Forward-Chaining Viva Simulator</h5>
+        <small class="text-muted">Simulate hypotheticals (e.g. inject high wind, dry soil, approaching storm, or recent irrigation) to observe real-time forward chaining inference.</small>
+      </div>
+      <span class="badge bg-danger">Viva Demonstration Tool</span>
+    </div>
+    <div class="card-body p-4">
+      <form id="simForm"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <div class="row g-3">
+          <div class="col-md-3">
+            <label class="form-label small fw-semibold">Wind Speed (km/h)</label>
+            <input type="number" step="1" class="form-control form-control-sm" id="simWind" value="28">
+            <small class="text-muted" style="font-size:0.7rem;">&gt; 25 triggers RULE_01 Spray Lockout</small>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label small fw-semibold">Soil Moisture (%)</label>
+            <input type="number" step="1" class="form-control form-control-sm" id="simMoist" value="22">
+            <small class="text-muted" style="font-size:0.7rem;">&lt; 30 triggers RULE_05 Irrigation Need</small>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label small fw-semibold">48h Rain Forecast (mm)</label>
+            <input type="number" step="1" class="form-control form-control-sm" id="simRain" value="18">
+            <small class="text-muted" style="font-size:0.7rem;">&gt; 12 triggers RULE_03 Irrigation Delay</small>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label small fw-semibold">Hours Since Last Irrigation</label>
+            <input type="number" step="1" class="form-control form-control-sm" id="simIrrHours" value="12">
+            <small class="text-muted" style="font-size:0.7rem;">&lt; 24 triggers RULE_04 Irrigation Lockout</small>
+          </div>
+        </div>
+        <div class="mt-3 text-end">
+          <button type="button" class="btn btn-danger btn-sm px-4 shadow-sm" id="btnRunSim">
+            <i class="fa-solid fa-play me-1"></i>Execute Forward Chaining Inference Cycle
+          </button>
+        </div>
+      </form>
+
+      <!-- Live Simulator Output Box -->
+      <div id="simResults" class="mt-4 p-3 bg-light rounded-3 border d-none">
+        <h6 class="fw-bold mb-3 text-danger"><i class="fa-solid fa-terminal me-2"></i>Inference Engine Trace Output</h6>
+        <div id="simTraceContent"></div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('btnRunSim').addEventListener('click', function() {
+  const wind = parseFloat(document.getElementById('simWind').value) || 0;
+  const moist = parseFloat(document.getElementById('simMoist').value) || 0;
+  const rain = parseFloat(document.getElementById('simRain').value) || 0;
+  const irrHours = parseFloat(document.getElementById('simIrrHours').value) || 0;
+
+  const traceBox = document.getElementById('simResults');
+  const content = document.getElementById('simTraceContent');
+  traceBox.classList.remove('d-none');
+
+  let fired = [];
+  let conflicts = [];
+
+  // RULE_01: High Wind
+  if (wind > 25.0) {
+    fired.push({
+      rule: 'RULE_01: High Wind Spraying Restriction',
+      type: 'Safety',
+      severity: 'WARNING',
+      reason: `Wind speed (${wind.toFixed(1)} km/h) exceeds safe threshold (25 km/h). Foliar agrochemical application locked out.`
+    });
+  }
+
+  // Conflict: Moisture Deficit vs Recent Irrigation vs Incoming Rain
+  const drySoil = moist < 30.0;
+  const irrigatedRecently = irrHours < 24.0;
+  const incomingRain = rain > 12.0;
+
+  if (drySoil && irrigatedRecently) {
+    conflicts.push({
+      conflict: `Soil moisture is low (${moist}%), but irrigation was confirmed ${irrHours.toFixed(1)}h ago.`,
+      resolution: `Closed-loop refractory period: RULE_04 locks out repeat irrigation to prevent root asphyxiation.`
+    });
+    fired.push({
+      rule: 'RULE_04: Recent Irrigation Lockout',
+      type: 'Irrigation',
+      severity: 'INFO',
+      reason: `Confirmed irrigation ${irrHours.toFixed(1)}h ago. Suppressed duplicate watering task.`
+    });
+  } else if (drySoil && incomingRain) {
+    conflicts.push({
+      conflict: `Soil moisture is low (${moist}%), but heavy rain (${rain.toFixed(1)} mm) is forecast within 48 hours.`,
+      resolution: `Weather forecast priority: RULE_03 postpones irrigation to conserve groundwater and avoid waterlogging.`
+    });
+    fired.push({
+      rule: 'RULE_03: Rain Forecast Irrigation Postponement',
+      type: 'Irrigation',
+      severity: 'INFO',
+      reason: `Impending rain (${rain.toFixed(1)} mm) will naturally replenish soil moisture.`
+    });
+  } else if (drySoil) {
+    fired.push({
+      rule: 'RULE_05: Soil Moisture Deficit Irrigation Needed',
+      type: 'Irrigation',
+      severity: 'CAUTION',
+      reason: `Soil moisture (${moist}%) below 30% threshold with no rain imminent. Irrigation task scheduled.`
+    });
+  }
+
+  let html = '';
+  if (conflicts.length > 0) {
+    html += '<div class="alert alert-warning py-2 mb-3 small"><strong class="d-block"><i class="fa-solid fa-scale-balanced me-1"></i>Conflict Resolution Triggered:</strong>';
+    conflicts.forEach(c => {
+      html += `<div class="mt-1">&bull; <strong>Conflict:</strong> ${c.conflict}<br>&bull; <strong>Resolution Principle:</strong> ${c.resolution}</div>`;
+    });
+    html += '</div>';
+  }
+
+  html += '<div class="list-group">';
+  fired.forEach(f => {
+    html += `<div class="list-group-item list-group-item-action p-3">
+      <div class="d-flex justify-content-between align-items-center mb-1">
+        <strong class="text-danger">${f.rule}</strong>
+        <span class="badge bg-dark">${f.severity}</span>
+      </div>
+      <p class="small text-muted mb-0">${f.reason}</p>
+    </div>`;
+  });
+  html += '</div>';
+
+  content.innerHTML = html;
+});
+</script>
+{% endblock %}

@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% block title %}AgriWise AI | Crop Lifecycle{% endblock %}
+{% block content %}
+<div class="row g-4">
+  <div class="col-lg-5">
+    <div class="card shadow-sm border-0 rounded-4 p-4">
+      <h3 class="mb-3">Start Crop Lifecycle</h3>
+      <form method="POST"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <div class="mb-3">
+          <label class="form-label">Crop</label>
+          <select name="crop_name" class="form-select">
+            {% if selected_crop %}
+              <option selected>{{ selected_crop }}</option>
+            {% endif %}
+            {% for c in all_crops or ['Rice', 'Wheat', 'Maize', 'Cotton', 'Chickpea', 'Pigeon Pea', 'Groundnut', 'Tomato', 'Onion'] %}
+              {% if not selected_crop or c|lower != selected_crop|lower %}
+                <option>{{ c }}</option>
+              {% endif %}
+            {% endfor %}
+          </select>
+
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Sowing Date</label>
+          <input type="date" name="sowing_date" class="form-control" required>
+        </div>
+        <button type="submit" class="btn btn-success w-100">Start Lifecycle</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="col-lg-7">
+    <div class="card shadow-sm border-0 rounded-4 p-4">
+      <h3 class="mb-3">Lifecycle Overview</h3>
+      {% if cycle %}
+        <div class="mb-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <h4>{{ cycle.crop_name }}</h4>
+            <span class="badge bg-success text-white">{{ cycle.current_stage }}</span>
+          </div>
+          <p class="text-muted mb-2">Sowing Date: {{ cycle.sowing_date }}</p>
+          <p class="text-muted mb-3">Expected Harvest: {{ cycle.expected_harvest_date }}</p>
+          <div class="progress" style="height: 18px;">
+            <div class="progress-bar bg-success" role="progressbar" style="width: {{ cycle.progress }}%;">{{ cycle.progress }}%</div>
+          </div>
+        </div>
+
+        <div class="row g-3 mt-2">
+          <div class="col-md-6">
+            <div class="small text-muted">Days in Current Stage</div>
+            <strong>{{ cycle.days_in_current_stage }}</strong>
+          </div>
+          <div class="col-md-6">
+            <div class="small text-muted">Days Until Next Stage</div>
+            <strong>{{ cycle.days_until_next_stage }} · {{ cycle.next_stage }}</strong>
+          </div>
+        </div>
+
+        <div class="lifecycle-track mt-4" aria-label="Estimated crop stages">
+          {% for stage in cycle.stage_timeline %}
+            <div class="lifecycle-step {{ 'is-current' if stage.status == 'CURRENT' else 'is-complete' if stage.status == 'COMPLETED' else '' }}">
+              <span class="lifecycle-marker">{{ '✓' if stage.status == 'COMPLETED' else '●' if stage.status == 'CURRENT' else loop.index }}</span>
+              <span><strong>{{ stage.name }}</strong><small>{{ stage.status|title }} · {{ stage.duration_days }} days configured</small></span>
+            </div>
+          {% endfor %}
+        </div>
+        <p class="small text-muted mt-2">Stage dates are estimated from configured durations and sowing date; they are not field-observed growth measurements.</p>
+
+        <div class="mt-4">
+          <h5>Stage action plan</h5>
+          <div class="stage-actions">
+            {% for item in cycle.activities %}
+              <div class="stage-action"><span>{{ item }}</span><form method="post" action="{{ url_for('create_activity') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="title" value="{{ item }}"><input type="hidden" name="activity_type" value="Field inspection"><input type="hidden" name="description" value="Recommended for the {{ cycle.current_stage }} stage."><input type="hidden" name="due_date" value="{{ today }}"><button class="btn btn-sm btn-outline-success" type="submit">Add as pending</button></form></div>
+            {% endfor %}
+          </div>
+        </div>
+      {% else %}
+        <p class="text-muted mb-0">No crop lifecycle started yet.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

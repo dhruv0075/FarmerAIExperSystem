@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block title %}AgriWise AI | Farm Profile{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <div class="card shadow-sm border-0 rounded-4 p-4">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Farm Profile</h2>
+        <button class="btn btn-outline-success" type="button" id="detect-location-btn">Detect My Location</button>
+      </div>
+      <form method="POST"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">Farm Name</label>
+            <input type="text" name="farm_name" class="form-control" value="{{ farm.farm_name if farm else '' }}" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Location Name</label>
+            <input type="text" name="location_name" class="form-control" value="{{ farm.location_name if farm else '' }}">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Area (acres)</label>
+            <input type="number" step="0.01" name="area" class="form-control" value="{{ farm.area if farm else '' }}" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Soil Type</label>
+            <input type="text" name="soil_type" class="form-control" value="{{ farm.soil_type if farm else '' }}">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Water Source</label>
+            <input type="text" name="water_source" class="form-control" value="{{ farm.water_source if farm else '' }}">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Latitude</label>
+            <input type="number" step="any" min="-90" max="90" name="latitude" id="latitude-field" class="form-control" value="{{ farm.latitude if farm else '' }}">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Longitude</label>
+            <input type="number" step="any" min="-180" max="180" name="longitude" id="longitude-field" class="form-control" value="{{ farm.longitude if farm else '' }}">
+          </div>
+        </div>
+        <div class="mt-4 d-flex gap-2">
+          <button type="submit" class="btn btn-success">Save Farm Details</button>
+          <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">Back to Dashboard</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/location.js') }}"></script>
+{% endblock %}

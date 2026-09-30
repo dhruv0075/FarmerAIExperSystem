@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}Report a Crop Problem — AgriWise AI{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0" style="max-width: 860px;">
+  <div class="mb-4">
+    <h2 class="h3 fw-bold mb-1"><i class="fa-solid fa-bug text-danger me-2"></i>Report a Crop Problem & Diagnostic AI</h2>
+    <p class="text-muted small mb-0">Submit observed plant anomalies, symptoms, and optional photos for multimodal computer-vision screening and weather-aware guidance.</p>
+  </div>
+
+  <div class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-white py-3">
+      <h5 class="mb-0 fw-bold"><i class="fa-solid fa-clipboard-question text-success me-2"></i>Field Symptom Intake</h5>
+    </div>
+    <div class="card-body p-4">
+      <form method="POST" action="{{ url_for('report_problem_page') }}" enctype="multipart/form-data"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold">Affected Crop <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" name="crop" value="{{ default_crop }}" placeholder="e.g. Rice, Maize, Tomato" required>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold">Plant Part Affected <span class="text-danger">*</span></label>
+            <select class="form-select" name="plant_part" required>
+              <option value="Leaf" selected>Leaf / Foliage</option>
+              <option value="Stem">Stem / Shoots</option>
+              <option value="Root">Root / Crown</option>
+              <option value="Flower">Flower / Inflorescence</option>
+              <option value="Fruit">Fruit / Grain Earhead</option>
+              <option value="Whole Plant">Whole Plant</option>
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold">Problem Category (If Suspected)</label>
+            <select class="form-select" name="problem_category">
+              <option value="Unknown" selected>Not Sure / Unknown</option>
+              <option value="Fungal">Fungal Infection (Spots, Mildew, Blight)</option>
+              <option value="Bacterial">Bacterial Blight / Canker</option>
+              <option value="Viral">Viral (Yellowing, Leaf Curl)</option>
+              <option value="Pest">Insect / Pest Attack (Chewing, Sucking)</option>
+              <option value="Nutrient">Nutrient Deficiency (Chlorosis, Stunting)</option>
+              <option value="Weather">Weather Damage (Hail, Sunscald, Frost)</option>
+            </select>
+          </div>
+
+          <div class="col-md-3 col-6">
+            <label class="form-label small fw-semibold">Duration (Days)</label>
+            <input type="number" min="1" max="100" class="form-control" name="duration_days" value="3">
+          </div>
+
+          <div class="col-md-3 col-6">
+            <label class="form-label small fw-semibold">Affected Area %</label>
+            <input type="number" min="1" max="100" class="form-control" name="affected_area_pct" value="15">
+          </div>
+
+          <div class="col-md-12">
+            <label class="form-label small fw-semibold">Detailed Symptoms Observed <span class="text-danger">*</span></label>
+            <textarea class="form-control" name="symptoms" rows="3" placeholder="Describe lesion shapes, spot colors, presence of pests, wilting, or yellowing halos..." required>Spindle-shaped grey lesions with brown borders appearing on leaf surface.</textarea>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold">Severity Estimate</label>
+            <select class="form-select" name="severity">
+              <option value="Mild">Mild (Isolated plants only)</option>
+              <option value="Moderate" selected>Moderate (Noticeable patches across plot)</option>
+              <option value="Severe">Severe (Rapidly spreading across field)</option>
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold">Upload Plant / Leaf Photo <span class="text-muted">(Max 5MB)</span></label>
+            <input type="file" class="form-control" name="photo" accept=".jpg,.jpeg,.png,.webp">
+            <small class="text-muted" style="font-size:0.75rem;">Supported formats: JPG, PNG, WEBP. High-resolution closeup recommended.</small>
+          </div>
+
+          <div class="col-12">
+            <label class="form-label small fw-semibold">Additional Agronomic Notes</label>
+            <textarea class="form-control" name="farmer_notes" rows="2" placeholder="e.g. Applied nitrogen fertilizer 4 days ago; recent rains occurred yesterday."></textarea>
+          </div>
+        </div>
+
+        <div class="alert alert-info py-2 small mt-4 mb-3">
+          <i class="fa-solid fa-circle-info me-1"></i><strong>Diagnostic Disclaimer:</strong> AgriWise AI delivers screening decision support by correlating visual features, symptoms, and microclimate records. It does not replace certified laboratory pathology.
+        </div>
+
+        <div class="text-center mt-4">
+          <button type="submit" class="btn btn-danger btn-lg px-5 shadow-sm">
+            <i class="fa-solid fa-microscope me-2"></i>Submit & Run AI Diagnostic Screening
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Past Problem Reports History -->
+  {% if past_reports %}
+    <div class="card shadow-sm border-0">
+      <div class="card-header bg-white py-3">
+        <h5 class="mb-0 fw-bold"><i class="fa-solid fa-clock-rotate-left text-muted me-2"></i>Previous Problem Reports</h5>
+      </div>
+      <div class="card-body p-0">
+        <div class="list-group list-group-flush">
+          {% for r in past_reports %}
+            <a href="{{ url_for('disease_result_page', report_id=r.id) }}" class="list-group-item list-group-item-action p-3 d-flex justify-content-between align-items-center">
+              <div>
+                <span class="badge bg-light text-dark border me-1">{{ r.crop }}</span>
+                <span class="badge bg-{{ 'danger' if r.severity == 'Severe' else ('warning text-dark' if r.severity == 'Moderate' else 'info') }} me-1">{{ r.severity }}</span>
+                <strong class="d-block mt-1">{{ r.symptoms|truncate(80) }}</strong>
+                <small class="text-muted">Reported on {{ r.created_at }} &bull; Part: {{ r.plant_part }}</small>
+              </div>
+              <div>
+                <span class="btn btn-sm btn-outline-secondary">View Diagnosis &rarr;</span>
+              </div>
+            </a>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

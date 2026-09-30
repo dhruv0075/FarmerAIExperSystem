@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+{% block title %}AI Crop Planning & Suitability — AgriWise AI{% endblock %}
+
+{% block content %}
+<div class="container py-2" style="max-width: 900px;">
+  <div class="mb-4">
+    <span class="badge bg-success-subtle text-success px-3 py-1 rounded-pill fw-semibold mb-1">
+      <i class="fa-solid fa-seedling me-1"></i>Two-Level Decision Architecture
+    </span>
+    <h2 class="h3 fw-bold mb-1">AI Crop Recommendation & Planning</h2>
+    <p class="text-muted small mb-0">
+      Integrates Random Forest machine learning classification (Level 1) with multi-factor agronomic, weather, market, and farm suitability ranking (Level 2).
+    </p>
+  </div>
+
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <h5 class="mb-0 fw-bold"><i class="fa-solid fa-sliders text-success me-2"></i>Soil & Ambient Microclimate Parameters</h5>
+      <button type="button" class="btn btn-sm btn-outline-success" id="btnAutofillWeather">
+        <i class="fa-solid fa-cloud-sun me-1"></i>Autofill Live Weather from Farm Location
+      </button>
+    </div>
+    <div class="card-body p-4">
+      <form method="POST" action="{{ url_for('crop_recommendation') }}" id="cropForm"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <!-- 1. SOIL NUTRIENTS -->
+        <h6 class="fw-bold text-success mb-3"><i class="fa-solid fa-vial me-2"></i>1. Soil Chemistry & Macronutrients (kg/ha)</h6>
+        <div class="row g-3 mb-4">
+          <div class="col-md-3 col-6">
+            <label class="form-label small fw-semibold">Nitrogen (N) <span class="text-danger">*</span></label>
+            <input type="number" step="0.1" name="nitrogen" class="form-control" value="{{ soil.nitrogen if soil else 75 }}" required>
+            <small class="text-muted" style="font-size: 0.7rem;">Normal: 20 - 120 kg/ha</small>
+          </div>
+          <div class="col-md-3 col-6">
+            <label class="form-label small fw-semibold">Phosphorus (P) <span class="text-danger">*</span></label>
+            <input type="number" step="0.1" name="phosphorus" class="form-control" value="{{ soil.phosphorus if soil else 45 }}" required>
+            <small class="text-muted" style="font-size: 0.7rem;">Normal: 15 - 80 kg/ha</small>
+          </div>
+          <div class="col-md-3 col-6">
+            <label class="form-label small fw-semibold">Potassium (K) <span class="text-danger">*</span></label>
+            <input type="number" step="0.1" name="potassium" class="form-control" value="{{ soil.potassium if soil else 40 }}" required>
+            <small class="text-muted" style="font-size: 0.7rem;">Normal: 20 - 100 kg/ha</small>
+          </div>
+          <div class="col-md-3 col-6">
+            <label class="form-label small fw-semibold">Soil pH <span class="text-danger">*</span></label>
+            <input type="number" step="0.1" min="0" max="14" name="ph" class="form-control" value="{{ soil.ph if soil else 6.5 }}" required>
+            <small class="text-muted" style="font-size: 0.7rem;">Neutral: 6.0 - 7.5</small>
+          </div>
+          <div class="col-md-6 col-12">
+            <label class="form-label small fw-semibold">Soil Moisture (%) <span class="text-muted">(Optional sensor reading)</span></label>
+            <input type="number" step="0.1" min="0" max="100" name="moisture" class="form-control" value="{{ soil.moisture if soil and soil.moisture is not none else '' }}" placeholder="e.g. 35">
+            <small class="text-muted" style="font-size: 0.7rem;">Leave blank if measured sensor data is not available.</small>
+          </div>
+        </div>
+
+        <!-- 2. WEATHER & CLIMATE -->
+        <h6 class="fw-bold text-primary mb-3"><i class="fa-solid fa-cloud-sun-rain me-2"></i>2. Climate & Season Conditions</h6>
+        <div class="row g-3 mb-4">
+          <div class="col-md-4">
+            <label class="form-label small fw-semibold">Temperature (°C) <span class="text-danger">*</span></label>
+            <input type="number" step="0.1" id="inputTemp" name="temperature" class="form-control" value="{{ soil.temperature if soil else 26.5 }}" required>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label small fw-semibold">Relative Humidity (%) <span class="text-danger">*</span></label>
+            <input type="number" step="0.1" min="0" max="100" id="inputHum" name="humidity" class="form-control" value="{{ soil.humidity if soil else 68 }}" required>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label small fw-semibold">Seasonal Rainfall (mm) <span class="text-danger">*</span></label>
+            <input type="number" step="0.1" id="inputRain" name="rainfall" class="form-control" value="{{ soil.rainfall if soil else 140 }}" required>
+          </div>
+        </div>
+
+        <!-- 3. FARM & FARMER PREFERENCES (LEVEL 2 ENGINE) -->
+        <h6 class="fw-bold text-dark mb-3"><i class="fa-solid fa-scale-balanced me-2"></i>3. Level 2 Multi-Factor Preferences</h6>
+        <div class="row g-3 mb-4">
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold">Farmer Risk Preference</label>
+            <select class="form-select" name="risk_preference">
+              <option value="Balanced" selected>Balanced (Standard yield &amp; market price)</option>
+              <option value="Low Risk">Low Risk (Drought tolerant, guaranteed MSP)</option>
+              <option value="High Profit">High Profit (High value cash crops &amp; fruits)</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold">Crop Category Preference</label>
+            <select class="form-select" name="preferred_crop_type">
+              <option value="No preference" selected>All Categories (Best Overall Score)</option>
+              <option value="Food Grains">Food Grains / Cereals (Rice, Maize)</option>
+              <option value="Pulses">Pulses &amp; Legumes (Chickpea, Lentil, Pigeonpeas)</option>
+              <option value="Cash Crops">Cash Crops (Cotton, Jute, Coffee)</option>
+              <option value="Fruits">Horticultural Fruits (Mango, Banana, Grapes, Apple)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="alert alert-info py-2 small mb-4">
+          <i class="fa-solid fa-circle-info me-1"></i><strong>Closed-Loop Persistence:</strong> Running this recommendation will save the latest soil condition snapshot to your farm records.
+        </div>
+
+        <div class="text-center">
+          <button type="submit" class="btn btn-success btn-lg px-5 shadow-sm">
+            <i class="fa-solid fa-wand-magic-sparkles me-2"></i>Generate 2-Level Crop Recommendations
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('btnAutofillWeather').addEventListener('click', function() {
+  const btn = this;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Fetching Open-Meteo...';
+
+  fetch("{{ url_for('api_weather') }}")
+    .then(r => r.json())
+    .then(data => {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-cloud-sun me-1"></i>Autofill Live Weather from Farm Location';
+      if (data.success && data.weather && data.weather.current) {
+        const c = data.weather.current;
+        if (c.temperature !== undefined) document.getElementById('inputTemp').value = c.temperature;
+        if (c.humidity !== undefined) document.getElementById('inputHum').value = c.humidity;
+        if (c.precipitation !== undefined) {
+          // Seasonal proxy estimate from precipitation
+          const rain = parseFloat(c.precipitation) || 0;
+          document.getElementById('inputRain').value = Math.max(rain * 15, 60.0);
+        }
+      } else {
+        alert(data.message || 'Could not fetch live weather. Please check farm coordinates.');
+      }
+    })
+    .catch(err => {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-cloud-sun me-1"></i>Autofill Live Weather from Farm Location';
+      alert('Error fetching weather data: ' + err);
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+
+{% block title %}Today's Farm Plan — AgriWise AI{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+  <!-- Page Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+      <h2 class="h3 fw-bold mb-1"><i class="fa-solid fa-clipboard-check text-success me-2"></i>Today's AgriWise Farm Plan</h2>
+      <p class="text-muted small mb-0">Unified daily decision plan synthesized across weather forecast, lifecycle phase, and activity confirmations.</p>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge bg-white text-dark border px-3 py-2">
+        <i class="fa-regular fa-calendar me-1 text-success"></i>{{ plan.date_today }}
+      </span>
+      <a href="{{ url_for('seven_day_plan_page') }}" class="btn btn-outline-success btn-sm">
+        <i class="fa-regular fa-calendar-days me-1"></i>View 7-Day Plan
+      </a>
+    </div>
+  </div>
+
+  <!-- Condition Index Banner -->
+  <div class="card mb-4 border-0 shadow-sm" style="background: linear-gradient(135deg, #146c43 0%, #198754 100%); color: white;">
+    <div class="card-body p-4">
+      <div class="row align-items-center">
+        <div class="col-md-8">
+          <span class="badge bg-white text-success fw-bold px-3 py-1 mb-2">AGRIWISE DECISION-SUPPORT INDEX</span>
+          <h3 class="fw-bold mb-2">{{ plan.crop_name }} &bull; <span class="fw-normal text-white-50">{{ plan.crop_stage }} Stage</span></h3>
+          <p class="text-white-50 mb-0 small">
+            Farm condition is currently rated at <strong>{{ plan.condition_score }}/100</strong>. Overall farm microclimate risk is 
+            <span class="badge bg-{{ 'danger' if plan.overall_risk_category == 'CRITICAL' else ('warning text-dark' if plan.overall_risk_category == 'HIGH' else 'light text-dark') }}">
+              {{ plan.overall_risk_category }}
+            </span>.
+          </p>
+        </div>
+        <div class="col-md-4 text-md-end text-center mt-3 mt-md-0">
+          <div class="d-inline-flex flex-column align-items-center p-3 rounded-circle bg-white text-dark shadow" style="width: 100px; height: 100px; justify-content: center;">
+            <span class="fs-3 fw-bold text-success" style="line-height: 1;">{{ plan.condition_score|round|int if plan.condition_score is not none else 'Unknown' }}</span>
+            <span style="font-size: 0.65rem;" class="text-muted fw-bold">INDEX</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- LEFT COLUMN: DO FIRST, TODAY & AVOID -->
+    <div class="col-lg-7">
+      <!-- 1. DO FIRST: Top Priority Task -->
+      <div class="card mb-4 border-start border-4 border-danger shadow-sm">
+        <div class="card-body p-4">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <span class="badge bg-danger text-uppercase px-2 py-1"><i class="fa-solid fa-bell me-1"></i>DO FIRST &bull; HIGHEST PRIORITY</span>
+            {% if plan.do_first %}
+              <span class="badge bg-light text-dark border">{{ plan.do_first.category }}</span>
+            {% endif %}
+          </div>
+          {% if plan.do_first %}
+            <h4 class="fw-bold mt-2 mb-2">{{ plan.do_first.title }}</h4>
+            <p class="text-secondary small mb-3">{{ plan.do_first.reason }}</p>
+            {% if plan.do_first.activity_id %}
+              <form method="POST" action="{{ url_for('update_activity_status', activity_id=plan.do_first.activity_id) }}" class="d-inline"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <input type="hidden" name="status" value="COMPLETED">
+                <button type="submit" class="btn btn-success btn-sm px-3 shadow-sm">
+                  <i class="fa-solid fa-check me-1"></i>Mark Task Completed
+                </button>
+              </form>
+            {% else %}
+              <span class="badge bg-info-subtle text-info border">System Guidance Advisory</span>
+            {% endif %}
+          {% else %}
+            <p class="text-muted mb-0">No urgent high-priority interventions required today. Continue normal crop monitoring.</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- 2. TODAY: Scheduled Operations -->
+      <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+          <h5 class="mb-0 fw-bold"><i class="fa-solid fa-list-check text-success me-2"></i>Scheduled Tasks For Today</h5>
+          <a href="{{ url_for('activities_page') }}" class="btn btn-sm btn-link text-success text-decoration-none">Manage All Tasks</a>
+        </div>
+        <div class="card-body p-0">
+          {% if plan.today_tasks %}
+            <div class="list-group list-group-flush">
+              {% for act in plan.today_tasks %}
+                <div class="list-group-item p-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                  <div>
+                    <span class="badge bg-{{ 'danger' if act.urgency == 'URGENT' else ('warning text-dark' if act.urgency == 'IMPORTANT' else 'secondary') }} me-1" style="font-size: 0.65rem;">
+                      {{ act.urgency or 'NORMAL' }}
+                    </span>
+                    <strong class="d-block mt-1">{{ act.title }}</strong>
+                    <small class="text-muted">{{ act.activity_type }} &bull; Due: {{ act.due_date }}</small>
+                  </div>
+                  <div>
+                    <form method="POST" action="{{ url_for('update_activity_status', activity_id=act.id) }}" class="d-inline"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                      <input type="hidden" name="status" value="COMPLETED">
+                      <button type="submit" class="btn btn-sm btn-outline-success">
+                        <i class="fa-solid fa-check me-1"></i>Done
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="p-4 text-center text-muted">
+              <i class="fa-solid fa-calendar-check text-success fs-3 mb-2"></i>
+              <p class="mb-0">No secondary pending operations scheduled for today.</p>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- 3. AVOID: Negative Guidance Engine -->
+      <div class="card mb-4 border-start border-4 border-warning shadow-sm">
+        <div class="card-header bg-white py-3">
+          <h5 class="mb-0 fw-bold text-dark"><i class="fa-solid fa-ban text-warning me-2"></i>AVOID TODAY &bull; Risk Prevention</h5>
+        </div>
+        <div class="card-body p-3">
+          {% if plan.avoid %}
+            <ul class="list-unstyled mb-0">
+              {% for item in plan.avoid %}
+                <li class="mb-2 pb-2 border-bottom last-border-0">
+                  <div class="fw-semibold text-danger"><i class="fa-solid fa-circle-xmark me-2"></i>{{ item.action }}</div>
+                  <small class="text-muted ps-4">{{ item.reason }}</small>
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p class="text-muted mb-0 small"><i class="fa-solid fa-circle-check text-success me-2"></i>No weather-triggered operation restrictions detected today.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN: WATCH, WEATHER & MARKET -->
+    <div class="col-lg-5">
+      <!-- 4. WATCH: Conditions to Monitor -->
+      <div class="card mb-4 shadow-sm border-start border-4 border-info">
+        <div class="card-header bg-white py-3">
+          <h5 class="mb-0 fw-bold"><i class="fa-solid fa-eye text-info me-2"></i>WATCH TODAY</h5>
+        </div>
+        <div class="card-body p-3">
+          <ul class="list-unstyled mb-0">
+            {% for item in plan.watch %}
+              <li class="mb-2 small d-flex align-items-start">
+                <i class="fa-solid fa-triangle-exclamation text-info mt-1 me-2 flex-shrink-0"></i>
+                <span>{{ item }}</span>
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+
+      <!-- 5. WEATHER WIDGET -->
+      <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+          <h5 class="mb-0 fw-bold"><i class="fa-solid fa-cloud-sun text-info me-2"></i>Microclimate Summary</h5>
+          <span class="badge badge-provenance badge-live-weather">Live Open-Meteo</span>
+        </div>
+        <div class="card-body p-3">
+          <div class="row g-2 text-center">
+            <div class="col-3 border-end">
+              <span class="text-muted d-block small">Temp</span>
+              <strong class="fs-5">{{ plan.weather.temperature|round|int if plan.weather.temperature is not none else 'Not available' }}°C</strong>
+            </div>
+            <div class="col-3 border-end">
+              <span class="text-muted d-block small">Rain %</span>
+              <strong class="fs-5">{{ plan.weather.rain_probability|round|int if plan.weather.rain_probability is not none else 'Not available' }}%</strong>
+            </div>
+            <div class="col-3 border-end">
+              <span class="text-muted d-block small">Wind</span>
+              <strong class="fs-5">{{ plan.weather.wind_speed|round|int if plan.weather.wind_speed is not none else 'Not available' }}<small class="fs-6">km/h</small></strong>
+            </div>
+            <div class="col-3">
+              <span class="text-muted d-block small">Humidity</span>
+              <strong class="fs-5">{{ plan.weather.humidity|round|int if plan.weather.humidity is not none else 'Not available' }}%</strong>
+            </div>
+          </div>
+          <div class="mt-3 text-end">
+            <a href="{{ url_for('weather_page') }}" class="btn btn-sm btn-link text-decoration-none">Detailed 10-Day Forecast &rarr;</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6. MARKET OPPORTUNITY -->
+      <div class="card shadow-sm border-start border-4 border-success">
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+          <h5 class="mb-0 fw-bold"><i class="fa-solid fa-shop text-success me-2"></i>Market Opportunity</h5>
+          <span class="badge badge-provenance badge-govt-market">Agmarknet Data</span>
+        </div>
+        <div class="card-body p-3">
+          {% if plan.market.has_market %}
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <div>
+                <h6 class="fw-bold mb-0">{{ plan.market.market_name }}</h6>
+                <small class="text-muted">{{ plan.market.distance_km }} km from farm &bull; Trend: <strong>{{ plan.market.trend }}</strong></small>
+              </div>
+              <div class="text-end">
+                <span class="fs-4 fw-bold text-success">₹{{ plan.market.modal_price|int }}</span>
+                <small class="d-block text-muted" style="font-size: 0.65rem;">Modal / Quintal</small>
+              </div>
+            </div>
+            <p class="text-muted small mb-0">{{ plan.market.explanation }}</p>
+          {% else %}
+            <p class="text-muted small mb-0">No active mandi commodity records found for the current crop.</p>
+          {% endif %}
+          <div class="mt-3 text-end">
+            <a href="{{ url_for('market_page') }}" class="btn btn-sm btn-link text-decoration-none">Explore All Mandis &rarr;</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
