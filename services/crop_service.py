@@ -146,7 +146,7 @@ def predict_crop(features: Dict[str, Any]) -> Dict[str, Any]:
     )
     prediction = model.predict(input_frame)[0]
     probability = None
-    top_3 = [{"crop": str(prediction), "confidence": 100.0}]
+    top_3 = [{"crop": str(prediction), "confidence": None}]
 
     try:
         probabilities = model.predict_proba(input_frame)[0]
@@ -162,11 +162,11 @@ def predict_crop(features: Dict[str, Any]) -> Dict[str, Any]:
             for index in indices
         ]
     except AttributeError:
-        probability = 0.0
+        probability = None
 
     return {
         "recommended_crop": str(prediction),
-        "confidence": round(float(probability or 0.0), 2),
+        "confidence": round(probability, 2) if probability is not None else None,
         "top_3": top_3,
     }
 

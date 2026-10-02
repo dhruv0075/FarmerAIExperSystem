@@ -5,9 +5,6 @@ from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
 import joblib
-import matplotlib
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from sklearn.ensemble import HistGradientBoostingClassifier, RandomForestClassifier
@@ -176,6 +173,10 @@ def train_and_save_crop_models(
 
     # Save best model
     model_out = Path(model_output_path)
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
     model_out.parent.mkdir(parents=True, exist_ok=True)
     joblib.dump(best_model_obj, model_out)
 

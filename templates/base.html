@@ -46,7 +46,7 @@
         <div class="d-none d-md-flex align-items-center px-3 py-1 bg-light rounded-pill border border-secondary-subtle small text-secondary">
           <i class="fa-solid fa-location-dot text-success me-2"></i>
           <span class="fw-semibold text-dark me-1">{{ g.current_farm.farm_name }}</span>
-          <span>({{ g.current_farm.location_name or 'Location verified' }})</span>
+          <span>({{ g.current_farm.location_name or 'Location not set' }})</span>
         </div>
       {% endif %}
 
@@ -89,84 +89,18 @@
         <aside class="app-sidebar" id="appSidebar">
           <div class="sidebar-nav">
             
-            <div class="nav-category">Farm Operations</div>
-            <a class="sidebar-link {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">
-              <i class="fa-solid fa-gauge-high"></i> Dashboard
-            </a>
-            <a class="sidebar-link {% if request.endpoint == 'daily_plan_page' %}active{% endif %}" href="{{ url_for('daily_plan_page') }}">
-              <i class="fa-solid fa-clipboard-check text-success"></i> Today's Farm Plan
-            </a>
-            <a class="sidebar-link {% if request.endpoint == 'seven_day_plan_page' %}active{% endif %}" href="{{ url_for('seven_day_plan_page') }}">
-              <i class="fa-regular fa-calendar-days"></i> 7-Day Action Plan
-            </a>
-            <a class="sidebar-link {% if request.endpoint == 'farm_profile' %}active{% endif %}" href="{{ url_for('farm_profile') }}">
-              <i class="fa-solid fa-tractor"></i> My Farm
-            </a>
-            <a class="sidebar-link {% if request.endpoint == 'activities_page' %}active{% endif %}" href="{{ url_for('activities_page') }}">
-              <i class="fa-solid fa-list-check"></i> Farm Activities
-            </a>
-            <a class="sidebar-link {% if request.endpoint == 'lifecycle_page' %}active{% endif %}" href="{{ url_for('lifecycle_page') }}">
-              <i class="fa-solid fa-seedling"></i> Crop Lifecycle
-            </a>
-
-            <div class="nav-category">AI & Intelligence</div>
-            <a class="sidebar-link {% if request.endpoint == 'crop_recommendation' %}active{% endif %}" href="{{ url_for('crop_recommendation') }}">
-              <i class="fa-solid fa-wand-magic-sparkles text-primary"></i> AI Crop Planner
-            </a>
-            <a class="sidebar-link {% if request.endpoint == 'compare_crops_page' %}active{% endif %}" href="{{ url_for('compare_crops_page') }}">
-              <i class="fa-solid fa-code-compare"></i> Compare Crops
-            </a>
-            <a class="sidebar-link {% if request.endpoint == 'profit_planner_page' %}active{% endif %}" href="{{ url_for('profit_planner_page') }}">
-              <i class="fa-solid fa-chart-line text-success"></i> Profit Planner
-            </a>
-            <a class="sidebar-link {% if request.endpoint == 'weather_page' %}active{% endif %}" href="{{ url_for('weather_page') }}">
-              <i class="fa-solid fa-cloud-sun-rain text-info"></i> Weather Intelligence
-            </a>
-            <a class="sidebar-link {% if request.endpoint in ['risk_analysis_page', 'risk_center_page'] %}active{% endif %}" href="{{ url_for('risk_analysis_page') }}">
-              <i class="fa-solid fa-shield-halved text-warning"></i> Risk Center
-            </a>
-            <a class="sidebar-link {% if request.endpoint == 'what_if_page' %}active{% endif %}" href="{{ url_for('what_if_page') }}">
-              <i class="fa-solid fa-sliders"></i> What-If Simulator
-            </a>
-
-            <div class="nav-category">Crop Care & Resources</div>
-            <a class="sidebar-link {% if request.endpoint == 'report_problem_page' %}active{% endif %}" href="{{ url_for('report_problem_page') }}">
-              <i class="fa-solid fa-bug text-danger"></i> Disease & Problem AI
-            </a>
-            <a class="sidebar-link {% if request.endpoint == 'fertilizer_page' %}active{% endif %}" href="{{ url_for('fertilizer_page') }}">
-              <i class="fa-solid fa-vial-circle-check text-success"></i> Nutrition & Fertilizer
-            </a>
-            <a class="sidebar-link {% if request.endpoint == 'resources_page' %}active{% endif %}" href="{{ url_for('resources_page') }}">
-              <i class="fa-solid fa-map-location-dot text-primary"></i> Resources Near Me
-            </a>
-
-            <div class="nav-category">Market & Financials</div>
-            <a class="sidebar-link {% if request.endpoint == 'market_page' %}active{% endif %}" href="{{ url_for('market_page') }}">
-              <i class="fa-solid fa-shop text-success"></i> Market Intelligence
-            </a>
-            <a class="sidebar-link {% if request.endpoint == 'sell_planner_page' %}active{% endif %}" href="{{ url_for('sell_planner_page') }}">
-              <i class="fa-solid fa-scale-balanced text-primary"></i> Sell Planner
-            </a>
-            <a class="sidebar-link {% if request.endpoint == 'expenses_page' %}active{% endif %}" href="{{ url_for('expenses_page') }}">
-              <i class="fa-solid fa-indian-rupee-sign text-warning"></i> Expenses & Profits
-            </a>
-
-            <div class="nav-category">AIES & Research</div>
-            <a class="sidebar-link {% if request.endpoint == 'expert_system_page' %}active{% endif %}" href="{{ url_for('expert_system_page') }}">
-              <i class="fa-solid fa-brain text-purple"></i> Expert System (Viva)
-            </a>
-            <a class="sidebar-link {% if request.endpoint == 'ml_analytics_page' %}active{% endif %}" href="{{ url_for('ml_analytics_page') }}">
-              <i class="fa-solid fa-chart-pie"></i> ML Analytics
-            </a>
-            <a class="sidebar-link {% if request.endpoint == 'data_transparency_page' %}active{% endif %}" href="{{ url_for('data_transparency_page') }}">
-              <i class="fa-solid fa-database"></i> Data & Transparency
-            </a>
-            <a class="sidebar-link {% if request.endpoint == 'research_page' %}active{% endif %}" href="{{ url_for('research_page') }}">
-              <i class="fa-solid fa-book-open"></i> Research Paper
-            </a>
-            <a class="sidebar-link {% if request.endpoint == 'farm_report_page' %}active{% endif %}" href="{{ url_for('farm_report_page') }}">
-              <i class="fa-solid fa-file-invoice"></i> Farm Dossier Report
-            </a>
+            <a class="sidebar-link {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}"><i class="fa-solid fa-gauge-high"></i> Dashboard</a>
+            <a class="sidebar-link {% if request.endpoint == 'farm_profile' %}active{% endif %}" href="{{ url_for('farm_profile') }}"><i class="fa-solid fa-tractor"></i> My Farm</a>
+            <a class="sidebar-link {% if request.endpoint == 'crop_recommendation' %}active{% endif %}" href="{{ url_for('crop_recommendation') }}"><i class="fa-solid fa-seedling"></i> Crop Recommendation</a>
+            <a class="sidebar-link {% if request.endpoint == 'lifecycle_page' %}active{% endif %}" href="{{ url_for('lifecycle_page') }}"><i class="fa-solid fa-calendar"></i> Crop Lifecycle</a>
+            <a class="sidebar-link {% if request.endpoint == 'activities_page' %}active{% endif %}" href="{{ url_for('activities_page') }}"><i class="fa-solid fa-list-check"></i> Farm Activities</a>
+            <a class="sidebar-link {% if request.endpoint == 'weather_page' %}active{% endif %}" href="{{ url_for('weather_page') }}"><i class="fa-solid fa-cloud-sun"></i> Weather & Advisories</a>
+            <a class="sidebar-link {% if request.endpoint == 'report_problem_page' %}active{% endif %}" href="{{ url_for('report_problem_page') }}"><i class="fa-solid fa-clipboard"></i> Report Crop Problem</a>
+            <a class="sidebar-link {% if request.endpoint == 'market_page' %}active{% endif %}" href="{{ url_for('market_page') }}"><i class="fa-solid fa-shop"></i> Market Prices</a>
+            <a class="sidebar-link {% if request.endpoint == 'history_page' %}active{% endif %}" href="{{ url_for('history_page') }}"><i class="fa-solid fa-clock-rotate-left"></i> History</a>
+            <a class="sidebar-link {% if request.endpoint == 'research_page' %}active{% endif %}" href="{{ url_for('research_page') }}"><i class="fa-solid fa-book-open"></i> Research / AI Details</a>
+            <a class="sidebar-link {% if request.endpoint == 'settings_page' %}active{% endif %}" href="{{ url_for('settings_page') }}"><i class="fa-solid fa-gear"></i> Settings</a>
+            <a class="sidebar-link {% if request.endpoint == 'logout' %}active{% endif %}" href="{{ url_for('logout') }}"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
 
           </div>
         </aside>

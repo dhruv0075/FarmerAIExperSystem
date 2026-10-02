@@ -116,6 +116,18 @@ def build_unified_daily_farm_plan(farm_state: FarmState) -> Dict[str, Any]:
 
     # Find pending and overdue tasks for DO FIRST and TODAY
     pending_tasks = [a for a in activities if str(a.get("status", "")).upper() in ["PENDING", "OVERDUE"]]
+    upcoming = [a for a in pending_tasks if str(a.get("due_date") or "") > date.today().isoformat()]
+    pending_tasks = [a for a in pending_tasks if a not in upcoming]
+    latest_irrigation = latest_completed_activity(activities, "Irrigation")
+    irrigation_age = hours_since(latest_irrigation.get("completed_at")) if latest_irrigation else None
+    blocked = []
+    for activity in pending_tasks:
+        kind = str(activity.get("activity_type", "")).lower()
+        if (kind == "irrigation" and (rain_48h > 12 or (irrigation_age is not None and irrigation_age < 24))) or (kind == "fertilizer" and rain_48h > 12):
+            blocked.append(activity)
+            avoid_items.append({"action": "Review or reschedule: " + activity.get("title", kind),
+                                "reason": "Rain forecast or a recent confirmed activity conflicts with this pending task. It has not been marked completed."})
+    pending_tasks = [a for a in pending_tasks if a not in blocked]
     pending_tasks.sort(key=lambda a: 0 if str(a.get("urgency", "")).upper() == "CRITICAL" else (1 if str(a.get("urgency", "")).upper() == "URGENT" else 2))
 
     if pending_tasks:
@@ -153,7 +165,7 @@ def build_unified_daily_farm_plan(farm_state: FarmState) -> Dict[str, Any]:
     if any(float(d.get("precipitation", 0) or 0) > 10.0 for d in weather.get("forecast", [])[:3]):
         watch_items.append("Rainfall forecast in next 72h — verify farm drainage outlets are unobstructed.")
     if not watch_items:
-        watch_items.append("Microclimatic and field moisture conditions remain within normal tolerance limits.")
+        watch_items.append("No watch rule triggered by available data; inspect actual field conditions.")
 
     return {
         "farm_name": farm.get("farm_name", "My Farm"),
@@ -162,6 +174,7 @@ def build_unified_daily_farm_plan(farm_state: FarmState) -> Dict[str, Any]:
         "date_today": date.today().isoformat(),
         "do_first": do_first,
         "today_tasks": today_tasks,
+        "upcoming": upcoming,
         "watch": watch_items,
         "avoid": avoid_items,
         "market": {
@@ -172,6 +185,7 @@ def build_unified_daily_farm_plan(farm_state: FarmState) -> Dict[str, Any]:
             "trend": best_market.get("price_trend") if best_market else "Stable",
             "explanation": market_res.get("decision_explanation", ""),
         },
+        "forecast": weather.get("forecast", [])[:7],
         "weather": {
             "temperature": weather.get("current", {}).get("temperature"),
             "rain_probability": weather.get("current", {}).get("rain_probability"),

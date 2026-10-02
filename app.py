@@ -29,7 +29,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 from PIL import Image, UnidentifiedImageError
 from dotenv import load_dotenv
-from config import UPLOAD_DIR
+from config import UPLOAD_DIR, SECRET_KEY, SERVERLESS
 
 from db import DB_PATH, get_db_connection, init_db as db_init
 from services.activity_service import (
@@ -102,7 +102,6 @@ from services.weather_service import WeatherError, fetch_weather_data
 BASE_DIR = Path(__file__).resolve().parent
 load_dotenv(BASE_DIR / '.env')
 UPLOAD_FOLDER = UPLOAD_DIR
-UPLOAD_FOLDER.mkdir(parents=True, exist_ok=True)
 ALLOWED_EXTENSIONS = {"jpg", "jpeg", "png", "webp"}
 
 
@@ -225,13 +224,13 @@ def load_farm_state_object(db: sqlite3.Connection, farm_id: int, user_id: int) -
 
 def create_app(test_config=None) -> Flask:
     app = Flask(__name__)
-    app.config["SECRET_KEY"] = os.environ.get("AGRIWISE_SECRET_KEY") or os.urandom(32)
+    app.config["SECRET_KEY"] = SECRET_KEY
     app.config["DATABASE"] = str(DB_PATH)
     app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024  # 5MB max upload
     app.config['SESSION_COOKIE_HTTPONLY'] = True
     app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
     app.config['SESSION_COOKIE_SECURE'] = os.environ.get('AGRIWISE_SECURE_COOKIES', '').lower() == 'true'
-    if os.environ.get('AGRIWISE_ENV') == 'production' and not os.environ.get('AGRIWISE_SECRET_KEY'):
+    if (SERVERLESS or os.environ.get('AGRIWISE_ENV') == 'production') and not os.environ.get('AGRIWISE_SECRET_KEY'):
         raise RuntimeError('AGRIWISE_SECRET_KEY must be configured in production.')
     if test_config:
         app.config.update(test_config)
@@ -507,6 +506,7 @@ def create_app(test_config=None) -> Flask:
         if latest_cycle:
             stage_summary = get_crop_stage_summary(latest_cycle["crop_name"], latest_cycle["sowing_date"])
             progress = stage_summary.get("progress", 0)
+            crop_stage = stage_summary.get("current_stage", crop_stage)
 
         return render_template(
             "dashboard.html",
@@ -521,6 +521,7 @@ def create_app(test_config=None) -> Flask:
             progress=progress,
             activities=activities,
             activity_counts=activity_counts,
+            plan=build_unified_daily_farm_plan(load_farm_state_object(get_db(), farm["id"], user["id"])),
             condition_score=farm_analysis["condition_score"],
             condition_components=farm_analysis["condition_components"],
             risk_level=farm_analysis["risk_level"],
@@ -603,16 +604,6 @@ def create_app(test_config=None) -> Flask:
                 (farm["id"], stage_data["nitrogen"], stage_data["phosphorus"], stage_data["potassium"], stage_data["ph"], stage_data["moisture"], stage_data["temperature"], stage_data["humidity"], stage_data["rainfall"]),
             )
 
-            # Run Level 1 & Level 2 Recommendation
-            weather_dict = {"current": {"temperature": stage_data["temperature"], "humidity": stage_data["humidity"], "precipitation": 0.0}}
-            farmer_prefs = {
-                "risk_preference": request.form.get("risk_preference", "Balanced"),
-                "preferred_crop_type": request.form.get("preferred_crop_type", "No preference"),
-            }
-            ranked_output = rank_and_explain_crops(stage_data, weather_dict, farm, farmer_prefs)
-            top_winner = ranked_output["decision_ranked_crops"][0] if ranked_output["decision_ranked_crops"] else None
-
-            # ML Level 1 raw output
             ml_pred = predict_crop(stage_data)
             explanation = build_explanation(ml_pred, stage_data)
 
@@ -622,7 +613,7 @@ def create_app(test_config=None) -> Flask:
                 INSERT INTO crop_recommendations (farm_id, recommended_crop, confidence, explanation, input_data)
                 VALUES (?, ?, ?, ?, ?)
                 """,
-                (farm["id"], top_winner["crop_name"] if top_winner else ml_pred["recommended_crop"], top_winner["ml_probability"] if top_winner else ml_pred["confidence"], json.dumps(explanation), json.dumps(stage_data)),
+                (farm["id"], ml_pred["recommended_crop"], ml_pred["confidence"], json.dumps(explanation), json.dumps(stage_data)),
             )
             get_db().commit()
 
@@ -632,7 +623,6 @@ def create_app(test_config=None) -> Flask:
                 explanation=explanation,
                 farm=farm,
                 soil=stage_data,
-                ranked_output=ranked_output,
                 recommendation_id=rec_cursor.lastrowid,
             )
 
@@ -682,9 +672,10 @@ def create_app(test_config=None) -> Flask:
 
         if request.method == "POST":
             crop_name = (request.form.get("crop_name") or "").strip().lower()
-            sowing_date = (request.form.get("sowing_date") or date.today().isoformat()).strip()
+            sowing_date = (request.form.get("sowing_date") or "").strip()
             try:
-                date.fromisoformat(sowing_date)
+                if date.fromisoformat(sowing_date) > date.today() or crop_name not in get_all_supported_crops():
+                    raise ValueError
             except ValueError:
                 flash("Enter a valid sowing date (YYYY-MM-DD).", "danger")
                 return redirect(url_for("lifecycle_page"))
@@ -784,7 +775,7 @@ def create_app(test_config=None) -> Flask:
             (farm["id"],),
         ).fetchall()]
 
-        stage = cycle.get("current_stage", "Vegetative")
+        stage = get_crop_stage_summary(cycle["crop_name"], cycle["sowing_date"])["current_stage"]
         eval_result = evaluate_expert_system(cycle["crop_name"], stage, weather_data, soil or {}, weather_data.get("forecast", []), history)
         today = date.today().isoformat()
 
@@ -972,6 +963,7 @@ def create_app(test_config=None) -> Flask:
                     save_path = UPLOAD_FOLDER / unique_name
                     file.seek(0)
                     image_bytes = file.read()
+                    UPLOAD_FOLDER.mkdir(parents=True, exist_ok=True)
                     with open(save_path, "wb") as f_out:
                         f_out.write(image_bytes)
                     saved_filename = unique_name
@@ -990,6 +982,7 @@ def create_app(test_config=None) -> Flask:
                 category=category,
                 weather_data=weather_data,
                 image_bytes=image_bytes,
+                severity=severity,
             )
 
             # Insert report
@@ -1122,6 +1115,17 @@ def create_app(test_config=None) -> Flask:
     # ==========================================
     # MARKET INTELLIGENCE & SELL PLANNER
     # ==========================================
+
+    @app.route("/market/refresh", methods=["POST"])
+    @login_required
+    def refresh_market_page():
+        from services.official_market_service import refresh_market_data
+        filters = {field: request.form.get(field, "").strip() for field in ("commodity", "state", "district", "market")}
+        filters = {key: value for key, value in filters.items() if value}
+        if "commodity" in filters:
+            filters["commodity"] = filters["commodity"].title()
+        refresh_market_data(filters)
+        return redirect(url_for("market_page", **filters))
 
     @app.route("/market")
     @login_required
@@ -1376,7 +1380,7 @@ def create_app(test_config=None) -> Flask:
             "SELECT * FROM crop_recommendations WHERE farm_id = ? ORDER BY id DESC", (farm_id,)
         ).fetchall(), cycles=get_db().execute(
             "SELECT * FROM crop_cycles WHERE farm_id = ? ORDER BY id DESC", (farm_id,)
-        ).fetchall())
+        ).fetchall(), advisories=get_db().execute("SELECT * FROM advisories WHERE farm_id = ? ORDER BY id DESC LIMIT 100", (farm_id,)).fetchall())
 
     @app.route("/what-if", methods=["GET", "POST"])
     @login_required
@@ -1526,7 +1530,7 @@ def create_app(test_config=None) -> Flask:
 
     @app.route("/research")
     def research_page():
-        return render_template("research.html")
+        return render_template("research.html", metrics=get_model_evaluation_metrics())
 
     # ==========================================
     # JSON APIs

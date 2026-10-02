@@ -365,3 +365,13 @@ h1, h2, h3, h4, h5, h6 {
     padding: 1rem;
   }
 }
+
+/* Calm core-product layout with bounded cards on small screens. */
+.app-content { min-width: 0; }
+.content-section { padding: 1.5rem; background: white; border: 1px solid var(--agri-border); border-radius: 12px; }
+.dashboard-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; }
+.dashboard-summary .card { height: auto; min-height: 110px; }
+@media (max-width: 767px) {
+  .dashboard-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .content-section { padding: 1rem; }
+}

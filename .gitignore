@@ -16,3 +16,9 @@ data/official_market_cache.json
 *.log
 data/official_market_cache.tmp
 .runtime/
+
+cache/
+generated/
+official_market_cache.json
+official_market_cache.tmp
+resource_catalog.json

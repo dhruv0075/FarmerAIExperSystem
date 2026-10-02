@@ -37,17 +37,15 @@ def test_bounded_backoff_preserves_cache_and_redacts_key(monkeypatch, tmp_path, 
     assert 'test-secret-never-log' not in caplog.text
 
 
-def test_background_refresh_does_not_block_caller(monkeypatch, tmp_path):
+def test_page_read_never_starts_network_or_thread(monkeypatch, tmp_path):
     reset(monkeypatch, tmp_path)
-    started = []
-    class Thread:
-        def __init__(self, **kwargs): self.kwargs = kwargs
-        def start(self): started.append(self.kwargs)
-    monkeypatch.setattr(market.threading, 'Thread', Thread)
-    result = market.load_official_market_data({'commodity': 'Rice'})
-    assert result['message'] == 'Market data temporarily unavailable'
-    assert started[0]['daemon']
-    assert not result['commodities']
+    def forbidden(*args, **kwargs):
+        raise AssertionError("Page read started external work")
+    monkeypatch.setattr(market, 'request_sample', forbidden)
+    monkeypatch.setattr(market.threading, 'Thread', forbidden)
+    for _ in range(3):
+        result = market.load_official_market_data({'commodity': 'Rice'})
+        assert result['refresh_status'] == 'unavailable'
 
 
 def test_small_sample_then_filtered_request_and_disk_cache(monkeypatch, tmp_path):
@@ -75,20 +73,21 @@ def test_concurrent_page_loads_start_one_refresh(monkeypatch, tmp_path):
     reset(monkeypatch, tmp_path)
     entered, release = threading.Event(), threading.Event()
     calls = []
-    def refresh(filters):
-        calls.append(filters)
+    def fetch(*args):
+        calls.append(1)
         entered.set()
         release.wait(5)
-    monkeypatch.setattr(market, 'refresh_market_data', refresh)
-    threads = [threading.Thread(target=market.load_official_market_data, args=({'commodity': 'Rice'},)) for _ in range(12)]
+        return {'records': []}
+    monkeypatch.setattr(market, 'request_sample', fetch)
+    threads = [threading.Thread(target=market.refresh_market_data) for _ in range(12)]
     try:
         for thread in threads: thread.start()
-        for thread in threads: thread.join(2)
         assert entered.wait(2)
         assert len(calls) == 1
         assert market.load_official_market_data()['refresh_in_progress']
     finally:
         release.set()
+        for thread in threads: thread.join(5)
 
 
 def test_cooldown_and_freshness_states(monkeypatch, tmp_path):

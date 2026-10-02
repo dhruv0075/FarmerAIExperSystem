@@ -39,12 +39,22 @@ def main():
                 page.check('[name=no_soil_test]')
                 page.locator('button[type=submit]').click()
                 page.wait_for_url('**/dashboard')
-                for path in ['/dashboard', '/weather', '/daily-plan', '/seven-day-plan', '/crop-recommendation', '/activities', '/resources', '/market', '/expenses', '/report', '/ml-analytics']:
+                for path in ['/dashboard', '/weather', '/daily-plan', '/seven-day-plan', '/crop-recommendation', '/activities', '/report-problem', '/market', '/history', '/research', '/lifecycle']:
                     response = page.goto('http://127.0.0.1:5056' + path)
                     page.wait_for_timeout(250)
                     results.append({'path': path, 'status': response.status})
                 page.set_viewport_size({'width': 390, 'height': 844})
                 page.goto('http://127.0.0.1:5056/dashboard')
+                page.wait_for_timeout(300)
+                dimensions = page.evaluate('({width: document.documentElement.scrollWidth, height: document.documentElement.scrollHeight})')
+                assert dimensions['width'] <= 390, dimensions
+                assert dimensions['height'] < 5000, dimensions
+                page.locator('#sidebarToggle').click()
+                assert page.locator('#appSidebar').evaluate("el => el.classList.contains('show')")
+                page.locator('#sidebarToggle').click()
+                page.wait_for_timeout(400)
+                assert page.locator('.dashboard-summary > div').count() == 4
+                assert page.locator('.app-content').bounding_box()['width'] >= 358
                 page.screenshot(path=str(artifacts / 'mobile_dashboard.png'), full_page=True)
                 browser.close()
         finally:

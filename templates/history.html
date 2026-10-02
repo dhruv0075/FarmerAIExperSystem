@@ -45,4 +45,5 @@
     </div>
   </div>
 </div>
+<section class="content-section mt-4"><h2 class="h4">Advisory History</h2>{% for item in advisories %}<article class="mb-3"><strong>{{ item.title }}</strong><p>{{ item.message }}</p><small>{{ item.created_at }} ? {{ item.severity }}</small></article>{% else %}<p>No saved advisories.</p>{% endfor %}</section>
 {% endblock %}

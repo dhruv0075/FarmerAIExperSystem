@@ -159,6 +159,7 @@ def get_market_prices_for_commodity(
         "refresh_in_progress": data.get('refresh_in_progress', False),
         "retry_after_seconds": data.get('retry_after_seconds', 0),
         "source": data.get("source", "Agmarknet / DMI Government of India"),
+        "source_url": data.get("source_url"),
         "fetch_timestamp": data.get("updated_at", datetime.now(timezone.utc).isoformat()),
         "history_30d": comm_info.get("history_30d", []),
         "markets": results,

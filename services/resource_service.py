@@ -7,7 +7,8 @@ from typing import Any, Dict, List, Optional
 from services.market_service import haversine_distance_km
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-CATALOG_PATH = BASE_DIR / "data" / "resource_catalog.json"
+from config import DATA_DIR
+CATALOG_PATH = DATA_DIR / "resource_catalog.json"
 
 _RESOURCE_CACHE: List[Dict[str, Any]] = []
 
@@ -123,6 +124,7 @@ def add_custom_resource_listing(listing_data: Dict[str, Any]) -> Dict[str, Any]:
         ] if listing_data.get("item_name") else [],
     }
     resources.append(new_entry)
+    CATALOG_PATH.parent.mkdir(parents=True, exist_ok=True)
     with CATALOG_PATH.open("w", encoding="utf-8") as f:
         json.dump(resources, f, indent=2)
     return new_entry

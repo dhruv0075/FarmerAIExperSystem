@@ -20,30 +20,7 @@
     </div>
   </div>
 
-  <!-- Condition Index Banner -->
-  <div class="card mb-4 border-0 shadow-sm" style="background: linear-gradient(135deg, #146c43 0%, #198754 100%); color: white;">
-    <div class="card-body p-4">
-      <div class="row align-items-center">
-        <div class="col-md-8">
-          <span class="badge bg-white text-success fw-bold px-3 py-1 mb-2">AGRIWISE DECISION-SUPPORT INDEX</span>
-          <h3 class="fw-bold mb-2">{{ plan.crop_name }} &bull; <span class="fw-normal text-white-50">{{ plan.crop_stage }} Stage</span></h3>
-          <p class="text-white-50 mb-0 small">
-            Farm condition is currently rated at <strong>{{ plan.condition_score }}/100</strong>. Overall farm microclimate risk is 
-            <span class="badge bg-{{ 'danger' if plan.overall_risk_category == 'CRITICAL' else ('warning text-dark' if plan.overall_risk_category == 'HIGH' else 'light text-dark') }}">
-              {{ plan.overall_risk_category }}
-            </span>.
-          </p>
-        </div>
-        <div class="col-md-4 text-md-end text-center mt-3 mt-md-0">
-          <div class="d-inline-flex flex-column align-items-center p-3 rounded-circle bg-white text-dark shadow" style="width: 100px; height: 100px; justify-content: center;">
-            <span class="fs-3 fw-bold text-success" style="line-height: 1;">{{ plan.condition_score|round|int if plan.condition_score is not none else 'Unknown' }}</span>
-            <span style="font-size: 0.65rem;" class="text-muted fw-bold">INDEX</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
+  <p class="text-muted mb-4">{{ plan.crop_name }} ? {{ plan.crop_stage }}</p>
   <div class="row g-4">
     <!-- LEFT COLUMN: DO FIRST, TODAY & AVOID -->
     <div class="col-lg-7">
@@ -215,4 +192,5 @@
     </div>
   </div>
 </div>
+<section class="content-section"><h2 class="h5">Upcoming</h2>{% for item in plan.upcoming %}<p>{{ item.title }} ? {{ item.due_date }}</p>{% else %}<p>No future activities scheduled.</p>{% endfor %}</section>
 {% endblock %}

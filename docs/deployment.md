@@ -1,5 +1,9 @@
 # Deploying the existing Flask application
 
+For the current no-paid-database Vercel demo, follow [vercel.md](vercel.md).
+The Render configuration below is an optional persistent alternative only;
+it has not been provisioned and is not required for the demo.
+
 The repository includes a Render Blueprint (`render.yaml`). It keeps the current
 Flask/SQLite architecture and uses one Gunicorn worker with four threads. The
 market refresh lock is process-local, so do not increase workers or instances

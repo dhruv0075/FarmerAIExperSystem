@@ -1,4 +1,4 @@
-"""Nonblocking official market access with bounded retries and a durable cache."""
+"""Cache-only page reads and explicit, bounded official market refreshes."""
 import json
 import logging
 import math
@@ -71,21 +71,22 @@ def failure_stage(exc):
 
 def refresh_market_data(filters=None):
     global _inflight, _next_attempt, _cache
+    load_official_market_data(filters)
     key = os.environ.get('DATA_GOV_IN_API_KEY')
-    if not key:
-        with _lock: _inflight = False
-        return
     query_key = json.dumps(filters or {}, sort_keys=True)
+    with _lock:
+        if not key or _inflight or time.time() < max(_next_attempt, _refresh_after.get(query_key, 0)):
+            return False
+        _inflight = True
     try:
         for attempt in range(MAX_ATTEMPTS):
             try:
                 # Validate credentials/connectivity with a small real sample first.
-                if not _cache:
-                    initial = request_sample(key)
-                    _cache['{}'] = parse_records(initial['records'])
-                payload = request_sample(key, filters) if filters else None
-                parsed = parse_records(payload['records']) if payload else _cache['{}']
-                parsed['raw_records'] = payload['records'] if payload else initial['records'] if 'initial' in locals() else parsed.get('raw_records', [])
+                if not _cache and filters:
+                    request_sample(key)
+                payload = request_sample(key, filters)
+                parsed = parse_records(payload['records'])
+                parsed['raw_records'] = payload['records']
                 parsed['filters'] = filters or {}
                 with _lock:
                     _cache[query_key] = parsed
@@ -126,9 +127,6 @@ def load_official_market_data(filters=None):
                 pass
         query_key = json.dumps(filters or {}, sort_keys=True)
         result = _cache.get(query_key)
-        if os.environ.get('DATA_GOV_IN_API_KEY') and not _inflight and time.time() >= max(_next_attempt, _refresh_after.get(query_key, 0)):
-            _inflight = True
-            threading.Thread(target=refresh_market_data, args=(filters,), daemon=True).start()
         if result:
             result = dict(result)
             age = (datetime.now(timezone.utc) - datetime.fromisoformat(result['updated_at'])).total_seconds()
