@@ -128,7 +128,7 @@ def valid_email(email: str) -> bool:
 def login_required(view):
     @wraps(view)
     def wrapped(*args, **kwargs):
-        if "user_id" not in session:
+        if not g.get('current_user'):
             flash("Please log in to continue.", "warning")
             return redirect(url_for("login"))
         return view(*args, **kwargs)
@@ -138,9 +138,10 @@ def login_required(view):
 
 def get_current_user() -> Optional[Dict[str, Any]]:
     user_id = session.get("user_id")
-    if not user_id:
+    auth_token = session.get('auth_token')
+    if not user_id or not auth_token:
         return None
-    row = get_db().execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
+    row = get_db().execute("SELECT * FROM users WHERE id = ? AND auth_token = ?", (user_id, auth_token)).fetchone()
     return dict(row) if row else None
 
 
@@ -274,6 +275,9 @@ def create_app(test_config=None) -> Flask:
         if request.path.startswith('/static/uploads/'):
             return render_template('error.html', message='Use the authorized report image link.'), 403
         g.current_user = get_current_user()
+        if session.get('user_id') and not g.current_user:
+            session.clear()
+            session['csrf_token'] = secrets.token_urlsafe(32)
         if g.current_user:
             g.current_farm = get_user_farm(g.current_user["id"])
             try:
@@ -332,13 +336,15 @@ def create_app(test_config=None) -> Flask:
                 return render_template("register.html")
 
             hashed = generate_password_hash(password)
+            auth_token = secrets.token_urlsafe(32)
             cursor = get_db().execute(
-                "INSERT INTO users (name, email, password_hash) VALUES (?, ?, ?)",
-                (name, email, hashed),
+                "INSERT INTO users (name, email, password_hash, auth_token) VALUES (?, ?, ?, ?)",
+                (name, email, hashed, auth_token),
             )
             get_db().commit()
             session.clear()
             session["user_id"] = cursor.lastrowid
+            session['auth_token'] = auth_token
             session.permanent = True
             flash("Welcome to AgriWise AI! Please configure your farm location to begin.", "success")
             return redirect(url_for("farm_setup"))
@@ -354,6 +360,7 @@ def create_app(test_config=None) -> Flask:
             if row and len(password) <= 128 and check_password_hash(row["password_hash"], password):
                 session.clear()
                 session["user_id"] = row["id"]
+                session['auth_token'] = row['auth_token']
                 session.permanent = True
                 farm = get_user_farm(row["id"])
                 flash("Welcome back to AgriWise AI.", "success")
@@ -1397,8 +1404,9 @@ def create_app(test_config=None) -> Flask:
             flash('Choose a password different from your current password.', 'danger')
             return redirect(url_for('settings_page'))
 
-        get_db().execute('UPDATE users SET password_hash = ? WHERE id = ?',
-                         (generate_password_hash(new_password), user['id']))
+        auth_token = secrets.token_urlsafe(32)
+        get_db().execute('UPDATE users SET password_hash = ?, auth_token = ? WHERE id = ?',
+                 (generate_password_hash(new_password), auth_token, user['id']))
         get_db().commit()
         session.clear()
         flash('Password changed. Sign in again with your new password.', 'success')

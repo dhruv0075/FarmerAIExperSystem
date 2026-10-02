@@ -9,6 +9,7 @@ import app as app_module
 from test_extended_flows import setup_client
 from services.official_market_service import parse_records
 from services.expert_system import evaluate_expert_system
+from db import init_db
 
 
 def test_official_market_rejects_bad_values():
@@ -97,3 +98,17 @@ def test_cross_user_ids_cannot_mutate_activities_or_read_reports(tmp_path, monke
     assert owner.get(f'/disease-image/{report_id}').status_code == 200
     assert outsider.get(f'/disease-image/{report_id}').status_code == 404
     assert outsider.get(f'/disease-result/{report_id}').status_code == 302
+
+
+def test_legacy_user_rows_receive_session_tokens(tmp_path):
+    database = tmp_path / 'legacy-users.db'
+    with sqlite3.connect(database) as conn:
+        conn.execute('CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT NOT NULL, email TEXT UNIQUE NOT NULL, password_hash TEXT NOT NULL, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)')
+        conn.execute("INSERT INTO users (id, name, email, password_hash) VALUES (1, 'Legacy farmer', 'legacy@example.com', 'existing-hash')")
+
+    init_db(database)
+
+    with sqlite3.connect(database) as conn:
+        row = conn.execute('SELECT name, auth_token FROM users WHERE id = 1').fetchone()
+    assert row[0] == 'Legacy farmer'
+    assert len(row[1]) >= 32

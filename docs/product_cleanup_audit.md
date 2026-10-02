@@ -95,6 +95,10 @@ or hosted deployment. See the delivery message for actual Git status.
   permanent 12-hour session. Production and Vercel always set Secure cookies;
   HttpOnly and SameSite=Lax are enabled. The production secret is required and read
   from `AGRIWISE_SECRET_KEY` at app creation.
+- Each user has a random database-backed session token. Existing SQLite schemas
+  receive tokens additively; each request verifies both user ID and token and
+  clears stale/mismatched cookies before protected route code runs. Password
+  changes rotate this token, revoking sessions that share that database.
 - All state-changing POSTs use the existing CSRF check. Logout is now POST-only.
   Password change validates the current password, new password and confirmation,
   saves a new hash, then signs out the current browser session.
@@ -114,15 +118,16 @@ or hosted deployment. See the delivery message for actual Git status.
 - There is no shared rate-limit store. Per-process throttling would not reliably
   protect this multi-instance/serverless deployment, so login rate limiting remains
   a production follow-up requiring a shared store.
-- Flask's signed-cookie session has no server-side revocation list. Logout and
-  password change invalidate the current browser cookie; password change does not
-  revoke already-issued cookies on other devices before their expiry.
+- Vercel's per-instance SQLite is not shared. A session from a different instance
+  fails closed when its account token does not match, but account state and token
+  revocation cannot be coordinated across isolated instance databases. Durable
+  shared storage is required for cross-instance continuity and global revocation.
 - No deployment or Git push was performed. Vercel still needs a deployment from
   this workspace before these source changes affect the hosted site.
 
 ## Current workspace verification — 2026-10-02
 
-- `python -m pytest -q`: 42 passed.
+- `python -m pytest -q`: 45 passed.
 - Browser smoke journey: registration, farm setup, 12 authenticated routes,
   password change, old-session logout, re-login, mobile overflow/sidebar checks;
   no JavaScript errors. This is a local isolated database, not production data.
@@ -131,8 +136,9 @@ or hosted deployment. See the delivery message for actual Git status.
   the repository-write audit hook.
 - Security regression tests: generic duplicate/invalid registration errors,
   normalized email uniqueness, password validation/change, CSRF logout, cookie
-  attributes/headers, missing production secret rejection, and cross-farmer ID and
-  private image access checks.
+  attributes/headers, missing production secret rejection, stale-session and
+  reused-ID cross-instance rejection, additive legacy token migration, and
+  cross-farmer ID/private image access checks.
 - Not verified: hosted deployment, rate limiting through a shared store, revoking
   sessions on other devices, email-based password reset, live market API access,
   independent field validation of the crop dataset, or disease image inference.

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sqlite3
+import secrets
 from pathlib import Path
 from typing import Optional
 from config import DATABASE_PATH
@@ -29,6 +30,7 @@ def init_db(database_path: Path | str = DB_PATH) -> None:
                 name TEXT NOT NULL,
                 email TEXT UNIQUE NOT NULL,
                 password_hash TEXT NOT NULL,
+                auth_token TEXT NOT NULL,
                 created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
             )
             """
@@ -518,6 +520,12 @@ def init_db(database_path: Path | str = DB_PATH) -> None:
 
 def _apply_migrations(conn: sqlite3.Connection) -> None:
     """Safely adds missing columns to existing database tables if they originated from earlier version."""
+    user_cols = {row[1] for row in conn.execute('PRAGMA table_info(users)')}
+    if 'auth_token' not in user_cols:
+        conn.execute('ALTER TABLE users ADD COLUMN auth_token TEXT')
+    for row in conn.execute('SELECT id FROM users WHERE auth_token IS NULL OR auth_token = ""').fetchall():
+        conn.execute('UPDATE users SET auth_token = ? WHERE id = ?', (secrets.token_urlsafe(32), row[0]))
+
     weather_cols = {row[1] for row in conn.execute('PRAGMA table_info(weather_records)')}
     for column, sql_type in {'precipitation': 'REAL', 'raw_payload': 'TEXT', 'apparent_temperature': 'REAL', 'wind_gust': 'REAL', 'et0': 'REAL', 'soil_temperature': 'REAL', 'soil_moisture': 'REAL'}.items():
         if column not in weather_cols:

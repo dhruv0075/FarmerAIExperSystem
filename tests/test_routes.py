@@ -119,3 +119,40 @@ def test_logout_is_post_only_and_csrf_protected(tmp_path):
         token = session['csrf_token']
     assert client.post('/logout', data={'csrf_token': token}).status_code == 302
     assert client.get('/settings').status_code == 302
+
+
+def test_stale_or_mismatched_session_redirects_instead_of_raising(tmp_path):
+    app = create_app({'SECRET_KEY': 'test-secret', 'DATABASE': str(tmp_path / 'stale-session.db')})
+    client = app.test_client()
+    with client.session_transaction() as session:
+        session['user_id'] = 987654
+        session['auth_token'] = 'token-from-another-instance'
+
+    response = client.get('/crop-recommendation')
+
+    assert response.status_code == 302
+    assert response.location.endswith('/login')
+    with client.session_transaction() as session:
+        assert 'user_id' not in session
+        assert 'auth_token' not in session
+
+
+def test_session_from_another_instance_cannot_match_reused_user_id(tmp_path):
+    first_app = create_app({'TESTING': True, 'SECRET_KEY': 'shared-test-secret', 'DATABASE': str(tmp_path / 'instance-a.db')})
+    second_app = create_app({'TESTING': True, 'SECRET_KEY': 'shared-test-secret', 'DATABASE': str(tmp_path / 'instance-b.db')})
+    first_client = first_app.test_client()
+    second_client = second_app.test_client()
+    first_client.post('/register', data={
+        'name': 'First Farmer', 'email': 'first@example.com', 'password': 'first-pass123'
+    })
+    second_client.post('/register', data={
+        'name': 'Second Farmer', 'email': 'second@example.com', 'password': 'second-pass123'
+    })
+    first_cookie = first_client.get_cookie('session')
+    assert first_cookie is not None
+
+    second_client.set_cookie('session', first_cookie.value)
+    response = second_client.get('/crop-recommendation')
+
+    assert response.status_code == 302
+    assert response.location.endswith('/login')
