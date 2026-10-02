@@ -5,6 +5,7 @@
     <meta name="csrf-token" content="{{ csrf_token }}">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}AgriWise AI — Intelligent Farming Decision Platform{% endblock %}</title>
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='img/favicon.svg') }}">
     
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -72,7 +73,7 @@
               <li><a class="dropdown-item" href="{{ url_for('farm_profile') }}"><i class="fa-solid fa-tractor me-2 text-muted"></i>My Farm Profile</a></li>
               <li><a class="dropdown-item" href="{{ url_for('settings_page') }}"><i class="fa-solid fa-gear me-2 text-muted"></i>Settings</a></li>
               <li><hr class="dropdown-divider"></li>
-              <li><a class="dropdown-item text-danger" href="{{ url_for('logout') }}"><i class="fa-solid fa-right-from-bracket me-2"></i>Logout</a></li>
+              <li><form method="POST" action="{{ url_for('logout') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="dropdown-item text-danger" type="submit"><i class="fa-solid fa-right-from-bracket me-2"></i>Logout</button></form></li>
             </ul>
           </div>
         {% else %}
@@ -100,7 +101,7 @@
             <a class="sidebar-link {% if request.endpoint == 'history_page' %}active{% endif %}" href="{{ url_for('history_page') }}"><i class="fa-solid fa-clock-rotate-left"></i> History</a>
             <a class="sidebar-link {% if request.endpoint == 'research_page' %}active{% endif %}" href="{{ url_for('research_page') }}"><i class="fa-solid fa-book-open"></i> Research / AI Details</a>
             <a class="sidebar-link {% if request.endpoint == 'settings_page' %}active{% endif %}" href="{{ url_for('settings_page') }}"><i class="fa-solid fa-gear"></i> Settings</a>
-            <a class="sidebar-link {% if request.endpoint == 'logout' %}active{% endif %}" href="{{ url_for('logout') }}"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+            <form method="POST" action="{{ url_for('logout') }}" class="m-0"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="sidebar-link w-100 border-0 bg-transparent text-start" type="submit"><i class="fa-solid fa-right-from-bracket"></i> Logout</button></form>
 
           </div>
         </aside>

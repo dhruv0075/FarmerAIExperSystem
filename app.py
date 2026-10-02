@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import sqlite3
 import uuid
 import math
@@ -116,6 +117,14 @@ def allowed_file(filename: str) -> bool:
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
+def valid_password(password: str) -> bool:
+    return 8 <= len(password) <= 128 and any(character.isalpha() for character in password) and any(character.isdigit() for character in password)
+
+
+def valid_email(email: str) -> bool:
+    return len(email) <= 254 and re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", email) is not None
+
+
 def login_required(view):
     @wraps(view)
     def wrapped(*args, **kwargs):
@@ -224,13 +233,15 @@ def load_farm_state_object(db: sqlite3.Connection, farm_id: int, user_id: int) -
 
 def create_app(test_config=None) -> Flask:
     app = Flask(__name__)
-    app.config["SECRET_KEY"] = SECRET_KEY
+    app.config["SECRET_KEY"] = os.environ.get('AGRIWISE_SECRET_KEY') or SECRET_KEY
     app.config["DATABASE"] = str(DB_PATH)
     app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024  # 5MB max upload
+    app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=12)
     app.config['SESSION_COOKIE_HTTPONLY'] = True
     app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
-    app.config['SESSION_COOKIE_SECURE'] = os.environ.get('AGRIWISE_SECURE_COOKIES', '').lower() == 'true'
-    if (SERVERLESS or os.environ.get('AGRIWISE_ENV') == 'production') and not os.environ.get('AGRIWISE_SECRET_KEY'):
+    production = SERVERLESS or os.environ.get('AGRIWISE_ENV', '').lower() == 'production'
+    app.config['SESSION_COOKIE_SECURE'] = production or os.environ.get('AGRIWISE_SECURE_COOKIES', '').lower() == 'true'
+    if production and not os.environ.get('AGRIWISE_SECRET_KEY'):
         raise RuntimeError('AGRIWISE_SECRET_KEY must be configured in production.')
     if test_config:
         app.config.update(test_config)
@@ -240,6 +251,15 @@ def create_app(test_config=None) -> Flask:
         db = g.pop("db", None)
         if db is not None:
             db.close()
+
+    @app.after_request
+    def set_security_headers(response):
+        response.headers.setdefault('X-Content-Type-Options', 'nosniff')
+        response.headers.setdefault('X-Frame-Options', 'DENY')
+        response.headers.setdefault('Referrer-Policy', 'strict-origin-when-cross-origin')
+        response.headers.setdefault('Permissions-Policy', 'camera=(), microphone=(), geolocation=(self)')
+        response.headers.setdefault('Content-Security-Policy', "base-uri 'self'; object-src 'none'; frame-ancestors 'none'")
+        return response
 
     db_init(app.config["DATABASE"])
     # Missing models are handled at prediction time; startup must not retrain.
@@ -303,12 +323,12 @@ def create_app(test_config=None) -> Flask:
             email = (request.form.get("email") or "").strip().lower()
             password = request.form.get("password") or ""
 
-            if not name or not email or len(password) < 6:
-                flash("Please provide a valid name, email, and password (min 6 characters).", "danger")
+            if not name or len(name) > 120 or not valid_email(email) or not valid_password(password):
+                flash("Unable to create an account with those details.", "danger")
                 return render_template("register.html")
 
             if get_db().execute("SELECT id FROM users WHERE email = ?", (email,)).fetchone():
-                flash("This email address is already registered.", "warning")
+                flash("Unable to create an account with those details.", "danger")
                 return render_template("register.html")
 
             hashed = generate_password_hash(password)
@@ -317,7 +337,9 @@ def create_app(test_config=None) -> Flask:
                 (name, email, hashed),
             )
             get_db().commit()
+            session.clear()
             session["user_id"] = cursor.lastrowid
+            session.permanent = True
             flash("Welcome to AgriWise AI! Please configure your farm location to begin.", "success")
             return redirect(url_for("farm_setup"))
 
@@ -329,8 +351,10 @@ def create_app(test_config=None) -> Flask:
             email = (request.form.get("email") or "").strip().lower()
             password = request.form.get("password") or ""
             row = get_db().execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
-            if row and check_password_hash(row["password_hash"], password):
+            if row and len(password) <= 128 and check_password_hash(row["password_hash"], password):
+                session.clear()
                 session["user_id"] = row["id"]
+                session.permanent = True
                 farm = get_user_farm(row["id"])
                 flash("Welcome back to AgriWise AI.", "success")
                 if not farm:
@@ -339,7 +363,7 @@ def create_app(test_config=None) -> Flask:
             flash("Invalid email or password.", "danger")
         return render_template("login.html")
 
-    @app.route("/logout")
+    @app.route("/logout", methods=["POST"])
     def logout():
         session.clear()
         flash("You have been logged out securely.", "info")
@@ -1351,6 +1375,34 @@ def create_app(test_config=None) -> Flask:
         user = get_current_user()
         farm = get_user_farm(user["id"])
         return render_template("settings.html", user=user, farm=farm)
+
+    @app.route("/settings/change-password", methods=["POST"])
+    @login_required
+    def change_password():
+        user = get_current_user()
+        current_password = request.form.get('current_password') or ''
+        new_password = request.form.get('new_password') or ''
+        confirm_password = request.form.get('confirm_password') or ''
+
+        if len(current_password) > 128 or not check_password_hash(user['password_hash'], current_password):
+            flash('Current password is incorrect.', 'danger')
+            return redirect(url_for('settings_page'))
+        if not valid_password(new_password):
+            flash('New password must have at least 8 characters including a letter and a number.', 'danger')
+            return redirect(url_for('settings_page'))
+        if new_password != confirm_password:
+            flash('New password and confirmation do not match.', 'danger')
+            return redirect(url_for('settings_page'))
+        if check_password_hash(user['password_hash'], new_password):
+            flash('Choose a password different from your current password.', 'danger')
+            return redirect(url_for('settings_page'))
+
+        get_db().execute('UPDATE users SET password_hash = ? WHERE id = ?',
+                         (generate_password_hash(new_password), user['id']))
+        get_db().commit()
+        session.clear()
+        flash('Password changed. Sign in again with your new password.', 'success')
+        return redirect(url_for('login'))
 
     @app.route("/settings/update-profile", methods=["POST"])
     @login_required

@@ -71,7 +71,7 @@ or hosted deployment. See the delivery message for actual Git status.
 
 ## Final verification
 
-- Full regression: `python -m pytest -q` — 35 passed in 16.28 seconds.
+- Core product audit baseline: `python -m pytest -q` — 35 passed in 16.28 seconds.
 - Saved-model evaluation: passed without retraining or overwriting model files.
 - Core journey: register/login, location, soil, weather, ML, lifecycle, generated
   irrigation task, confirmed completion, changed advice, problem report, market
@@ -84,3 +84,55 @@ or hosted deployment. See the delivery message for actual Git status.
 - Known unavailable: official mandi connectivity/key validation, independent crop
   field validation, image diagnosis, durable serverless SQLite/uploads and shared
   refresh coordination across instances. No deployment was performed by this audit.
+
+## Account security hardening — 2026-10-02
+
+- Registration normalizes email case, validates basic email syntax, bounds names,
+  and requires an 8–128 character password containing a letter and digit. Passwords
+  are stored with Werkzeug password hashing. Duplicate and malformed registrations
+  share one generic response; login errors are generic as well.
+- Successful registration/login clears pre-auth session state and creates a
+  permanent 12-hour session. Production and Vercel always set Secure cookies;
+  HttpOnly and SameSite=Lax are enabled. The production secret is required and read
+  from `AGRIWISE_SECRET_KEY` at app creation.
+- All state-changing POSTs use the existing CSRF check. Logout is now POST-only.
+  Password change validates the current password, new password and confirmation,
+  saves a new hash, then signs out the current browser session.
+- Responses set nosniff, frame, referrer, permissions and scoped CSP headers. The
+  CSP intentionally does not restrict script/style sources because the existing
+  UI depends on external assets and inline code; this is not a full XSS CSP.
+- Settings now includes the password-change flow; the disabled language selector
+  was removed. The shared navigation logout controls submit CSRF-protected forms.
+- Tests cover generic registration errors, normalized duplicate email, secure
+  production cookie flags, session lifetime, password change/logout, CSRF logout,
+  and cross-farmer activity/report/image ID tampering.
+
+### Deliberate limitations
+
+- Password reset is not offered because no email provider/token delivery is
+  configured. No fake reset workflow is exposed.
+- There is no shared rate-limit store. Per-process throttling would not reliably
+  protect this multi-instance/serverless deployment, so login rate limiting remains
+  a production follow-up requiring a shared store.
+- Flask's signed-cookie session has no server-side revocation list. Logout and
+  password change invalidate the current browser cookie; password change does not
+  revoke already-issued cookies on other devices before their expiry.
+- No deployment or Git push was performed. Vercel still needs a deployment from
+  this workspace before these source changes affect the hosted site.
+
+## Current workspace verification — 2026-10-02
+
+- `python -m pytest -q`: 42 passed.
+- Browser smoke journey: registration, farm setup, 12 authenticated routes,
+  password change, old-session logout, re-login, mobile overflow/sidebar checks;
+  no JavaScript errors. This is a local isolated database, not production data.
+- Production-configured import and `scripts/verify_serverless.py`: passed with
+  isolated temporary storage, `AGRIWISE_SECRET_KEY`, secure cookies enabled, and
+  the repository-write audit hook.
+- Security regression tests: generic duplicate/invalid registration errors,
+  normalized email uniqueness, password validation/change, CSRF logout, cookie
+  attributes/headers, missing production secret rejection, and cross-farmer ID and
+  private image access checks.
+- Not verified: hosted deployment, rate limiting through a shared store, revoking
+  sessions on other devices, email-based password reset, live market API access,
+  independent field validation of the crop dataset, or disease image inference.

@@ -13,9 +13,9 @@ def test_closed_loop_journey_and_local_persistence(tmp_path, monkeypatch):
     database = tmp_path / 'journey.db'
     application = create_app({'TESTING': True, 'SECRET_KEY': 'test', 'DATABASE': str(database)})
     client = application.test_client()
-    credentials = {'email': 'journey@example.com', 'password': 'test-password'}
+    credentials = {'email': 'journey@example.com', 'password': 'test-pass123'}
     assert client.post('/register', data=dict(credentials, name='Journey')).status_code == 302
-    client.get('/logout')
+    client.post('/logout')
     assert client.post('/login', data=credentials).status_code == 302
     assert client.post('/farm', data={'farm_name': 'Journey Farm', 'area': 2,
            'latitude': 18.5, 'longitude': 73.8, 'location_name': 'Test location'}).status_code == 302
@@ -37,7 +37,7 @@ def test_closed_loop_journey_and_local_persistence(tmp_path, monkeypatch):
         assert 'Irrigation recommended' not in titles
     assert client.post('/report-problem', data={'crop': 'rice', 'symptoms': 'yellow leaves', 'farmer_notes': 'Observed today'}, follow_redirects=True).status_code == 200
     assert client.get('/market').status_code == 200
-    client.get('/logout')
+    client.post('/logout')
     # Reopen the application with the same local database, rather than reusing its session.
     reopened = create_app({'TESTING': True, 'SECRET_KEY': 'test', 'DATABASE': str(database)}).test_client()
     reopened.post('/login', data=credentials)

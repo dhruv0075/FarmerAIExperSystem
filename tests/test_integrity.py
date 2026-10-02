@@ -3,7 +3,9 @@ import sqlite3
 from datetime import date
 
 import pytest
+from PIL import Image
 
+import app as app_module
 from test_extended_flows import setup_client
 from services.official_market_service import parse_records
 from services.expert_system import evaluate_expert_system
@@ -64,3 +66,34 @@ def test_rescheduled_task_is_not_completed(tmp_path):
     client.post(f'/activities/{activity_id}/status', data={'status': 'RESCHEDULED', 'rescheduled_date': '2026-12-01'})
     with sqlite3.connect(db) as conn:
         assert conn.execute('SELECT status, due_date, completed_at FROM farm_activities').fetchone() == ('PENDING', '2026-12-01', None)
+
+
+def test_cross_user_ids_cannot_mutate_activities_or_read_reports(tmp_path, monkeypatch):
+    application, owner, database = setup_client(tmp_path)
+    monkeypatch.setattr(app_module, 'UPLOAD_FOLDER', tmp_path / 'private_uploads')
+    owner.post('/activities/create', data={'title': 'Private irrigation task', 'activity_type': 'Irrigation'})
+    with sqlite3.connect(database) as conn:
+        activity_id = conn.execute('SELECT id FROM farm_activities').fetchone()[0]
+
+    outsider = application.test_client()
+    outsider.post('/register', data={
+        'name': 'Other Farmer', 'email': 'other@example.com', 'password': 'other-pass123'
+    })
+    outsider.post('/farm', data={'farm_name': 'Other farm', 'area': 1})
+    outsider.post(f'/activities/{activity_id}/status', data={'status': 'COMPLETED'})
+    with sqlite3.connect(database) as conn:
+        assert conn.execute('SELECT status, completed_at FROM farm_activities WHERE id = ?', (activity_id,)).fetchone() == ('PENDING', None)
+
+    image_bytes = io.BytesIO()
+    Image.new('RGB', (2, 2), color='green').save(image_bytes, format='PNG')
+    image_bytes.seek(0)
+    owner.post('/report-problem', data={
+        'symptoms': 'private leaf symptoms',
+        'photo': (image_bytes, 'private.png', 'image/png'),
+    }, content_type='multipart/form-data')
+    with sqlite3.connect(database) as conn:
+        report_id = conn.execute('SELECT id FROM disease_reports').fetchone()[0]
+
+    assert owner.get(f'/disease-image/{report_id}').status_code == 200
+    assert outsider.get(f'/disease-image/{report_id}').status_code == 404
+    assert outsider.get(f'/disease-result/{report_id}').status_code == 302
