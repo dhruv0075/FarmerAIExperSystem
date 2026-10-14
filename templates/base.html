@@ -22,9 +22,12 @@
     
     <!-- Custom AgriWise Styles -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/product.css') }}">
     {% block head %}{% endblock %}
   </head>
-  <body>
+  <body class="{% block body_class %}{% endblock %}">
+    <!-- Keyboard users can bypass repeated navigation. -->
+    <a class="skip-link" href="#main-content">Skip to main content</a>
     <!-- Top Navigation Bar -->
     <header class="app-navbar d-flex align-items-center justify-content-between">
       <div class="d-flex align-items-center">
@@ -54,15 +57,14 @@
       <!-- Right Profile & Notifications -->
       <div class="d-flex align-items-center gap-2">
         {% if session.get('user_id') %}
-          <a href="{{ url_for('notifications_page') }}" class="btn btn-light position-relative rounded-circle p-2 text-secondary" title="Notifications">
-            <i class="fa-regular fa-bell"></i>
+          <a href="{{ url_for('notifications_page') }}" class="btn btn-light position-relative rounded-circle p-2 text-secondary" title="Notifications" aria-label="Notifications">
+            <i class="fa-regular fa-bell" aria-hidden="true"></i>
             {% if g.unread_notifications and g.unread_notifications > 0 %}
               <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size:0.65rem;">
                 {{ g.unread_notifications }}
               </span>
             {% endif %}
           </a>
-
           <div class="dropdown">
             <button class="btn btn-light dropdown-toggle d-flex align-items-center gap-2 border" type="button" data-bs-toggle="dropdown" aria-expanded="false">
               <i class="fa-regular fa-circle-user text-success fs-5"></i>
@@ -91,16 +93,12 @@
           <div class="sidebar-nav">
             
             <a class="sidebar-link {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}"><i class="fa-solid fa-gauge-high"></i> Dashboard</a>
-            <a class="sidebar-link {% if request.endpoint == 'farm_profile' %}active{% endif %}" href="{{ url_for('farm_profile') }}"><i class="fa-solid fa-tractor"></i> My Farm</a>
+            <a class="sidebar-link {% if request.endpoint == 'farm_profile' %}active{% endif %}" href="{{ url_for('farm_profile') }}"><i class="fa-solid fa-tractor"></i> Farm Setup</a>
             <a class="sidebar-link {% if request.endpoint == 'crop_recommendation' %}active{% endif %}" href="{{ url_for('crop_recommendation') }}"><i class="fa-solid fa-seedling"></i> Crop Recommendation</a>
             <a class="sidebar-link {% if request.endpoint == 'lifecycle_page' %}active{% endif %}" href="{{ url_for('lifecycle_page') }}"><i class="fa-solid fa-calendar"></i> Crop Lifecycle</a>
-            <a class="sidebar-link {% if request.endpoint == 'activities_page' %}active{% endif %}" href="{{ url_for('activities_page') }}"><i class="fa-solid fa-list-check"></i> Farm Activities</a>
-            <a class="sidebar-link {% if request.endpoint == 'weather_page' %}active{% endif %}" href="{{ url_for('weather_page') }}"><i class="fa-solid fa-cloud-sun"></i> Weather & Advisories</a>
-            <a class="sidebar-link {% if request.endpoint == 'report_problem_page' %}active{% endif %}" href="{{ url_for('report_problem_page') }}"><i class="fa-solid fa-clipboard"></i> Report Crop Problem</a>
-            <a class="sidebar-link {% if request.endpoint == 'market_page' %}active{% endif %}" href="{{ url_for('market_page') }}"><i class="fa-solid fa-shop"></i> Market Prices</a>
-            <a class="sidebar-link {% if request.endpoint == 'history_page' %}active{% endif %}" href="{{ url_for('history_page') }}"><i class="fa-solid fa-clock-rotate-left"></i> History</a>
-            <a class="sidebar-link {% if request.endpoint == 'research_page' %}active{% endif %}" href="{{ url_for('research_page') }}"><i class="fa-solid fa-book-open"></i> Research / AI Details</a>
-            <a class="sidebar-link {% if request.endpoint == 'settings_page' %}active{% endif %}" href="{{ url_for('settings_page') }}"><i class="fa-solid fa-gear"></i> Settings</a>
+            <a class="sidebar-link {% if request.endpoint == 'activities_page' %}active{% endif %}" href="{{ url_for('activities_page') }}"><i class="fa-solid fa-list-check"></i> Activities</a>
+            <a class="sidebar-link {% if request.endpoint == 'weather_page' %}active{% endif %}" href="{{ url_for('weather_page') }}"><i class="fa-solid fa-cloud-sun"></i> Weather</a>
+            <a class="sidebar-link {% if request.endpoint == 'report_problem_page' %}active{% endif %}" href="{{ url_for('report_problem_page') }}"><i class="fa-solid fa-clipboard"></i> Problem Report</a>
             <form method="POST" action="{{ url_for('logout') }}" class="m-0"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="sidebar-link w-100 border-0 bg-transparent text-start" type="submit"><i class="fa-solid fa-right-from-bracket"></i> Logout</button></form>
 
           </div>
@@ -108,15 +106,15 @@
       {% endif %}
 
       <!-- Main Content Container -->
-      <main class="app-content">
+      <main class="app-content" id="main-content" tabindex="-1">
         <!-- Toast / Flash Messages -->
         {% with messages = get_flashed_messages(with_categories=true) %}
           {% if messages %}
-            <div class="no-print mb-3">
+            <div class="no-print mb-3" role="status" aria-live="polite">
               {% for category, message in messages %}
-                <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show shadow-sm" role="alert">
+                <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show shadow-sm" role="{{ 'alert' if category in ('danger', 'error') else 'status' }}">
                   <div class="d-flex align-items-center">
-                    <i class="fa-solid fa-circle-info me-2"></i>
+                    <i class="fa-solid {{ 'fa-triangle-exclamation' if category in ('danger', 'error') else 'fa-circle-info' }} me-2" aria-hidden="true"></i>
                     <div>{{ message }}</div>
                   </div>
                   <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>

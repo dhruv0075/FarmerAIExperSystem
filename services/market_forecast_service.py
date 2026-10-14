@@ -28,24 +28,42 @@ def forecast_commodity_price(
             "forecast_generated": False,
         }
 
-    history = comm_data.get("history_30d", [])
-    if len(history) < 20:
+    history_by_series = {}
+    for entry in comm_data.get("history_30d", []):
+        try:
+            market_name = str(entry["market_name"]).strip()
+            variety = str(entry.get("variety") or "Unspecified").strip()
+            observed_date = datetime.fromisoformat(entry["date"])
+            modal = float(entry["modal"])
+        except (KeyError, TypeError, ValueError):
+            continue
+        if not market_name or not variety or not math.isfinite(modal) or modal <= 0:
+            continue
+        history_by_series.setdefault((market_name, variety), {})[observed_date.date()] = {
+            "date": observed_date,
+            "modal": modal,
+        }
+    (market_name, variety), history = max(
+        history_by_series.items(), key=lambda item: len(item[1]), default=((None, None), {})
+    )
+    observations = sorted(history.values(), key=lambda entry: entry["date"])
+    if len(observations) < 20:
         return {
             "commodity": commodity,
             "status": "INSUFFICIENT_HISTORY",
-            "message": "Fewer than 20 comparable historical observations; insufficient historical data for reliable forecast.",
+            "message": f"At least 20 distinct daily observations from one market and variety are required; the best available series has {len(observations)}.",
             "forecast_generated": False,
         }
 
     # Extract days as integers (0, 7, 14, 21, 28)
-    base_date = datetime.fromisoformat(history[0]["date"])
+    base_date = observations[0]["date"]
     X = []
     y = []
-    for entry in history:
-        entry_date = datetime.fromisoformat(entry["date"])
+    for entry in observations:
+        entry_date = entry["date"]
         days_diff = (entry_date - base_date).days
         X.append([days_diff])
-        y.append(float(entry["modal"]))
+        y.append(entry["modal"])
 
     X_arr = np.array(X)
     y_arr = np.array(y)
@@ -91,7 +109,9 @@ def forecast_commodity_price(
         "commodity": comm_data.get("commodity", commodity),
         "status": "SUCCESS",
         "forecast_generated": True,
-        "model_name": "Time-Series Linear Trend Regression with Moving Variance",
+        "model_name": "Time-Series Linear Trend Regression",
+        "market_name": market_name,
+        "variety": variety,
         "observation_count": len(history),
         "evaluation_metrics": {
             "mae": round(mae, 2),
@@ -112,4 +132,3 @@ def forecast_commodity_price(
 
 
 generate_price_forecast = forecast_commodity_price
-

@@ -1,16 +1,62 @@
 {% extends 'base.html' %}
 {% block title %}AgriWise AI | Home{% endblock %}
+{% block body_class %}public-home{% endblock %}
 {% block content %}
-<section class="landing-hero mb-5">
-  <img class="landing-image" src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=2000&q=85" alt="Cultivated green fields under a wide open sky">
-  <div class="landing-copy"><p class="eyebrow text-white mb-3">Crop lifecycle decision support</p><h1>AI-Powered Decisions From Sowing to Harvest</h1><p>Connect crop recommendations, live weather, growth stages, transparent rules, and farmer-confirmed field actions in one decision-support workspace.</p><div class="d-flex gap-2 flex-wrap"><a class="btn btn-success btn-lg" href="{{ url_for('register') }}">Create farm account</a><a class="btn btn-outline-light btn-lg" href="{{ url_for('research_page') }}">About the research</a></div></div>
+<div class="product-home-page">
+<section class="product-hero" aria-labelledby="hero-title">
+  <img class="product-hero__image" src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=2200&q=85" alt="Rows of cultivated farmland beneath a clear morning sky" fetchpriority="high">
+  <div class="product-hero__wash" aria-hidden="true"></div>
+  <div class="product-hero__scene" data-farm-scene="field" data-scene-state="loading" aria-hidden="true"><canvas></canvas></div>
+  <div class="product-hero__content">
+    <p class="product-eyebrow"><span></span> Grounded in your farm, guided by evidence</p>
+    <h1 id="hero-title">AgriWise AI</h1>
+    <p class="product-hero__tagline">Understand field conditions. Review a crop recommendation. Track the lifecycle.</p>
+    <p class="product-hero__description">Use farm inputs and a trained crop classifier to review crop suggestions, then track estimated crop stages and keep farm records. Farmer records do not automatically retrain the model.</p>
+    <div class="product-hero__actions">
+      {% if session.get('user_id') %}
+        <a class="product-button product-button--light" href="{{ url_for('dashboard') }}">Open Dashboard <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+      {% else %}
+        <a class="product-button product-button--light" href="{{ url_for('register') }}">Start Farming Smarter <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+        <a class="product-button product-button--outline" href="{{ url_for('login') }}">Login</a>
+      {% endif %}
+    </div>
+    <div class="product-hero__proof" aria-label="Product principles">
+      <span><i class="fa-solid fa-seedling" aria-hidden="true"></i> Crop choices</span>
+      <span><i class="fa-solid fa-cloud-sun" aria-hidden="true"></i> Local weather</span>
+      <span><i class="fa-solid fa-check-double" aria-hidden="true"></i> Confirmed actions</span>
+    </div>
+  </div>
+  <div class="product-hero__caption"><span>Field context</span><span>Weather-aware planning</span><span>Farmer in control</span></div>
 </section>
 
-<section class="landing-section mb-5"><div class="d-flex justify-content-between align-items-end flex-wrap gap-2 mb-3"><div><p class="eyebrow mb-1">Decision workflow</p><h2 class="h3 mb-0">How AgriWise works</h2></div><a href="{{ url_for('research_page') }}">Research contribution <i class="fa-solid fa-arrow-right ms-1" aria-hidden="true"></i></a></div>
-  <ol class="workflow-list"><li><span>01</span><strong>Understand farm conditions</strong><small>Location, soil inputs, crop, and lifecycle stage</small></li><li><span>02</span><strong>Compare crop options</strong><small>Classifier probabilities and dataset-profile evidence</small></li><li><span>03</span><strong>Analyze weather</strong><small>Live observations, seven-day trends, and configured risks</small></li><li><span>04</span><strong>Generate explainable advice</strong><small>Rules show reasons and available evidence</small></li><li><span>05</span><strong>Track farmer actions</strong><small>Pending, completed, and skipped are distinct</small></li><li><span>06</span><strong>Use confirmed history</strong><small>Future rules consider completed actions only</small></li></ol>
+<section class="product-section product-workflow" aria-labelledby="workflow-title">
+  <div class="product-section__heading"><div><p class="product-kicker">Closed-loop farming workflow</p><h2 id="workflow-title">From field understanding to crop lifecycle tracking.</h2></div></div>
+  <ol class="workflow-steps">
+    <li><span>01</span><div><h3>Understand the farm</h3><p>Capture field data, soil inputs and local conditions before choosing a crop.</p></div></li>
+    <li><span>02</span><div><h3>Review crop suggestions</h3><p>Use a trained classifier to compare crop options from the submitted soil and climate inputs.</p></div></li>
+    <li><span>03</span><div><h3>Track the crop lifecycle</h3><p>Monitor crop stages and use the crop-specific timing plan through the season.</p></div></li>
+    <li><span>04</span><div><h3>Keep farm records</h3><p>Record actions and outcomes for your farm history. These records do not automatically retrain the crop model.</p></div></li>
+  </ol>
 </section>
 
-<section class="research-band mb-5"><div><p class="eyebrow mb-1">Closed-loop agricultural decision support</p><h2 class="h3">A recommendation is not proof of an action.</h2></div><p class="mb-0">AgriWise records what the system suggested separately from what the farmer confirms. Activity history can inform later irrigation and fertilizer rules. The platform supports decisions; it does not autonomously operate a farm.</p><a class="btn btn-outline-success" href="{{ url_for('research_page') }}">Read the project contribution</a></section>
+<section class="product-proof-band">
+  <div><span class="product-proof-band__index">01</span><h2>Crop recommendation is guided by farm reality.</h2></div>
+  <p>The system uses farm inputs to suggest crop options and tracks the active cycle through estimated stages. Confirmed actions can inform rule-based advisories but do not retrain the crop classifier.</p>
+  {% if session.get('user_id') %}
+    <a class="product-button product-button--dark" href="{{ url_for('dashboard') }}">Continue to your farm <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+  {% else %}
+    <a class="product-button product-button--dark" href="{{ url_for('register') }}">Start with your farm <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+  {% endif %}
+</section>
 
-<section class="landing-section mb-4"><p class="eyebrow mb-1">System components</p><h2 class="h3 mb-4">One workspace across the crop cycle</h2><div class="component-grid"><article><i class="fa-solid fa-brain" aria-hidden="true"></i><h3>Machine learning</h3><p>Crop classification, model comparison, and saved evaluation metrics.</p></article><article><i class="fa-solid fa-cloud-sun-rain" aria-hidden="true"></i><h3>Weather intelligence</h3><p>Measured conditions, seven-day trends, and configurable risk screening.</p></article><article><i class="fa-solid fa-list-check" aria-hidden="true"></i><h3>Expert system</h3><p>IF-THEN advice with evidence and confirmed activity facts.</p></article><article><i class="fa-solid fa-seedling" aria-hidden="true"></i><h3>Crop lifecycle</h3><p>Estimated growth stages and pending stage-specific tasks.</p></article></div></section>
+<section class="product-section product-capabilities" aria-labelledby="capabilities-title">
+  <div class="product-section__heading"><div><p class="product-kicker">Built around the crop cycle</p><h2 id="capabilities-title">Practical, crop-specific guidance for the field.</h2></div></div>
+  <div class="capability-list">
+    <article><span>01</span><div><h3>Farm understanding</h3><p>Use the farm profile and soil inputs to create a real context before recommending a crop.</p></div><i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></article>
+    <article><span>02</span><div><h3>Crop recommendation</h3><p>Review crop suggestions from the trained classifier using submitted soil and climate inputs.</p></div><i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></article>
+    <article><span>03</span><div><h3>Lifecycle + farm history</h3><p>Track estimated crop stages and record actions. Farm history is not used to automatically train the classifier.</p></div><i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></article>
+  </div>
+</section>
+</div>
 {% endblock %}
+{% block scripts %}<script type="module" src="{{ url_for('static', filename='js/farm-scene.js') }}"></script>{% endblock %}

@@ -11,7 +11,7 @@ import secrets
 from datetime import date, datetime, timedelta, timezone
 from functools import wraps
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Mapping, Optional
 
 from flask import (
     Flask,
@@ -104,6 +104,7 @@ BASE_DIR = Path(__file__).resolve().parent
 load_dotenv(BASE_DIR / '.env')
 UPLOAD_FOLDER = UPLOAD_DIR
 ALLOWED_EXTENSIONS = {"jpg", "jpeg", "png", "webp"}
+MAX_IMAGE_UPLOAD_BYTES = 5 * 1024 * 1024
 
 
 def get_db() -> sqlite3.Connection:
@@ -115,6 +116,32 @@ def get_db() -> sqlite3.Connection:
 
 def allowed_file(filename: str) -> bool:
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+def validate_crop_inputs(data: Mapping[str, Any], include_moisture: bool = False) -> Dict[str, Optional[float]]:
+    fields = ("nitrogen", "phosphorus", "potassium", "ph", "temperature", "humidity", "rainfall")
+    try:
+        values: Dict[str, Optional[float]] = {
+            field: float(data[field])
+            for field in fields
+        }
+        if include_moisture:
+            moisture = data.get("moisture")
+            values["moisture"] = float(moisture) if moisture not in (None, "") else None
+    except (KeyError, TypeError, ValueError):
+        raise ValueError("Enter valid numeric values for all required soil and climate inputs.") from None
+
+    if not all(math.isfinite(value) for value in values.values() if value is not None):
+        raise ValueError("Enter finite numeric values for all soil and climate inputs.")
+    if not 0 <= values["ph"] <= 14:
+        raise ValueError("pH must be between 0 and 14.")
+    if not 0 <= values["humidity"] <= 100:
+        raise ValueError("Humidity must be between 0 and 100.")
+    if any(values[field] < 0 for field in ("nitrogen", "phosphorus", "potassium", "rainfall")):
+        raise ValueError("Nutrients and rainfall must be nonnegative.")
+    if include_moisture and values["moisture"] is not None and not 0 <= values["moisture"] <= 100:
+        raise ValueError("Moisture must be between 0 and 100.")
+    return values
 
 
 def valid_password(password: str) -> bool:
@@ -171,6 +198,36 @@ def get_latest_cycle(farm_id: int) -> Optional[Dict[str, Any]]:
     cycle = dict(row)
     cycle.update(get_crop_stage_summary(cycle["crop_name"], cycle["sowing_date"]))
     return cycle
+
+
+def ensure_lifecycle_activities(db: sqlite3.Connection, farm_id: int, cycle: Dict[str, Any]) -> int:
+    summary = get_crop_stage_summary(cycle["crop_name"], cycle["sowing_date"])
+    stage = summary["current_stage"]
+    recommendations = generate_stage_activities(cycle["crop_name"], stage, date.today())
+    created = 0
+    for activity in recommendations:
+        existing = db.execute(
+            """SELECT id FROM farm_activities
+               WHERE farm_id = ? AND crop_cycle_id = ? AND crop_stage = ? AND title = ?""",
+            (farm_id, cycle["id"], stage, activity["title"]),
+        ).fetchone()
+        if existing:
+            continue
+        db.execute(
+            """INSERT INTO farm_activities
+               (crop_cycle_id, farm_id, activity_type, title, description, reason, evidence,
+                crop_stage, recommended_date, due_date, priority, urgency, status)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'PENDING')""",
+            (
+                cycle["id"], farm_id, activity["activity_type"], activity["title"],
+                activity["description"], activity["reason"], activity["evidence"],
+                stage, activity["recommended_date"], activity["due_date"], activity["priority"], activity["urgency"],
+            ),
+        )
+        created += 1
+    if created:
+        db.commit()
+    return created
 
 
 def get_latest_weather(farm_id: int) -> Optional[Dict[str, Any]]:
@@ -236,7 +293,7 @@ def create_app(test_config=None) -> Flask:
     app = Flask(__name__)
     app.config["SECRET_KEY"] = os.environ.get('AGRIWISE_SECRET_KEY') or SECRET_KEY
     app.config["DATABASE"] = str(DB_PATH)
-    app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024  # 5MB max upload
+    app.config["MAX_CONTENT_LENGTH"] = MAX_IMAGE_UPLOAD_BYTES + 64 * 1024
     app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=12)
     app.config['SESSION_COOKIE_HTTPONLY'] = True
     app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
@@ -387,6 +444,22 @@ def create_app(test_config=None) -> Flask:
         farm = get_user_farm(user["id"])
 
         if request.method == "POST":
+            soil_values = {
+                field: request.form.get(field, "")
+                for field in ("nitrogen", "phosphorus", "potassium", "ph", "moisture")
+            }
+
+            def render_setup_error(message):
+                flash(message, "danger")
+                return render_template(
+                    "farm_setup.html",
+                    farm=farm,
+                    soil=soil_values,
+                    default_lat=farm["latitude"] if farm and farm["latitude"] else None,
+                    default_lon=farm["longitude"] if farm and farm["longitude"] else None,
+                    default_location=farm["location_name"] if farm and farm["location_name"] else "",
+                )
+
             farm_name = (request.form.get("farm_name") or "").strip()
             location_name = (request.form.get("location_name") or "").strip()
             latitude = request.form.get("latitude")
@@ -398,18 +471,15 @@ def create_app(test_config=None) -> Flask:
             irrigation_type = (request.form.get("irrigation_type") or "Drip").strip()
             water_availability = (request.form.get("water_availability") or "Medium").strip()
             previous_crop = (request.form.get("previous_crop") or "").strip()
-
             if not farm_name:
-                flash("Farm name is required.", "danger")
-                return render_template("farm_setup.html", farm=farm)
+                return render_setup_error("Farm name is required.")
 
             try:
                 area_val = float(area)
                 if not math.isfinite(area_val) or area_val <= 0:
                     raise ValueError
             except ValueError:
-                flash("Farm area must be a positive number.", "danger")
-                return render_template("farm_setup.html", farm=farm)
+                return render_setup_error("Farm area must be a positive number.")
 
             lat_val = None
             lon_val = None
@@ -420,8 +490,26 @@ def create_app(test_config=None) -> Flask:
                     if not is_valid_coordinates(lat_val, lon_val):
                         raise ValueError
                 except ValueError:
-                    flash("Coordinates are invalid. Latitude must be -90..90 and Longitude -180..180.", "danger")
-                    return render_template("farm_setup.html", farm=farm)
+                    return render_setup_error("Coordinates are invalid. Latitude must be -90..90 and Longitude -180..180.")
+
+            try:
+                soil_values = {
+                    field: float(soil_values[field])
+                    for field in ("nitrogen", "phosphorus", "potassium", "ph")
+                } | {"moisture": float(soil_values["moisture"]) if soil_values["moisture"] else None}
+                if not all(math.isfinite(value) for value in soil_values.values() if value is not None):
+                    raise ValueError
+                if any(soil_values[field] < 0 for field in ("nitrogen", "phosphorus", "potassium")):
+                    raise ValueError
+                if not 0 <= soil_values["ph"] <= 14:
+                    raise ValueError
+                if soil_values["moisture"] is not None and not 0 <= soil_values["moisture"] <= 100:
+                    raise ValueError
+            except (TypeError, ValueError):
+                return render_setup_error(
+                    "Enter measured nitrogen, phosphorus, potassium, and pH values from a soil test. "
+                    "Nutrients must be nonnegative, pH must be 0–14, and moisture must be 0–100%."
+                )
 
             if farm:
                 get_db().execute(
@@ -447,36 +535,31 @@ def create_app(test_config=None) -> Flask:
                     (user["id"], farm_name, location_name, lat_val, lon_val, area_val, area_unit, water_source, soil_type, irrigation_type, water_availability, previous_crop),
                 )
                 farm_id = cursor.lastrowid
-                flash("Farm initialized! Now explore recommendations and daily planning.", "success")
+                flash("Farm profile saved. Next step: recommend a suitable crop for this field.", "success")
 
             get_db().execute("UPDATE farms SET farm_type=?, risk_preference=?, preferred_crop_type=?, previous_harvest_date=?, budget_range=? WHERE id=?",
                 (request.form.get('farm_type', 'Mixed'), request.form.get('risk_preference', 'Balanced'), request.form.get('preferred_crop_type', 'No preference'), request.form.get('previous_harvest_date') or None, request.form.get('budget_range'), farm_id))
 
-            # Record baseline soil snapshot if provided
-            n_val = request.form.get("nitrogen")
-            p_val = request.form.get("phosphorus")
-            k_val = request.form.get("potassium")
-            ph_val = request.form.get("ph")
-            moist_val = request.form.get("moisture")
-            if not request.form.get("no_soil_test") and n_val and p_val and k_val and ph_val:
-                try:
-                    get_db().execute(
-                        """
-                        INSERT INTO soil_records (farm_id, nitrogen, phosphorus, potassium, ph, moisture, temperature, humidity, rainfall)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                        """,
-                        (farm_id, float(n_val), float(p_val), float(k_val), float(ph_val), float(moist_val) if moist_val else None, None, None, None),
-                    )
-                except Exception:
-                    pass
+            get_db().execute(
+                """
+                INSERT INTO soil_records (farm_id, nitrogen, phosphorus, potassium, ph, moisture, temperature, humidity, rainfall)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    farm_id, soil_values["nitrogen"], soil_values["phosphorus"],
+                    soil_values["potassium"], soil_values["ph"], soil_values["moisture"],
+                    None, None, None,
+                ),
+            )
 
             get_db().commit()
-            return redirect(url_for("dashboard"))
+            return redirect(url_for("crop_recommendation"))
 
-        default_loc = get_default_farm_location()
+        soil = get_latest_soil_record(farm["id"]) if farm else None
         return render_template(
             "farm_setup.html",
             farm=farm,
+            soil=soil,
             default_lat=farm["latitude"] if farm and farm["latitude"] else None,
             default_lon=farm["longitude"] if farm and farm["longitude"] else None,
             default_location=farm["location_name"] if farm and farm["location_name"] else "",
@@ -603,30 +686,19 @@ def create_app(test_config=None) -> Flask:
 
         if request.method == "POST":
             try:
-                moisture_val = (request.form.get("moisture") or "").strip()
-                stage_data = {
-                    "nitrogen": float(request.form.get("nitrogen", "")),
-                    "phosphorus": float(request.form.get("phosphorus", "")),
-                    "potassium": float(request.form.get("potassium", "")),
-                    "ph": float(request.form.get("ph", "")),
-                    "temperature": float(request.form.get("temperature", "")),
-                    "humidity": float(request.form.get("humidity", "")),
-                    "rainfall": float(request.form.get("rainfall", "")),
-                    "moisture": float(moisture_val) if moisture_val else None,
-                }
-            except ValueError:
-                flash("Enter valid numeric values for all soil and climate inputs.", "danger")
+                stage_data = validate_crop_inputs(request.form, include_moisture=True)
+            except ValueError as exc:
+                flash(str(exc), "danger")
                 return render_template("crop_recommendation.html", farm=farm, soil=soil)
 
-            if (not all(math.isfinite(v) for v in stage_data.values() if v is not None)
-                or not 0 <= stage_data["ph"] <= 14
-                or not 0 <= stage_data["humidity"] <= 100
-                or any(stage_data[k] < 0 for k in ('nitrogen', 'phosphorus', 'potassium', 'rainfall'))
-                or (stage_data['moisture'] is not None and not 0 <= stage_data['moisture'] <= 100)):
-                flash("Enter finite values: pH 0–14, humidity/moisture 0–100, and nonnegative nutrients/rainfall.", "danger")
-                return render_template("crop_recommendation.html", farm=farm, soil=soil)
+            try:
+                ml_pred = predict_crop(stage_data)
+                explanation = build_explanation(ml_pred, stage_data)
+            except Exception:
+                current_app.logger.exception("Crop recommendation failed")
+                flash("Crop recommendation is temporarily unavailable. Please try again later.", "warning")
+                return render_template("crop_recommendation.html", farm=farm, soil=stage_data), 503
 
-            # Persist soil record
             get_db().execute(
                 """
                 INSERT INTO soil_records (farm_id, nitrogen, phosphorus, potassium, ph, moisture, temperature, humidity, rainfall)
@@ -634,9 +706,6 @@ def create_app(test_config=None) -> Flask:
                 """,
                 (farm["id"], stage_data["nitrogen"], stage_data["phosphorus"], stage_data["potassium"], stage_data["ph"], stage_data["moisture"], stage_data["temperature"], stage_data["humidity"], stage_data["rainfall"]),
             )
-
-            ml_pred = predict_crop(stage_data)
-            explanation = build_explanation(ml_pred, stage_data)
 
             # Insert into crop_recommendations
             rec_cursor = get_db().execute(
@@ -820,7 +889,7 @@ def create_app(test_config=None) -> Flask:
             )
             # Create pending task if actionable
             if adv.get("severity") in ["WARNING", "URGENT", "CAUTION"]:
-                if get_db().execute("SELECT id FROM farm_activities WHERE farm_id=? AND crop_cycle_id=? AND title=? AND due_date=? AND status='PENDING'", (farm['id'], cycle['id'], adv.get('title', ''), today)).fetchone():
+                if get_db().execute("SELECT id FROM farm_activities WHERE farm_id=? AND crop_cycle_id=? AND title=? AND due_date=?", (farm['id'], cycle['id'], adv.get('title', ''), today)).fetchone():
                     continue
                 prio = "HIGH" if adv.get("severity") in ["WARNING", "URGENT"] else "MEDIUM"
                 get_db().execute(
@@ -847,6 +916,9 @@ def create_app(test_config=None) -> Flask:
         farm = get_user_farm(get_current_user()["id"])
         activities = []
         if farm:
+            cycle = get_latest_cycle(farm["id"])
+            if cycle:
+                ensure_lifecycle_activities(get_db(), farm["id"], cycle)
             query = "SELECT a.*, c.crop_name FROM farm_activities a LEFT JOIN crop_cycles c ON c.id = a.crop_cycle_id WHERE a.farm_id = ?"
             params = [farm["id"]]
             status_filter = (request.args.get("status") or "").upper()
@@ -874,13 +946,23 @@ def create_app(test_config=None) -> Flask:
         farm = get_user_farm(get_current_user()["id"])
         title = (request.form.get("title") or "").strip()
         activity_type = (request.form.get("activity_type") or "Field inspection").strip()
-        due_date = (request.form.get("due_date") or date.today().isoformat()).strip()
+        due_date_value = (request.form.get("due_date") or date.today().isoformat()).strip()
         description = (request.form.get("description") or "").strip()
         priority = (request.form.get("priority") or "MEDIUM").strip().upper()
         cycle = get_latest_cycle(farm["id"]) if farm else None
 
+        try:
+            due_date = date.fromisoformat(due_date_value).isoformat()
+        except ValueError:
+            return render_template("error.html", message="Enter a valid activity due date."), 400
         if not farm or not title:
             flash("Activity title is required.", "danger")
+            return redirect(url_for("activities_page"))
+        if len(title) > 200:
+            flash("Activity title must be 200 characters or fewer.", "danger")
+            return redirect(url_for("activities_page"))
+        if priority not in {"LOW", "MEDIUM", "HIGH"}:
+            flash("Choose a valid activity priority.", "danger")
             return redirect(url_for("activities_page"))
 
         get_db().execute(
@@ -957,6 +1039,9 @@ def create_app(test_config=None) -> Flask:
         if not farm:
             return redirect(url_for("farm_setup"))
 
+        if cycle and request.method == "GET":
+            ensure_lifecycle_activities(get_db(), farm["id"], cycle)
+
         if request.method == "POST":
             crop = (request.form.get("crop") or default_crop).strip()
             plant_part = (request.form.get("plant_part") or "Leaf").strip()
@@ -981,6 +1066,8 @@ def create_app(test_config=None) -> Flask:
                         if not allowed_file(file.filename) or file.mimetype not in {'image/jpeg', 'image/png', 'image/webp'}:
                             raise ValueError
                         image_bytes = file.read()
+                        if len(image_bytes) > MAX_IMAGE_UPLOAD_BYTES:
+                            return render_template("error.html", message="Image exceeds the 5 MiB upload limit."), 413
                         with Image.open(io.BytesIO(image_bytes)) as uploaded:
                             if uploaded.format not in {'JPEG', 'PNG', 'WEBP'}:
                                 raise ValueError
@@ -1155,7 +1242,8 @@ def create_app(test_config=None) -> Flask:
         filters = {key: value for key, value in filters.items() if value}
         if "commodity" in filters:
             filters["commodity"] = filters["commodity"].title()
-        refresh_market_data(filters)
+        refresh_result = refresh_market_data(filters)
+        flash(refresh_result['message'], 'success' if refresh_result['status'] == 'success' else 'warning' if refresh_result['status'] in {'empty', 'missing_key', 'in_progress', 'cooldown'} else 'danger')
         return redirect(url_for("market_page", **filters))
 
     @app.route("/market")
@@ -1191,38 +1279,25 @@ def create_app(test_config=None) -> Flask:
         default_crop = cycle.get("crop_name", "Wheat") if cycle else "Wheat"
 
         commodity = (request.form.get("commodity") or request.args.get("commodity") or default_crop).strip()
-        quantity_qtl = float(request.form.get("quantity_qtl", 25.0))
-        transport_rate = float(request.form.get("transport_rate", 3.0))  # Rs per qtl per km
 
         lat = float(farm["latitude"]) if farm and farm["latitude"] else 18.5204
         lon = float(farm["longitude"]) if farm and farm["longitude"] else 73.8567
 
         market_data = get_market_prices_for_commodity(commodity, lat, lon)
         forecast = generate_price_forecast(commodity)
-
-        # Calculate net returns for each mandi
-        mandis_with_economics = []
-        for m in market_data.get("mandis", []):
-            dist = float(m.get("distance_km", 20.0))
-            price_qtl = float(m.get("modal_price", 2200))
-            gross_rev = quantity_qtl * price_qtl
-            trans_cost = quantity_qtl * dist * transport_rate
-            net_rev = gross_rev - trans_cost
-            m_copy = dict(m)
-            m_copy["gross_revenue"] = round(gross_rev)
-            m_copy["transport_cost"] = round(trans_cost)
-            m_copy["net_revenue"] = round(net_rev)
-            mandis_with_economics.append(m_copy)
-
-        mandis_with_economics.sort(key=lambda x: x["net_revenue"], reverse=True)
+        markets = market_data.get("markets", [])
+        top_market = max(markets, key=lambda item: item["modal_price"], default=None)
 
         return render_template(
             "sell_planner.html",
             commodity=commodity,
-            quantity_qtl=quantity_qtl,
-            transport_rate=transport_rate,
-            mandis=mandis_with_economics,
             forecast=forecast,
+            forecast_info=forecast,
+            market_data=market_data,
+            markets=markets,
+            top_market=top_market,
+            best_market=market_data.get("best_market"),
+            crop_name=commodity,
             farm=farm,
             commodities=get_all_commodities(),
         )
@@ -1298,24 +1373,22 @@ def create_app(test_config=None) -> Flask:
         item_name = (request.form.get("vendor") or request.form.get("item_name") or "").strip()
         try:
             amount = float(request.form.get("amount", 0.0))
-            if not math.isfinite(amount) or amount < 0:
+            expense_date = date.fromisoformat((request.form.get('date') or request.form.get('expense_date') or date.today().isoformat()).strip())
+            if not math.isfinite(amount) or amount <= 0 or expense_date > date.today():
                 raise ValueError
-            date.fromisoformat(request.form.get('date') or request.form.get('expense_date') or date.today().isoformat())
         except ValueError:
-            return render_template('error.html', message='Enter a nonnegative amount and valid date.'), 400
-        expense_date = (request.form.get("date") or request.form.get("expense_date") or date.today().isoformat()).strip()
+            return render_template('error.html', message='Enter a positive finite amount and an expense date no later than today.'), 400
         notes = (request.form.get("notes") or "").strip()
 
-        if amount > 0:
-            get_db().execute(
-                """
-                INSERT INTO farm_expenses (farm_id, category, vendor, amount, date, notes)
-                VALUES (?, ?, ?, ?, ?, ?)
-                """,
-                (farm["id"], category, item_name, amount, expense_date, notes),
-            )
-            get_db().commit()
-            flash(f"Expense of ₹{amount:,.0f} recorded under {category}.", "success")
+        get_db().execute(
+            """
+            INSERT INTO farm_expenses (farm_id, category, vendor, amount, date, notes)
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            (farm["id"], category, item_name, amount, expense_date.isoformat(), notes),
+        )
+        get_db().commit()
+        flash(f"Expense of ₹{amount:,.0f} recorded under {category}.", "success")
         return redirect(url_for("expenses_page"))
 
     @app.route("/add-sale", methods=["POST"])
@@ -1326,23 +1399,31 @@ def create_app(test_config=None) -> Flask:
             return redirect(url_for("farm_setup"))
 
         crop_name = (request.form.get("commodity") or request.form.get("crop_name") or "Wheat").strip()
-        quantity_kg = float(request.form.get("quantity_sold", request.form.get("quantity_kg", 0.0)))
-        price_per_kg = float(request.form.get("price_per_unit", request.form.get("price_per_kg", 0.0)))
+        try:
+            quantity_kg = float(request.form.get("quantity_sold", request.form.get("quantity_kg", "")))
+            price_per_kg = float(request.form.get("price_per_unit", request.form.get("price_per_kg", "")))
+            sale_date = date.fromisoformat((request.form.get("sale_date") or date.today().isoformat()).strip())
+        except (TypeError, ValueError):
+            return render_template('error.html', message='Enter a positive quantity, a valid price, and a valid sale date.'), 400
+        submitted_unit = request.form.get("unit")
+        unit = (submitted_unit or ("kg" if request.form.get("quantity_kg") is not None else "Quintal")).strip()
+        if not crop_name or unit.casefold() not in {"quintal", "qtl", "kg", "ton"}:
+            return render_template('error.html', message='Enter a commodity and choose Quintal, Kg, or Ton as the sale unit.'), 400
         mandi_name = (request.form.get("market_name") or request.form.get("mandi_name") or "").strip()
-        sale_date = (request.form.get("sale_date") or date.today().isoformat()).strip()
         buyer_type = (request.form.get("buyer_type") or "APMC Mandi").strip()
         notes = (request.form.get("notes") or "").strip()
 
         total_rev = quantity_kg * price_per_kg
-        if not all(math.isfinite(v) and v >= 0 for v in (quantity_kg, price_per_kg, total_rev)):
-            return render_template('error.html', message='Enter nonnegative finite sale values.'), 400
+        if (not all(math.isfinite(v) for v in (quantity_kg, price_per_kg, total_rev))
+            or quantity_kg <= 0 or price_per_kg <= 0 or sale_date > date.today()):
+            return render_template('error.html', message='Enter positive finite quantity and price values, and a sale date no later than today.'), 400
         if total_rev > 0:
             get_db().execute(
                 """
                 INSERT INTO sales (farm_id, commodity, quantity_sold, price_per_unit, total_amount, market_name, sale_date, buyer_name, notes, unit)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
-                (farm["id"], crop_name, quantity_kg, price_per_kg, total_rev, mandi_name, sale_date, buyer_type, notes, request.form.get("unit", "kg")),
+                (farm["id"], crop_name, quantity_kg, price_per_kg, total_rev, mandi_name, sale_date.isoformat(), buyer_type, notes, unit),
             )
             get_db().commit()
             flash(f"Harvest sale realized! Revenue of ₹{total_rev:,.0f} recorded.", "success")
@@ -1609,8 +1690,13 @@ def create_app(test_config=None) -> Flask:
                 return jsonify({"success": False, "message": "Coordinates out of bounds."}), 400
             loc = reverse_geocode(lat_f, lon_f)
             return jsonify({"success": True, "location": loc})
-        except Exception as e:
-            return jsonify({"success": False, "message": str(e)}), 400
+        except ValueError as exc:
+            # ValueError messages are our own validation wording and are safe to show.
+            return jsonify({"success": False, "message": str(exc)}), 400
+        except Exception:
+            # Never echo an unexpected internal exception to the client.
+            current_app.logger.exception("Reverse geocoding failed")
+            return jsonify({"success": False, "message": "Location lookup is temporarily unavailable. Enter the location manually."}), 502
 
     @app.route("/api/location", methods=["POST"])
     @login_required
@@ -1649,23 +1735,27 @@ def create_app(test_config=None) -> Flask:
             w_data = fetch_weather_data(float(lat), float(lon))
             return jsonify({"success": True, "weather": w_data})
         except Exception as exc:
-            return jsonify({"success": False, "message": str(exc)}), 400
+            # Only deliberately user-facing errors are echoed; anything unexpected is
+            # logged server-side and replaced with a generic message so internal
+            # exception text (paths, library versions, upstream details) never leaks.
+            current_app.logger.exception("Weather API failed")
+            message = str(exc) if isinstance(exc, WeatherError) else "Weather is temporarily unavailable. Try again later."
+            return jsonify({"success": False, "message": message}), 400
 
     @app.route("/api/recommend-crop", methods=["POST"])
     @login_required
     def api_recommend_crop():
         data = request.get_json(silent=True) or {}
-        values = {
-            "nitrogen": float(data.get("nitrogen", 70)),
-            "phosphorus": float(data.get("phosphorus", 40)),
-            "potassium": float(data.get("potassium", 40)),
-            "ph": float(data.get("ph", 6.5)),
-            "temperature": float(data.get("temperature", 26.0)),
-            "humidity": float(data.get("humidity", 65.0)),
-            "rainfall": float(data.get("rainfall", 120.0)),
-        }
-        result = predict_crop(values)
-        explanation = build_explanation(result, values)
+        try:
+            values = validate_crop_inputs(data)
+        except ValueError as exc:
+            return jsonify({"success": False, "message": str(exc)}), 400
+        try:
+            result = predict_crop(values)
+            explanation = build_explanation(result, values)
+        except Exception:
+            current_app.logger.exception("Crop recommendation API failed")
+            return jsonify({"success": False, "message": "Crop recommendation is temporarily unavailable."}), 503
         return jsonify({"success": True, "result": result, "explanation": explanation})
 
     # ==========================================

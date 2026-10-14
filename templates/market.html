@@ -17,7 +17,7 @@
 {% if market_data.retry_after_seconds %}<small>Try again in {{ market_data.retry_after_seconds }} seconds.</small>{% endif %}
 </form>
 {% if not market_data.found %}
-<div class="alert alert-info">{{ market_data.message or 'Market data temporarily unavailable' }}. Other farm features remain available.</div>
+<div class="alert alert-info">{{ market_data.message or 'Market data temporarily unavailable.' }} Other farm features remain available.</div>
 {% else %}
 <div class="table-responsive"><table class="table"><thead><tr><th>Market</th><th>Reported date</th><th>Minimum</th><th>Modal</th><th>Maximum</th></tr></thead><tbody>
 {% for item in market_data.markets %}<tr><td>{{ item.market_name }}</td><td>{{ item.price_date }}{% if item.is_stale %} (stale observation){% endif %}</td><td>{{ item.min_price }}</td><td>{{ item.modal_price }}</td><td>{{ item.max_price }}</td></tr>{% endfor %}

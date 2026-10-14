@@ -9,7 +9,8 @@ def setup_client(tmp_path):
     app = create_app({'TESTING': True, 'SECRET_KEY': 'test', 'DATABASE': str(db)})
     client = app.test_client()
     client.post('/register', data={'name': 'Tester', 'email': 'tester@example.com', 'password': 'secret123'})
-    client.post('/farm', data={'farm_name': 'Test farm', 'area': 2})
+    client.post('/farm', data={'farm_name': 'Test farm', 'area': 2,
+                              'nitrogen': 90, 'phosphorus': 42, 'potassium': 43, 'ph': 6.5})
     return app, client, db
 
 

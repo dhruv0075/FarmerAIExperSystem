@@ -123,7 +123,14 @@ def aggregate_farm_financials(
     total_qty_sold = 0.0
     for sale in sales:
         total_actual_revenue += float(sale.get("total_amount", 0.0) or 0.0)
-        total_qty_sold += float(sale.get("quantity_sold", 0.0) or 0.0) / (100 if str(sale.get("unit", "")).lower() == "kg" else 1)
+        quantity = float(sale.get("quantity_sold", 0.0) or 0.0)
+        unit = str(sale.get("unit", "")).casefold()
+        if unit == "kg":
+            total_qty_sold += quantity / 100
+        elif unit == "ton":
+            total_qty_sold += quantity * 10
+        elif unit in {"quintal", "qtl"}:
+            total_qty_sold += quantity
 
     actual_net_profit = round(total_actual_revenue - total_actual_cost, 2)
 

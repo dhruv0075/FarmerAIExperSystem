@@ -1,21 +1,74 @@
 {% extends 'base.html' %}
 {% block title %}Dashboard - AgriWise AI{% endblock %}
 {% block content %}
-<header class="mb-4"><h1 class="h3">{{ farm.farm_name }}</h1><p class="text-muted">Your crop, confirmed activities, and next steps in one place.</p></header>
-<div class="dashboard-summary mb-4">
-{% for label, value in [('Current Crop', latest_cycle.crop_name if latest_cycle else 'Not started'), ('Current Stage', crop_stage), ("Today's Weather", (plan.weather.temperature|string ~ ' C') if plan.weather.temperature is not none else 'Unavailable'), ('Pending Activities', activity_counts.pending)] %}
-<div ><div class="card"><div class="card-body"><small class="text-muted">{{ label }}</small><h2 class="h5 mt-2">{{ value }}</h2></div></div></div>{% endfor %}
-</div>
-<section class="content-section mb-4"><h2 class="h5">Main Advisory</h2>
-{% if plan.do_first %}<strong>{{ plan.do_first.title }}</strong><p>{{ plan.do_first.reason }}</p>{% else %}<p>No urgent action identified from available information. Check field conditions.</p>{% endif %}
-<a class="btn btn-success" href="{{ url_for('daily_plan_page') }}">Today's Farm Plan</a>
-<a class="btn btn-outline-success" href="{{ url_for('seven_day_plan_page') }}">7-Day Weather & Plan</a>
-</section>
-<section class="content-section mb-4"><h2 class="h5">7-Day Weather Summary</h2><div class="table-responsive"><table class="table"><thead><tr><th>Date</th><th>Max temperature</th><th>Rain</th></tr></thead><tbody>{% for day in plan.forecast %}<tr><td>{{ day.date }}</td><td>{{ day.temperature_max }} C</td><td>{{ day.precipitation }} mm</td></tr>{% else %}<tr><td colspan="3">Forecast unavailable. Open Weather to check saved coordinates.</td></tr>{% endfor %}</tbody></table></div></section>
-<div class="row g-4">
-<section class="col-lg-6"><div class="content-section"><h2 class="h5">Urgent Alerts</h2>{% for item in plan.avoid %}<p>{{ item.action }}: {{ item.reason }}</p>{% else %}<p class="text-muted">No avoidance rule triggered by available data.</p>{% endfor %}
-<h2 class="h5 mt-4">Crop Progress</h2><p>{{ progress|round|int }}% of the estimated lifecycle.</p><progress max="100" value="{{ progress }}" class="w-100"></progress><a href="{{ url_for('lifecycle_page') }}">Review lifecycle</a></div></section>
-<section class="col-lg-6"><div class="content-section"><h2 class="h5">Recent Activities</h2>{% for item in activities %}<p><strong>{{ item.title }}</strong><br><small>{{ item.display_status }} | {{ item.due_date }}</small></p>{% else %}<p>No activities recorded.</p>{% endfor %}<a href="{{ url_for('activities_page') }}">Manage activities</a></div></section>
-<section class="col-12"><div class="content-section"><h2 class="h5">Recent Advisories</h2>{% for item in advisories %}<p><strong>{{ item.title }}</strong><br>{{ item.message }}</p>{% else %}<p>No saved advisories yet.</p>{% endfor %}<a href="{{ url_for('advisories') }}">Generate and review advisories</a></div></section>
+<div class="dashboard-page">
+	<header class="dashboard-heading">
+		<div>
+			<p class="product-kicker">Farm briefing</p>
+			<h1>{{ farm.farm_name }}</h1>
+			<p>{{ farm.location_name or 'Farm location not set' }} · Updated from your saved farm context</p>
+		</div>
+		<a class="product-text-link" href="{{ url_for('farm_profile') }}">Farm settings <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></a>
+	</header>
+
+	<section class="dashboard-insight" aria-labelledby="today-insight-title">
+		<div>
+			<div class="dashboard-insight__label"><i class="fa-solid fa-sun" aria-hidden="true"></i> What should I do today?</div>
+			{% if plan.do_first %}
+				<h2 id="today-insight-title">{{ plan.do_first.title }}</h2>
+				<p>{{ plan.do_first.reason }}</p>
+			{% else %}
+				<h2 id="today-insight-title">No urgent action identified</h2>
+				<p>Use the farm plan to review upcoming work and check field conditions. Advice depends on the information available.</p>
+			{% endif %}
+			<div class="dashboard-links">
+				<a class="product-button product-button--dark" href="{{ url_for('daily_plan_page') }}">Open today's farm plan <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+				<a class="product-button" href="{{ url_for('seven_day_plan_page') }}">7-day outlook</a>
+			</div>
+		</div>
+		<aside class="dashboard-insight__evidence" aria-label="Recommendation context">
+			<h3>Decision context</h3>
+			{% if plan.do_first %}<p>{{ plan.do_first.reason }}</p>{% else %}<p>Farm records, confirmed activities and available weather are used where present. Missing information is not treated as a measurement.</p>{% endif %}
+			{% if plan.do_first and plan.do_first.category %}<span class="status-pill">{{ plan.do_first.category }}</span>{% endif %}
+		</aside>
+	</section>
+
+	<section class="dashboard-metrics" aria-label="Current farm status">
+		<div class="dashboard-metric"><span>Current crop</span><strong>{{ latest_cycle.crop_name|title if latest_cycle else 'Not started' }}</strong></div>
+		<div class="dashboard-metric"><span>Growth stage</span><strong>{{ crop_stage }}</strong></div>
+		<div class="dashboard-metric"><span>Temperature now</span><strong>{{ plan.weather.temperature|round|int ~ ' C' if plan.weather.temperature is not none else 'Unavailable' }}</strong></div>
+		<div class="dashboard-metric"><span>Pending activities</span><strong>{{ activity_counts.pending }}</strong></div>
+	</section>
+
+	<div class="dashboard-grid">
+		<section class="dashboard-panel" aria-labelledby="progress-title">
+			<div class="d-flex justify-content-between align-items-start gap-3"><div><p class="dashboard-section-label">Crop cycle</p><h2 id="progress-title">Estimated crop progress</h2></div><span class="status-pill">{{ progress|round|int }}%</span></div>
+			<div class="lifecycle-progress" role="progressbar" aria-label="Estimated crop progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ progress|round|int }}"><span style="width: {{ progress }}%"></span></div>
+			<p class="small text-muted mt-2 mb-0">{% if latest_cycle %}Based on {{ latest_cycle.sowing_date }} and configured crop-stage durations; not a field-observed measurement.{% else %}Start a lifecycle after selecting a crop and confirming the sowing date.{% endif %}</p>
+			<a class="product-text-link mt-3" href="{{ url_for('lifecycle_page') }}">Review crop lifecycle <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+		</section>
+
+		<section class="dashboard-panel" aria-labelledby="activity-title">
+			<div class="d-flex justify-content-between align-items-start gap-3"><div><p class="dashboard-section-label">Farmer-confirmed work</p><h2 id="activity-title">Upcoming activities</h2></div><a class="product-text-link" href="{{ url_for('activities_page') }}">All activities</a></div>
+			{% for item in activities[:3] %}
+				<div class="dashboard-activity"><strong>{{ item.title }}</strong><span class="status-pill {{ item.display_status|lower }}">{{ item.display_status|title }}</span><span>{{ item.due_date }}</span><span>{{ item.activity_type }}</span></div>
+			{% else %}<p class="dashboard-empty">No activities recorded yet.</p>{% endfor %}
+		</section>
+
+		<section class="dashboard-panel dashboard-panel--wide" aria-labelledby="forecast-title">
+			<div class="d-flex justify-content-between align-items-start gap-3"><div><p class="dashboard-section-label">Open-Meteo forecast</p><h2 id="forecast-title">The next seven days</h2></div><a class="product-text-link" href="{{ url_for('weather_page') }}">Weather details</a></div>
+			{% if plan.forecast %}<div class="dashboard-forecast">{% for day in plan.forecast[:7] %}<div class="dashboard-forecast__day"><span>{{ day.date }}</span><strong>{{ day.temperature_max if day.temperature_max is not none else '—' }} C</strong><span>{{ day.precipitation if day.precipitation is not none else '—' }} mm rain</span></div>{% endfor %}</div>{% else %}<p class="dashboard-empty">Forecast unavailable. Check the saved farm location or try again later.</p>{% endif %}
+		</section>
+
+		<section class="dashboard-panel" aria-labelledby="avoid-title">
+			<p class="dashboard-section-label">Risk prevention</p><h2 id="avoid-title">Watch and avoid</h2>
+			{% for item in plan.avoid[:3] %}<div class="dashboard-activity"><strong>{{ item.action }}</strong><span>{{ item.reason }}</span></div>{% else %}<p class="dashboard-empty">No avoidance rule was triggered by the available information.</p>{% endfor %}
+		</section>
+
+		<section class="dashboard-panel" aria-labelledby="advisories-title">
+			<div class="d-flex justify-content-between align-items-start gap-3"><div><p class="dashboard-section-label">Farm history</p><h2 id="advisories-title">Recent advisories</h2></div><a class="product-text-link" href="{{ url_for('history_page') }}">History</a></div>
+			{% for item in advisories[:3] %}<div class="dashboard-activity"><strong>{{ item.title }}</strong><span>{{ item.severity|title }}</span><span>{{ item.message }}</span></div>{% else %}<p class="dashboard-empty">No saved advisories yet.</p>{% endfor %}
+		</section>
+	</div>
 </div>
 {% endblock %}

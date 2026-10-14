@@ -1,0 +1,775 @@
+AgriWise AI – Cline Handoff and Progress Tracker
+
+============================================================
+1. Project Overview
+============================================================
+
+Project name:
+AgriWise AI: An Intelligent Crop Lifecycle Decision Support System for Sustainable Agriculture
+
+Purpose:
+A Flask-based web application for farmers to manage farm setup, crop recommendations, crop lifecycle planning, weather-aware advisory generation, resource discovery, market price analysis, sell planning, and farm finance tracking.
+
+Technology stack:
+- Python
+- Flask
+- SQLite
+- Jinja templates
+- Bootstrap and custom CSS/JS
+- pandas, numpy, scikit-learn, joblib, requests, Pillow, python-dotenv
+
+Application architecture:
+- Frontend: Flask templates under templates/ and static assets under static/
+- Backend: app.py routes and service modules under services/
+- Database: SQLite schema initialized in db.py
+- AI/ML: crop recommendation model in services/crop_ml_service.py and ml/train_model.py
+- Weather integration: services/weather_service.py
+- Market integration: services/official_market_service.py and services/market_service.py
+- Lifecycle and advisory logic: services/lifecycle_service.py, services/activity_service.py, services/expert_system.py, services/decision_orchestrator.py
+- Finance and planning: services/profit_service.py
+- Disease reporting: services/disease_service.py
+
+How to run the application locally:
+- Activate a Python environment
+- Install dependencies: pip install -r requirements.txt
+- Start the app: python app.py
+- Open the app in the browser at http://localhost:5000
+
+Important note:
+This handoff file is based on repository inspection and git state only. It does not claim a fresh live runtime verification for every feature.
+
+============================================================
+2. Work Completed
+============================================================
+
+A. Features fully implemented
+
+1. User authentication and farm setup flow
+Evidence:
+- app.py: login(), register(), logout(), farm_setup()
+- db.py: users, farms, soil_records tables
+- get_current_user(), get_user_farm() in app.py
+
+Status:
+This is implemented in code and appears consistent, but the current audit did not freshly verify browser behavior.
+
+2. Crop recommendation flow
+Evidence:
+- services/crop_ml_service.py: train_and_save_crop_models(), predict_crop_ml(), ensure_crop_model_exists(), get_model_evaluation_metrics()
+- services/crop_service.py: predict_crop(), train_and_save_model(), ensure_model_exists(), compare_crop_dataset_fit()
+- app.py: crop_recommendation() route
+- tests/test_ml.py
+
+Status:
+The training and prediction flow is clearly implemented and covered by repository tests.
+
+3. Crop lifecycle and activity generation
+Evidence:
+- services/lifecycle_service.py
+- services/activity_service.py
+- app.py: lifecycle(), activities routes
+- db.py: crop_cycles, crop_stages, farm_activities tables
+
+Status:
+The code structure and database schema indicate the feature is implemented, though real end-to-end validation is not freshly proven in this audit.
+
+4. Weather integration
+Evidence:
+- services/weather_service.py: fetch_weather_data(), _parse_open_meteo_payload()
+- app.py weather routes and dashboard integration
+
+Status:
+Live weather integration is implemented and includes cache fallback behavior.
+
+5. Market intelligence and sell planning integration
+Evidence:
+- services/official_market_service.py: request_sample(), refresh_market_data(), load_official_market_data(), parse_records(), failure_stage(), refresh_error_message()
+- services/market_service.py: get_market_prices_for_commodity(), get_all_commodities()
+- app.py: market_page(), refresh_market_page(), sell_planner_page()
+- tests/test_market_integration.py
+
+Status:
+The integration is implemented in code and test coverage exists, but live provider authentication and usable-record verification are not currently proven.
+
+6. Financial tracking
+Evidence:
+- app.py: expenses_page(), add_expense(), add_sale(), profit_planner_page()
+- services/profit_service.py
+- db.py: farm_expenses and sales tables
+
+Status:
+Implemented in code and tied into the app routes.
+
+7. Resource directory and notifications
+Evidence:
+- services/resource_service.py
+- app.py: resources_page(), add_custom_resource(), notifications routes
+- db.py: resources, resource_prices, notifications tables
+
+Status:
+Implemented but not freshly verified in this audit.
+
+B. Features partially implemented
+
+1. Disease reporting and diagnosis
+Evidence:
+- services/disease_service.py
+- db.py: disease_reports and disease_predictions tables
+- app.py: report-problem routes
+
+Current state:
+The code explicitly states that image diagnosis is unavailable and that this is a manual/contextual workflow, not a real ML disease image classifier.
+
+2. Official market API live verification
+Evidence:
+- docs/api_integrations.md
+- services/official_market_service.py
+
+Current state:
+The integration exists, but the last known live request reached DNS/TCP/TLS and then timed out waiting for the HTTP response. Authentication and usable records remain unverified.
+
+3. UI/accessibility polish
+Evidence:
+- templates/ and static/
+
+Current state:
+Basic responsive UI exists, but no formal accessibility audit was found in the repo.
+
+C. Bugs fixed
+
+Based on the current repo state and recent worktree changes, the following were addressed in the current working branch:
+
+- Crop input validation tightened to reject invalid or implausible soil/climate values
+- Market refresh logic improved for bounded retries and clearer error messaging
+- Cache handling made safer so stale or failed refreshes do not clobber valid prior observations
+- Sell planner messaging improved to avoid overconfident output when market data is weak or uncertain
+- Homepage/dashboard messaging corrected to better reflect actual implementation status
+- Unit normalization and financial logic improved in multiple paths
+
+Files involved in recent work:
+- app.py
+- services/official_market_service.py
+- services/market_forecast_service.py
+- services/profit_service.py
+- templates/*.html
+- tests/test_market_integration.py
+- tests/test_reliability_repairs.py
+- tests/test_black_box.py
+
+D. Files created or modified
+
+Tracked modified files seen in git status:
+- .env.example
+- README.md
+- app.py
+- docs/api_integrations.md
+- scripts/browser_check.py
+- scripts/diagnose_market_api.py
+- services/market_forecast_service.py
+- services/official_market_service.py
+- services/profit_service.py
+- templates/base.html
+- templates/crop_lifecycle.html
+- templates/dashboard.html
+- templates/expenses.html
+- templates/farm_setup.html
+- templates/index.html
+- templates/market.html
+- templates/resources.html
+- templates/sell_planner.html
+- tests/test_activities.py
+- tests/test_core_journey.py
+- tests/test_extended_flows.py
+- tests/test_integrity.py
+- tests/test_market_integration.py
+- tests/test_routes.py
+
+Untracked files seen in git status:
+- docs/ai_implementation_report.md
+- docs/black_box_test_report.md
+- docs/current_baseline.md
+- docs/feature_audit_v2.md
+- static/css/product.css
+- static/js/farm-scene.js
+- tests/test_black_box.py
+- tests/test_reliability_repairs.py
+
+E. Backend, frontend, database, and AI/ML changes
+
+Backend:
+- app.py contains route-level logic for all major user workflows.
+- Several routes were updated to improve validation, data handling, and user messaging.
+- Data access and ownership patterns are centralized around current_user and current farm.
+
+Frontend:
+- templates/ contain dashboard, market, farm setup, crop lifecycle, resources, and sell-planner pages.
+- Custom CSS and JS exist under static/.
+
+Database:
+- db.py manages SQLite schema creation and migration-style table initialization.
+- Tables include user, farm, soil, recommendation, cycle, weather, market, resource, finance, and disease-related records.
+
+AI/ML:
+- Crop model training and inference library is in services/crop_ml_service.py and services/crop_service.py.
+- Training script is ml/train_model.py.
+- Model metrics and evaluation report are stored in ml/model_metrics.json.
+- The model artifact is ml/crop_model.pkl.
+
+F. Recent changes made by GitHub Copilot
+
+Based on the current worktree, the recent changes clearly touch:
+- market refresh safety and timeout logic
+- reliability and validation improvements
+- dashboard and page messaging
+- route and form validation logic
+- tests and docs for feature audit and market integration
+
+Important: The repository is currently dirty and should be treated as a working branch with active user and tooling changes. Do not overwrite it blindly.
+
+G. Evidence supporting completion claims
+
+Evidence sources used in this handoff:
+- app.py: route registration and business logic
+- db.py: schema and persistence model
+- services/crop_ml_service.py: active ML implementation and metrics generation
+- services/official_market_service.py: market integration lifecycle and cache/failure handling
+- services/weather_service.py: weather fetch logic and fallback behavior
+- tests/test_ml.py: ML training and inference validation logic
+- tests/test_market_integration.py: market integration mock-based validation logic
+- docs/api_integrations.md: API integration warnings and current known status
+- docs/ai_implementation_report.md: AI implementation detail and model limitations
+- README.md: run instructions and project description
+- git status output: current state of worktree
+
+============================================================
+3. Current Feature Status
+============================================================
+
+Each feature has been assigned a status based on repository evidence only, without fresh live verification beyond what was already inspected.
+
+Authentication: IMPLEMENTED BUT UNVERIFIED
+Dashboard: IMPLEMENTED BUT UNVERIFIED
+Farm profiles: IMPLEMENTED BUT UNVERIFIED
+Crop recommendations: WORKING AND VERIFIED (by repository test logic, not freshly re-run in this audit)
+ML models: WORKING AND VERIFIED (for the crop model benchmark in repository artifacts)
+Weather: IMPLEMENTED BUT UNVERIFIED
+Crop lifecycle: IMPLEMENTED BUT UNVERIFIED
+Activities and reminders: IMPLEMENTED BUT UNVERIFIED
+Disease reporting: PARTIALLY WORKING
+Fertilizer recommendations: IMPLEMENTED BUT UNVERIFIED
+Mandi prices: BLOCKED
+Market comparisons: IMPLEMENTED BUT UNVERIFIED
+Sell planning: IMPLEMENTED BUT UNVERIFIED
+Expenses: IMPLEMENTED BUT UNVERIFIED
+Sales: IMPLEMENTED BUT UNVERIFIED
+Profit calculations: IMPLEMENTED BUT UNVERIFIED
+Resources: IMPLEMENTED BUT UNVERIFIED
+Reports: IMPLEMENTED BUT UNVERIFIED
+Deployment: IMPLEMENTED BUT UNVERIFIED
+
+Notes:
+- The crop recommendation model is the clearest implemented and test-backed feature.
+- The official market API path is still blocked by the lack of verified live response and authentication proof.
+- Disease reporting is intentionally limited and not an actual AI diagnosis model.
+
+============================================================
+4. Mandi API Status
+============================================================
+
+Official API endpoint:
+https://api.data.gov.in/resource/9ef84268-d588-465a-a308-a864a43d0070
+
+Official resource page:
+https://www.data.gov.in/resource/current-daily-price-various-commodities-various-markets-mandi
+
+Integration files:
+- services/official_market_service.py
+- services/market_service.py
+- app.py (market page and refresh route)
+- docs/api_integrations.md
+- tests/test_market_integration.py
+
+Environment variable name:
+DATA_GOV_IN_API_KEY
+
+Important: The actual value must never be included in this handoff. It remains secret and must stay in environment or local .env configuration only.
+
+What has been implemented:
+- Minimal official request path
+- API key validation at configuration level
+- Bounded retry logic with timeout and cooldown
+- Sanitized logging to avoid printing secrets
+- Response validation for JSON and expected record structure
+- Cache persistence and fresh/cached/stale status tracking
+- Deduplication of records by key fields
+- Error-stage mapping for DNS/TCP/TLS/HTTP/JSON failures
+
+Most recent known error:
+The last reported live request reached DNS, TCP and TLS 1.3 but timed out waiting for the HTTP response. This is a historical statement and not a fresh runtime verification in this audit.
+
+Has a live response been verified?
+Not in the current repo evidence. The last reported live request timed out before a final HTTP response. That means the actual API/authentication path remains unverified.
+
+Is API authentication verified?
+No. The code handles auth and 401/403 cases, but an actual successful authenticated live response is not currently proven by the repository evidence.
+
+Have usable price records been retrieved?
+Not proven by the current repo evidence. No successful live record count is confirmed in the inspected files.
+
+Caching, persistence, historical prices, and error handling:
+- Refreshes are cached to JSON in the configured data directory
+- Cache writes are atomic using temporary files
+- Data is deduplicated to avoid duplicate records
+- `refresh_status` values are fresh/cached/stale/unavailable
+- Failed refreshes leave the previous cache intact and do not overwrite with invalid data
+- Stale observations are labeled and handled in logic
+
+Tests covering this integration:
+- tests/test_market_integration.py
+
+Coverage includes:
+- backoff behavior
+- secret redaction
+- missing key handling
+- stale/fresh states
+- concurrent refresh behavior
+- diagnostic generation without saving raw provider payloads
+
+Remaining work:
+- Confirm API key acceptance with provider
+- Confirm actual response payload shape and field names
+- Confirm usable records are returned
+- Confirm UI market page works with real data in a live environment
+- Confirm sell planner and market comparison remain compatible with real provider output
+
+Historical note:
+The repository contains statements that "127 tests passed" and "37 warnings" were observed in a historical run. These are not freshly re-run in this audit and should be treated as historical claims only unless revalidated later.
+
+============================================================
+5. AI and Machine Learning
+============================================================
+
+A. Crop classifier
+Purpose:
+Predict the recommended crop from soil and climate inputs.
+
+Dataset:
+- data/Crop_recommendation.csv
+
+Training script:
+- ml/train_model.py
+- services/crop_ml_service.py
+
+Model artifact path:
+- ml/crop_model.pkl
+- ml/model_metrics.json
+- ml/confusion_matrix.png (if generated)
+
+Input features:
+- N
+- P
+- K
+- temperature
+- humidity
+- ph
+- rainfall
+
+Output:
+- Crop label recommendation
+- Top-3 crop candidates and confidence values
+
+Evaluation metrics and evidence:
+The docs/ai_implementation_report.md contains benchmark metrics for the current dataset. Based on the repo content:
+- Decision Tree: accuracy ~0.9818, macro F1 ~0.9817
+- Random Forest: accuracy ~0.9955, macro F1 ~0.9955
+- KNN: accuracy ~0.9795, macro F1 ~0.9793
+- Histogram Gradient Boosting: accuracy ~0.9886, macro F1 ~0.9886
+
+Inference tested:
+The repository includes tests in tests/test_ml.py for model training and prediction flow, so the inference path is at least partially validated in code.
+
+Known limitations:
+- Dataset provenance is not established in the repo
+- Metrics are benchmark results on local data, not field-validated real-world performance
+- Regional/local performance is not independently validated
+- The crop recommendation is a supervised learning workflow and not a scientifically validated agronomic model
+
+B. Market price forecast regression
+Purpose:
+Forecast price direction using recent official price history.
+
+Dataset/source:
+- cached official market data and time-series price observations
+
+Implementation:
+- services/market_forecast_service.py
+
+Status:
+Rule-based and regression-based forecasting is implemented, but it depends on enough usable historical price data.
+
+C. Disease reporting logic
+Purpose:
+Guided symptom and crop problem assessment.
+
+Status:
+Not a trained model. It is rule-based symptom analysis and manual reporting guidance.
+
+Evidence:
+- services/disease_service.py
+- README and docs/ai_implementation_report.md
+
+D. Rule-based logic versus trained ML
+The project contains both:
+- trained ML: crop recommendation classifier
+- rule-based logic: crop lifecycle, weather-based advice, nutrient advice, risk assessment
+- external API calls: Open-Meteo, data.gov.in, location services
+- static data: crop dataset and local knowledge tables
+
+Important distinction:
+Rule-based agricultural logic is not equivalent to a trained ML model.
+
+============================================================
+6. Bugs and Known Limitations
+============================================================
+
+Issue 1: Live market API verification is not proven
+Severity: P0
+Affected files:
+- services/official_market_service.py
+- docs/api_integrations.md
+- app.py
+Reproduction steps:
+- Attempt live refresh using configured market API in a real environment
+Expected behavior:
+- API key accepted, HTTP response received, records parsed and usable
+Current behavior:
+- The last known live request reached DNS/TCP/TLS and then timed out before HTTP response
+Suggested fix:
+- Confirm provider configuration and actual response format before claiming market data is live and usable
+
+Issue 2: Disease image diagnosis is not implemented
+Severity: P1
+Affected files:
+- services/disease_service.py
+- app.py
+- db.py
+Reproduction steps:
+- Submit a crop problem with an image and expect automatic class prediction
+Expected behavior:
+- An AI image classifier would identify likely disease conditions
+Current behavior:
+- Code explicitly states that image diagnosis is unavailable and the workflow is manual/contextual
+Suggested fix:
+- Either implement a real image model pipeline with dataset and validation, or clearly restrict the feature to manual symptom reporting
+
+Issue 3: Dataset provenance and real-world validity are not established
+Severity: P1
+Affected files:
+- data/Crop_recommendation.csv
+- docs/ai_implementation_report.md
+- services/crop_ml_service.py
+Reproduction steps:
+- Use the crop model as a trusted field recommendation system without local validation
+Expected behavior:
+- Data provenance and regional fit should be documented and verified
+Current behavior:
+- Dataset origin and license are not established in the repo and the documentation explicitly warns that benchmark metrics are not field validation
+Suggested fix:
+- Document dataset provenance, geography, collection date, and validation strategy before claiming general field accuracy
+
+Issue 4: Session/auth flow must be browser-validated
+Severity: P1
+Affected files:
+- app.py
+- db.py
+Reproduction steps:
+- Open the app in a browser and validate login state across page loads
+Expected behavior:
+- Correctly persistent, user-scoped session state
+Current behavior:
+- Session-related issues are known to require browser validation and cannot be assumed to be correct just from code inspection
+Suggested fix:
+- Validate login, persisted session, redirect behavior, and farm ownership checks in a real browser flow
+
+Issue 5: UI and accessibility polish are incomplete
+Severity: P2
+Affected files:
+- templates/
+- static/
+Reproduction steps:
+- Review the app under accessibility and responsive layout checks
+Expected behavior:
+- More complete mobile-friendly, accessible, and polished interface
+Current behavior:
+- Basic responsive structure exists, but no formal accessibility review is in the repo
+Suggested fix:
+- Run a UI accessibility review and improve keyboard, contrast, and semantic structure
+
+Issue 6: Strict input validation may frustrate some farmers
+Severity: P2
+Affected files:
+- app.py
+- templates/farm_setup.html
+Reproduction steps:
+- Enter partial, approximate, or missing soil values when the farmer does not know them exactly
+Expected behavior:
+- The app should allow approximate values or provide a clear fallback path
+Current behavior:
+- Some routes prefer explicit numeric validation and may reject approximate or incomplete values without a clear fallback
+Suggested fix:
+- Add guided fallback handling for unknown values and explain the difference between exact measured and estimated data
+
+============================================================
+7. Testing Status
+============================================================
+
+Test commands used in the repo and documentation:
+- pytest
+- python scripts/diagnose_market_api.py
+- python scripts/browser_check.py
+- python ml/train_model.py
+
+Test files in the repo:
+- tests/test_ml.py
+- tests/test_market_integration.py
+- tests/test_activities.py
+- tests/test_core_journey.py
+- tests/test_extended_flows.py
+- tests/test_integrity.py
+- tests/test_routes.py
+- tests/test_black_box.py
+- tests/test_reliability_repairs.py
+
+Latest verifiable results:
+- This audit did not run the test suite.
+- The repo contains historical statements that 127 tests passed and 37 warnings were observed.
+- These should be treated as historical claims, not as current fresh evidence, unless rerun.
+
+Passing and failing tests:
+- The repo includes tests that appear designed to pass, but no current fresh execution result is available in this audit.
+- No failing test result is confirmed here.
+
+Warnings and known causes:
+- Documentation and repo notes reference warnings in the historical test run, but the exact causes are not freshly verified in this audit.
+- This should be treated as historical and not current fact.
+
+Untested workflows:
+- live official market response validation
+- real browser auth/session flow
+- live deployment validation
+- real end-to-end farm workflow in an actual built app
+
+External services mocked vs tested live:
+- Market API is mocked in tests/test_market_integration.py
+- Weather and geocoding are likely external integrations but should be treated as implementation-level, not necessarily live-verified
+- No live external API success is verified in the repo evidence obtained here
+
+============================================================
+8. Git and Working-Tree State
+============================================================
+
+Current branch:
+- main
+
+Latest commit available in git status/log:
+- HEAD: 1ee1704 (Handle stale per-instance farmer sessions)
+
+Staged changes:
+- Not explicitly listed in the observed git status output, but the worktree is dirty and includes modified tracked files.
+
+Unstaged changes:
+- Multiple tracked files are modified in the working tree.
+
+Untracked files:
+- docs/ai_implementation_report.md
+- docs/black_box_test_report.md
+- docs/current_baseline.md
+- docs/feature_audit_v2.md
+- static/css/product.css
+- static/js/farm-scene.js
+- tests/test_black_box.py
+- tests/test_reliability_repairs.py
+
+Important changes that must not be overwritten:
+- app.py
+- services/official_market_service.py
+- services/profit_service.py
+- templates/*.html
+- tests/test_market_integration.py
+- tests/test_routes.py
+- any other modified worktree files listed by git status
+
+Known risk of losing work:
+- This is a dirty repository. Another agent should inspect current git status before editing or replacing any files.
+- Do not reset, stash, revert, or discard anything without explicit permission.
+
+============================================================
+9. Pending Work
+============================================================
+
+Priority 0 (P0): Confirm live market data validity
+Description:
+Verify that the official data.gov.in API accepts the configured key and that usable records are returned.
+Relevant files:
+- services/official_market_service.py
+- app.py
+- docs/api_integrations.md
+- tests/test_market_integration.py
+Dependencies:
+- Access to configured environment and/or live provider
+Acceptance criteria:
+- API key accepted
+- HTTP 200 response achieved
+- Parser validates records successfully
+- UI market page shows usable and safe data
+Tests required:
+- Focused market integration tests
+- End-to-end market route check
+
+Priority 1 (P1): Validate authentication and session flow in browser
+Description:
+Confirm login state, farm ownership, and redirects work correctly across real page loads.
+Relevant files:
+- app.py
+- db.py
+Dependencies:
+- Browser flow and user account data
+Acceptance criteria:
+- Logged-in user remains authenticated correctly
+- Farm ownership checks work consistently
+- Unauthenticated flows redirect as expected
+Tests required:
+- Route-level session tests
+- Browser session smoke test
+
+Priority 1 (P1): Confirm disease workflow boundaries
+Description:
+Clarify whether disease reporting remains manual-only or is upgraded to an actual model-backed system.
+Relevant files:
+- services/disease_service.py
+- app.py
+- db.py
+Dependencies:
+- Data and model decision
+Acceptance criteria:
+- Documentation matches actual behavior
+- Any model-backed claim is supported by dataset and metric evidence
+Tests required:
+- Route-level disease report tests
+- Model/evaluation evidence validation
+
+Priority 2 (P2): Improve user-input handling for approximate soil and farm details
+Description:
+Allow partial or estimated values more gracefully where a farmer does not know exact measurements.
+Relevant files:
+- app.py
+- templates/farm_setup.html
+Dependencies:
+- UX and backend validation decision
+Acceptance criteria:
+- Clear fallback or estimation guidance when exact values are unavailable
+- Validation messages are clearer and less blocking
+Tests required:
+- Input validation tests
+- UI form tests
+
+Priority 2 (P2): Strengthen deployment and secret management expectations
+Description:
+Ensure environment config and persistence behavior are explicitly documented and consistent.
+Relevant files:
+- config.py
+- render.yaml
+- README.md
+- .env.example
+Dependencies:
+- Deployment environment configuration
+Acceptance criteria:
+- Secret management is documented and stable
+- Startup and persistence behavior are predictable
+Tests required:
+- Deployment config review and environment smoke checks
+
+============================================================
+10. Exact Next Steps for Cline
+============================================================
+
+The next three to five actions Cline should take are:
+
+1. Inspect the current dirty worktree before making any change
+- Read git status and focus on modified files like app.py, services/official_market_service.py, templates/*.html, and tests/
+- Do not overwrite user changes
+
+2. Validate the auth and session flow in a live browser
+- Confirm that login state and redirect behavior match the intended app flow
+- Check current-user and current-farm logic before changing anything else
+
+3. Verify the market API path with the safest available evidence only
+- Read services/official_market_service.py and docs/api_integrations.md carefully
+- Only claim progress when a real provider response and valid record parsing are confirmed
+- Do not print or expose the key or any environment secrets
+
+4. Confirm the crop recommendation path still points to the correct model artifact and valid training logic
+- Inspect services/crop_ml_service.py, services/crop_service.py, and ml/train_model.py
+- Verify that any model path changes preserve the active workflow
+
+5. Keep the project’s honest status boundaries
+- Treat disease image diagnosis as absent unless a real model exists with dataset and evaluation evidence
+- Treat live market success as unverified until actual response proof exists
+- Treat benchmark metrics as local dataset performance, not a field guarantee
+
+What Cline should avoid changing:
+- the active worktree changes already made by the user or GitHub Copilot
+- any secret or .env value
+- claims that the market API is working without live proof
+- route logic that changes the meaning of the app without clear test evidence
+
+How Cline should verify fixes:
+- Prefer targeted tests directly related to the touched service or route
+- Prefer repository-side validation before broader changes
+- For market work, verify the provider response format and record compatibility before claiming success
+- For auth work, validate redirect and session behavior in a browser
+- For ML work, verify the model artifact, feature names, and training pipeline still align
+
+============================================================
+11. Progress Tracking Rules
+============================================================
+
+Use this checklist for every future task:
+
+[ ] Not started
+[ ] In progress
+[ ] Implemented
+[ ] Tested
+[ ] Verified
+[ ] Blocked
+
+Important rule:
+A task should only be marked VERIFIED when there is appropriate evidence, such as passing tests, a successful end-to-end route check, or a confirmed live provider response.
+
+For every future task, Cline should record:
+- Task name
+- Files changed
+- Implementation summary
+- Tests executed and actual results
+- Remaining problems
+- Current status
+
+Example tracking format:
+Task name:
+Files changed:
+Implementation summary:
+Tests executed:
+Actual results:
+Remaining problems:
+Current status:
+
+============================================================
+Notes and limitations
+============================================================
+
+- This file was created based on repository inspection and git status, not by running the full test suite or making new external API calls.
+- Historical claims such as "127 tests passed" and "37 warnings" are not treated as fresh verification in this audit unless rerun.
+- The project is in a dirty but reachable state for continued development.
+- The next AI agent should respect the existing worktree and keep the project’s honest implementation boundaries intact.
+
+End of Cline handoff file.

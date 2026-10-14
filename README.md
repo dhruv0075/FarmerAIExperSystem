@@ -61,6 +61,8 @@ The project expects a crop dataset at:
 
 The local dataset has 2,200 rows and 22 balanced classes. Its original collection provenance and license are unverified; local benchmark metrics are not evidence of nationwide field accuracy. See docs/data_provenance.md.
 
+For the end-to-end AI/decision-logic implementation, dataset inventory, training steps, and limitations, see [the AI implementation report](docs/ai_implementation_report.md).
+
 ## Model Training
 
 Run:
@@ -113,9 +115,9 @@ This covers authentication, weather parsing, ML behavior, expert rules, lifecycl
 
 1. Load crop dataset
 2. Check required feature columns
-3. Split data into training and validation sets
-4. Train Decision Tree, Random Forest, and KNN models
-5. Compare metrics such as accuracy, precision, recall, and F1 score
+3. Use a stratified 80/20 train/test split with `random_state=42`
+4. Train Decision Tree, Random Forest, KNN, and Histogram Gradient Boosting models
+5. Run five-fold stratified cross-validation on training data and select by held-out macro F1
 6. Save the best model
 7. Use the model for crop prediction in the app
 
@@ -166,3 +168,42 @@ python scripts/browser_check.py
 ```
 
 The standalone diagnostic prints stages and exception types without credentials. Browser verification requires Playwright and Microsoft Edge. Government API currently fails at TCP connection, before TLS/authentication. Offline weather, generated market/vendor fixtures, fabricated disease probabilities, and unsupported profit estimates are not used as live evidence.
+
+
+## Current status and verification (2026-10-14)
+
+The living task tracker is **[CLINE_PROGRESS.md](CLINE_PROGRESS.md)**. It records
+what is IMPLEMENTED, TESTED, VERIFIED and BLOCKED, with the evidence for each.
+
+Latest verified results:
+
+- Full automated suite: **145 passed, 0 failed** (`python -m pytest -q`).
+- Security regression suite `tests/test_security.py`: **11 passed**.
+- Browser automation `scripts/browser_check.py`: **exit code 0**, 19 page checks
+  HTTP 200, 0 JavaScript errors, 0 HTTP errors, WebGL scene `ready`.
+- Test inventory: [docs/test_inventory.md](docs/test_inventory.md).
+
+Two information-disclosure defects were fixed in the JSON APIs so internal
+exception text is never returned to the client; both are covered by regression
+tests. A stale selector in `scripts/browser_check.py` was also corrected.
+
+### Research documentation
+
+Research material lives in [docs/research/](docs/research):
+
+| Document | Contents |
+|---|---|
+| `literature_review.md` | Two peer-reviewed papers, each fetched and read from the publisher or PMC, with verified title, authors, year, venue and DOI, plus author-stated vs inferred limitations |
+| `research_gap_evidence.md` | Candidate gaps graded by whether the literature actually supports them |
+| `dataset_provenance.md` | Dataset attributes, with provenance explicitly recorded as NOT ESTABLISHED |
+| `methodology.md` | Reproducible evaluation protocol, seeds, metrics, software versions and threats to validity |
+| `experimental_results.md` | Only results actually produced, plus an explicit list of experiments not run |
+| `limitations_and_future_work.md` | Full limitation register and what must never be claimed |
+| `research_paper_outline.md` | Section-by-section outline, marked **NOT publication-ready** |
+
+The crop classifier's 0.9955 held-out accuracy is a **local benchmark result**.
+The training dataset's provider, licence, collection geography and collection
+period are not established, and no geographic or temporal holdout was performed.
+No Pune, Maharashtra or India-wide accuracy claim is made or should be inferred.
+There is no disease image classifier in this repository, and no email, SMS or
+push notification delivery exists.

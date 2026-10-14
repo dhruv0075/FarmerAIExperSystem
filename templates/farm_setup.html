@@ -201,52 +201,37 @@
       </div>
     </div>
 
-    <!-- CARD 3: SOIL TEST INFORMATION -->
+    <!-- CARD 3: REQUIRED SOIL TEST INFORMATION -->
     <div class="card mb-4 border-0 shadow-sm">
-      <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+      <div class="card-header bg-white py-3 border-bottom">
         <h5 class="mb-0 fw-bold"><i class="fa-solid fa-vial text-success me-2"></i>Soil & Nutrient Baseline</h5>
-        <div class="form-check form-switch m-0">
-          <input class="form-check-input" type="checkbox" id="noSoilTestToggle" name="no_soil_test" value="1">
-          <label class="form-check-label small fw-medium" for="noSoilTestToggle">I don't have a soil test</label>
-        </div>
       </div>
       <div class="card-body p-4">
-        <!-- Warning when toggle is active -->
-        <div id="soilTestWarning" class="alert alert-warning d-none py-2 small mb-3">
-          <i class="fa-solid fa-triangle-exclamation me-1"></i>
-          <strong>Limited Soil Data Notice:</strong> AgriWise AI will utilize regional climatological benchmarks and soil texture averages for initial recommendations. For maximum precision, obtaining an official Soil Health Card test is strongly advised.
+        <div class="alert alert-info py-2 small mb-3">
+          <i class="fa-solid fa-circle-info me-1"></i>
+          Enter measured values from a Soil Health Card or lab report. Soil type alone cannot determine N, P, K, or pH; do not guess these values.
         </div>
 
-        <div id="soilInputFields">
-          <div class="row g-3">
-            <div class="col-md-3 col-6">
-              <label class="form-label small fw-semibold">Nitrogen (N) <span class="text-muted">(kg/ha)</span></label>
-              <input type="number" step="1" min="0" class="form-control" name="nitrogen" value="">
-            </div>
-            <div class="col-md-3 col-6">
-              <label class="form-label small fw-semibold">Phosphorus (P) <span class="text-muted">(kg/ha)</span></label>
-              <input type="number" step="1" min="0" class="form-control" name="phosphorus" value="">
-            </div>
-            <div class="col-md-3 col-6">
-              <label class="form-label small fw-semibold">Potassium (K) <span class="text-muted">(kg/ha)</span></label>
-              <input type="number" step="1" min="0" class="form-control" name="potassium" value="">
-            </div>
-            <div class="col-md-3 col-6">
-              <label class="form-label small fw-semibold">Soil pH <span class="text-muted">(0 - 14)</span></label>
-              <input type="number" step="0.1" min="3.0" max="11.0" class="form-control" name="ph" value="">
-            </div>
-            <div class="col-md-4 col-6">
-              <label class="form-label small fw-semibold">Soil Moisture <span class="text-muted">(%)</span></label>
-              <input type="number" step="0.1" min="0" max="100" class="form-control" name="moisture" value="">
-            </div>
-            <div class="col-md-4 col-6">
-              <label class="form-label small fw-semibold">Organic Carbon <span class="text-muted">(%)</span></label>
-              <input type="number" step="0.01" min="0" max="5" class="form-control" name="organic_carbon" value="" placeholder="Optional">
-            </div>
-            <div class="col-md-4 col-12">
-              <label class="form-label small fw-semibold">Electrical Conductivity (EC)</label>
-              <input type="number" step="0.01" min="0" class="form-control" name="electrical_conductivity" value="" placeholder="dS/m (Optional)">
-            </div>
+        <div class="row g-3">
+          <div class="col-md-3 col-6">
+            <label class="form-label small fw-semibold">Nitrogen (N) <span class="text-muted">(kg/ha)</span> <span class="text-danger">*</span></label>
+            <input type="number" step="0.1" min="0" class="form-control" name="nitrogen" value="{{ soil.nitrogen if soil and soil.nitrogen is not none else '' }}" required>
+          </div>
+          <div class="col-md-3 col-6">
+            <label class="form-label small fw-semibold">Phosphorus (P) <span class="text-muted">(kg/ha)</span> <span class="text-danger">*</span></label>
+            <input type="number" step="0.1" min="0" class="form-control" name="phosphorus" value="{{ soil.phosphorus if soil and soil.phosphorus is not none else '' }}" required>
+          </div>
+          <div class="col-md-3 col-6">
+            <label class="form-label small fw-semibold">Potassium (K) <span class="text-muted">(kg/ha)</span> <span class="text-danger">*</span></label>
+            <input type="number" step="0.1" min="0" class="form-control" name="potassium" value="{{ soil.potassium if soil and soil.potassium is not none else '' }}" required>
+          </div>
+          <div class="col-md-3 col-6">
+            <label class="form-label small fw-semibold">Soil pH <span class="text-muted">(0 - 14)</span> <span class="text-danger">*</span></label>
+            <input type="number" step="0.1" min="0" max="14" class="form-control" name="ph" value="{{ soil.ph if soil and soil.ph is not none else '' }}" required>
+          </div>
+          <div class="col-md-4 col-6">
+            <label class="form-label small fw-semibold">Soil Moisture <span class="text-muted">(%)</span> (Optional)</label>
+            <input type="number" step="0.1" min="0" max="100" class="form-control" name="moisture" value="{{ soil.moisture if soil and soil.moisture is not none else '' }}">
           </div>
         </div>
       </div>
@@ -382,21 +367,5 @@
     this.innerHTML = '<i class="fa-solid fa-check-double me-1"></i>Location Confirmed';
   });
 
-  // Soil Test Toggle Handler
-  const soilToggle = document.getElementById('noSoilTestToggle');
-  const soilInputs = document.getElementById('soilInputFields');
-  const soilWarning = document.getElementById('soilTestWarning');
-
-  soilToggle.addEventListener('change', function() {
-    if (this.checked) {
-      soilWarning.classList.remove('d-none');
-      soilInputs.style.opacity = '0.5';
-      soilInputs.querySelectorAll('input').forEach(input => input.disabled = true);
-    } else {
-      soilWarning.classList.add('d-none');
-      soilInputs.style.opacity = '1';
-      soilInputs.querySelectorAll('input').forEach(input => input.disabled = false);
-    }
-  });
 </script>
 {% endblock %}

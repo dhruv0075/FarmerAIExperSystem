@@ -18,7 +18,8 @@ def test_closed_loop_journey_and_local_persistence(tmp_path, monkeypatch):
     client.post('/logout')
     assert client.post('/login', data=credentials).status_code == 302
     assert client.post('/farm', data={'farm_name': 'Journey Farm', 'area': 2,
-           'latitude': 18.5, 'longitude': 73.8, 'location_name': 'Test location'}).status_code == 302
+           'latitude': 18.5, 'longitude': 73.8, 'location_name': 'Test location',
+           'nitrogen': 90, 'phosphorus': 42, 'potassium': 43, 'ph': 6.5}).status_code == 302
     assert client.get('/weather').status_code == 200
     response = client.post('/crop-recommendation', data={'nitrogen': 90, 'phosphorus': 42,
         'potassium': 43, 'ph': 6.5, 'temperature': 30, 'humidity': 55, 'rainfall': 100, 'moisture': 10})

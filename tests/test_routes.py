@@ -34,7 +34,8 @@ def test_registration_and_login_flow(tmp_path):
     response = client.get('/dashboard')
     assert response.status_code == 302
     assert response.location.endswith('/farm/setup')
-    client.post('/farm', data={'farm_name': 'Test Farm', 'area': '2'})
+    client.post('/farm', data={'farm_name': 'Test Farm', 'area': '2',
+                               'nitrogen': '90', 'phosphorus': '42', 'potassium': '43', 'ph': '6.5'})
     response = client.get('/dashboard')
     assert response.status_code == 200
 
@@ -52,6 +53,24 @@ def test_registration_and_login_flow(tmp_path):
     assert response.status_code == 200
     with client.session_transaction() as session:
         assert session.permanent is True
+
+
+def test_homepage_actions_match_authentication_state(tmp_path):
+    app = create_app({'TESTING': True, 'SECRET_KEY': 'test-secret', 'DATABASE': str(tmp_path / 'home-auth.db')})
+    client = app.test_client()
+
+    guest_home = client.get('/')
+    assert b'href="/login">Login</a>' in guest_home.data
+    assert b'href="/register">Start Farming Smarter' in guest_home.data
+
+    client.post('/register', data={
+        'name': 'Test User', 'email': 'home@example.com', 'password': 'secret123',
+    })
+    signed_in_home = client.get('/')
+    assert b'href="/login">Login</a>' not in signed_in_home.data
+    assert b'href="/register">Start Farming Smarter' not in signed_in_home.data
+    assert b'href="/dashboard">Open Dashboard' in signed_in_home.data
+    assert b'href="/dashboard">Continue to your farm' in signed_in_home.data
 
 
 def test_password_change_requires_current_password_and_invalidates_session(tmp_path):

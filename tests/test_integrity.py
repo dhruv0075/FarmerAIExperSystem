@@ -80,7 +80,8 @@ def test_cross_user_ids_cannot_mutate_activities_or_read_reports(tmp_path, monke
     outsider.post('/register', data={
         'name': 'Other Farmer', 'email': 'other@example.com', 'password': 'other-pass123'
     })
-    outsider.post('/farm', data={'farm_name': 'Other farm', 'area': 1})
+    outsider.post('/farm', data={'farm_name': 'Other farm', 'area': 1,
+                                'nitrogen': 90, 'phosphorus': 42, 'potassium': 43, 'ph': 6.5})
     outsider.post(f'/activities/{activity_id}/status', data={'status': 'COMPLETED'})
     with sqlite3.connect(database) as conn:
         assert conn.execute('SELECT status, completed_at FROM farm_activities WHERE id = ?', (activity_id,)).fetchone() == ('PENDING', None)

@@ -127,6 +127,11 @@
       </div>
     {% endfor %}
   </div>
+  {% if not resources %}
+    <div class="alert alert-info mt-4" role="status">
+      No community resource listings match this category yet. Listings are farmer-submitted and are not independently verified; confirm seller identity, prices, and availability before making a purchase.
+    </div>
+  {% endif %}
 </div>
 
 <!-- Modal: Add Local Vendor Listing -->

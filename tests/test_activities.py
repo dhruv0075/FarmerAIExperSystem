@@ -19,7 +19,7 @@ def test_activity_completion_skip_and_user_isolation(tmp_path):
     app = create_app({"TESTING": True, "SECRET_KEY": "test", "DATABASE": str(database)})
     first_client = app.test_client()
     register(first_client, "FarmerOne")
-    first_client.post("/farm", data={"farm_name": "North Field", "area": "2"})
+    first_client.post("/farm", data={"farm_name": "North Field", "area": "2", "nitrogen": 90, "phosphorus": 42, "potassium": 43, "ph": 6.5})
     response = first_client.post("/activities/create", data={
         "title": "Inspect soil moisture", "activity_type": "Field inspection",
         "description": "Check the east plots", "due_date": date.today().isoformat(),
@@ -65,7 +65,7 @@ def test_overdue_activity_is_derived_not_saved_as_completion(tmp_path):
     app = create_app({"TESTING": True, "SECRET_KEY": "test", "DATABASE": str(database)})
     client = app.test_client()
     register(client, "OverdueFarmer")
-    client.post("/farm", data={"farm_name": "Old Field", "area": "1"})
+    client.post("/farm", data={"farm_name": "Old Field", "area": "1", "nitrogen": 90, "phosphorus": 42, "potassium": 43, "ph": 6.5})
     client.post("/activities/create", data={
         "title": "Inspect drainage", "activity_type": "Field inspection",
         "due_date": (date.today() - timedelta(days=1)).isoformat(),
@@ -104,7 +104,7 @@ def test_recommendation_saves_measured_moisture_and_shows_distinct_fit(tmp_path)
     app = create_app({"TESTING": True, "SECRET_KEY": "test", "DATABASE": str(database)})
     client = app.test_client()
     register(client, "CropFarmer")
-    client.post("/farm", data={"farm_name": "Trial Farm", "area": "3"})
+    client.post("/farm", data={"farm_name": "Trial Farm", "area": "3", "nitrogen": 90, "phosphorus": 42, "potassium": 43, "ph": 6.5})
     response = client.post("/crop-recommendation", data={
         "nitrogen": "90", "phosphorus": "42", "potassium": "43", "ph": "6.5",
         "temperature": "20.8", "humidity": "82", "rainfall": "210", "moisture": "24",
@@ -114,7 +114,7 @@ def test_recommendation_saves_measured_moisture_and_shows_distinct_fit(tmp_path)
     assert b"Dataset-profile match" in response.data
     with sqlite3.connect(database) as connection:
         nitrogen, phosphorus, potassium, moisture = connection.execute(
-            "SELECT nitrogen, phosphorus, potassium, moisture FROM soil_records"
+            "SELECT nitrogen, phosphorus, potassium, moisture FROM soil_records ORDER BY id DESC LIMIT 1"
         ).fetchone()
         recommendation_id, recommended_crop = connection.execute(
             "SELECT id, recommended_crop FROM crop_recommendations"
@@ -125,7 +125,7 @@ def test_recommendation_saves_measured_moisture_and_shows_distinct_fit(tmp_path)
         selected_crop = connection.execute("SELECT selected_crop FROM crop_recommendations WHERE id = ?", (recommendation_id,)).fetchone()[0]
     assert selected_crop == recommended_crop
     lifecycle_response = client.get(f"/lifecycle?crop={recommended_crop}")
-    assert f'<option selected>{recommended_crop}</option>'.encode() in lifecycle_response.data
+    assert f'<option value="{recommended_crop}" selected>'.encode() in lifecycle_response.data
     comparison_crop = "Rice" if recommended_crop != "Rice" else "Wheat"
     conditions = {
         "nitrogen": "90", "phosphorus": "42", "potassium": "43", "ph": "6.5",
@@ -149,7 +149,7 @@ def test_advisory_generation_creates_pending_trackable_activity(tmp_path, monkey
     app = create_app({"TESTING": True, "SECRET_KEY": "test", "DATABASE": str(database)})
     client = app.test_client()
     register(client, "AdvisoryFarmer")
-    client.post("/farm", data={"farm_name": "Weather Farm", "area": "2", "latitude": "18.5", "longitude": "73.8"})
+    client.post("/farm", data={"farm_name": "Weather Farm", "area": "2", "latitude": "18.5", "longitude": "73.8", "nitrogen": 90, "phosphorus": 42, "potassium": 43, "ph": 6.5})
     client.post("/lifecycle", data={"crop_name": "Rice", "sowing_date": date.today().isoformat()})
     client.post("/crop-recommendation", data={
         "nitrogen": "50", "phosphorus": "50", "potassium": "50", "ph": "6.5",
@@ -176,7 +176,7 @@ def test_confirmed_harvest_marks_its_crop_cycle_harvested(tmp_path):
     app = create_app({"TESTING": True, "SECRET_KEY": "test", "DATABASE": str(database)})
     client = app.test_client()
     register(client, "HarvestFarmer")
-    client.post("/farm", data={"farm_name": "Harvest Field", "area": "2"})
+    client.post("/farm", data={"farm_name": "Harvest Field", "area": "2", "nitrogen": 90, "phosphorus": 42, "potassium": 43, "ph": 6.5})
     client.post("/lifecycle", data={"crop_name": "Wheat", "sowing_date": date.today().isoformat()})
     with sqlite3.connect(database) as connection:
         farm_id, cycle_id = connection.execute("SELECT id, (SELECT id FROM crop_cycles LIMIT 1) FROM farms").fetchone()

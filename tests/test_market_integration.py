@@ -3,15 +3,18 @@ import time
 import threading
 from datetime import date
 
+import pytest
 import requests
 
 from services import official_market_service as market
+from scripts.diagnose_market_api import build_diagnostic
 
 
 def reset(monkeypatch, tmp_path):
     monkeypatch.setattr(market, '_cache', {})
     monkeypatch.setattr(market, '_next_attempt', 0)
     monkeypatch.setattr(market, '_refresh_after', {})
+    monkeypatch.setattr(market, '_last_refresh_errors', {})
     monkeypatch.setattr(market, '_inflight', False)
     monkeypatch.setattr(market, '_loaded', True)
     monkeypatch.setattr(market, 'CACHE_PATH', tmp_path / 'cache.json')
@@ -28,11 +31,13 @@ def test_bounded_backoff_preserves_cache_and_redacts_key(monkeypatch, tmp_path, 
         raise requests.ConnectTimeout('secret request URL test-secret-never-log')
     monkeypatch.setattr(market, 'request_sample', fail)
     monkeypatch.setattr(market.time, 'sleep', delays.append)
-    market.refresh_market_data({'commodity': 'Rice'})
+    result = market.refresh_market_data({'commodity': 'Rice'})
     assert len(calls) == 3
     assert delays == [0.5, 1.0]
     assert market._cache['{}'] == saved
     assert market._next_attempt > time.time()
+    assert result['status'] == 'failed'
+    assert 'before the connection timeout' in result['message']
     assert 'stage=TCP connection exception=ConnectTimeout' in caplog.text
     assert 'test-secret-never-log' not in caplog.text
 
@@ -106,3 +111,93 @@ def test_cooldown_and_freshness_states(monkeypatch, tmp_path):
         assert result['retry_after_seconds'] > 0
     market._cache.clear()
     assert market.load_official_market_data()['refresh_status'] == 'unavailable'
+
+
+def test_missing_key_reports_configuration_without_request(monkeypatch, tmp_path):
+    reset(monkeypatch, tmp_path)
+    monkeypatch.delenv('DATA_GOV_IN_API_KEY')
+    def forbidden(*args, **kwargs):
+        raise AssertionError('Request made without a configured key')
+    monkeypatch.setattr(market, 'request_sample', forbidden)
+
+    result = market.refresh_market_data({'commodity': 'Rice'})
+    page_data = market.load_official_market_data({'commodity': 'Rice'})
+    assert result['status'] == 'missing_key'
+    assert 'DATA_GOV_IN_API_KEY' in result['message']
+    assert 'local .env' in page_data['message']
+
+
+def test_diagnostic_reports_usable_records_without_saving_payload():
+    record = {
+        'commodity': 'Rice', 'market': 'Test', 'district': 'District', 'state': 'State',
+        'arrival_date': date.today().strftime('%d/%m/%Y'),
+        'min_price': '100', 'modal_price': '150', 'max_price': '200',
+    }
+    diagnostic = build_diagnostic(
+        'private-test-key',
+        connectivity_probe=lambda host: [{'stage': 'TLS handshake', 'status': 'success'}],
+        api_request=lambda key: {'records': [record]},
+    )
+    assert diagnostic['key_configured'] is True
+    assert {'stage': 'JSON response', 'status': 'valid', 'record_count': 1} in diagnostic['stages']
+    assert {'stage': 'usable price records', 'status': 'success', 'record_count': 1} in diagnostic['stages']
+    assert 'private-test-key' not in json.dumps(diagnostic)
+    assert record not in diagnostic['stages']
+
+
+def test_diagnostic_marks_auth_and_response_unverified_on_timeout():
+    def timeout(key):
+        raise requests.ReadTimeout('request URL contains private-test-key')
+    diagnostic = build_diagnostic(
+        'private-test-key',
+        connectivity_probe=lambda host: [],
+        api_request=timeout,
+    )
+    assert {'stage': 'HTTP response', 'status': 'failed', 'exception_type': 'ReadTimeout'} in diagnostic['stages']
+    assert {'stage': 'authentication', 'status': 'not verified'} in diagnostic['stages']
+    assert {'stage': 'JSON response', 'status': 'not verified'} in diagnostic['stages']
+    assert 'private-test-key' not in json.dumps(diagnostic)
+
+
+def test_diagnostic_with_missing_key_does_not_call_api():
+    def forbidden(key):
+        raise AssertionError('Request made without a configured key')
+    diagnostic = build_diagnostic(None, connectivity_probe=lambda host: [], api_request=forbidden)
+    assert diagnostic['key_configured'] is False
+    assert {'stage': 'authentication', 'status': 'not tested: key missing'} in diagnostic['stages']
+
+
+def test_request_sample_uses_redacted_query_key_and_validates_payload(monkeypatch, caplog):
+    calls = []
+    class Response:
+        status_code = 200
+        headers = {'Content-Type': 'application/json'}
+        def raise_for_status(self):
+            return None
+        def json(self):
+            return {'records': []}
+    def get(url, **kwargs):
+        calls.append((url, kwargs))
+        return Response()
+    monkeypatch.setattr(market.requests, 'get', get)
+
+    assert market.request_sample('private-test-key') == {'records': []}
+    url, kwargs = calls[0]
+    assert url == market.ENDPOINT
+    assert kwargs['params']['api-key'] == 'private-test-key'
+    assert kwargs['verify'] is True and kwargs['allow_redirects'] is False
+    assert 'private-test-key' not in caplog.text
+
+
+def test_request_sample_reports_auth_rejection_without_leaking_key(monkeypatch, caplog):
+    class Response:
+        status_code = 403
+        headers = {'Content-Type': 'application/json'}
+        def raise_for_status(self):
+            raise requests.HTTPError('Forbidden', response=self)
+    monkeypatch.setattr(market.requests, 'get', lambda *args, **kwargs: Response())
+
+    with pytest.raises(requests.HTTPError):
+        market.request_sample('private-test-key')
+    assert 'status=403' in caplog.text
+    assert 'private-test-key' not in caplog.text
