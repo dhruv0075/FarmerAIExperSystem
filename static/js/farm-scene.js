@@ -126,54 +126,233 @@ function createField(THREE, scene, isMobile) {
 }
 
 function createPlant(THREE, scene, element) {
+  const bedShape = new THREE.Shape();
+  bedShape.moveTo(-1.25, -0.7);
+  bedShape.lineTo(1.25, -0.7);
+  bedShape.quadraticCurveTo(1.42, -0.7, 1.42, -0.53);
+  bedShape.lineTo(1.42, 0.53);
+  bedShape.quadraticCurveTo(1.42, 0.7, 1.25, 0.7);
+  bedShape.lineTo(-1.25, 0.7);
+  bedShape.quadraticCurveTo(-1.42, 0.7, -1.42, 0.53);
+  bedShape.lineTo(-1.42, -0.53);
+  bedShape.quadraticCurveTo(-1.42, -0.7, -1.25, -0.7);
   const ground = new THREE.Mesh(
-    new THREE.CircleGeometry(2.7, 28),
-    new THREE.MeshStandardMaterial({ color: 0x77905d, roughness: 1 }),
+    new THREE.ShapeGeometry(bedShape, 8),
+    new THREE.MeshStandardMaterial({ color: 0x806b4e, roughness: 1, side: THREE.DoubleSide }),
   );
   ground.rotation.x = -Math.PI / 2;
-  ground.position.y = -0.13;
+  ground.position.y = -0.12;
   scene.add(ground);
 
   const stage = (element.dataset.stage || '').toLowerCase();
   const progress = Math.max(0, Math.min(100, Number(element.dataset.progress || 0)));
-  let height = 0.75 + (progress / 100) * 1.5;
-  if (stage.includes('germination')) height = 0.62;
-  if (stage.includes('seedling')) height = 0.95;
-  if (stage.includes('flower')) height = Math.max(height, 2.15);
-  if (stage.includes('maturity') || stage.includes('grain')) height = Math.max(height, 2.35);
+  let height = 0.9 + (progress / 100) * 0.85;
+  if (stage.includes('germination')) height = 0.48;
+  if (stage.includes('seedling') || stage.includes('emergence')) height = 0.78;
+  if (stage.includes('flower')) height = Math.max(height, 1.65);
+  if (stage.includes('maturity') || stage.includes('grain')) height = Math.max(height, 1.75);
 
   const plant = new THREE.Group();
-  const stem = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.065, 0.12, height, 7),
-    new THREE.MeshStandardMaterial({ color: 0x55784b, roughness: 0.9 }),
-  );
-  stem.position.y = height / 2;
-  plant.add(stem);
-  const leafMaterial = new THREE.MeshStandardMaterial({ color: 0x6c9255, roughness: 0.9, side: THREE.DoubleSide });
-  const leafCount = Math.max(3, Math.round(3 + progress / 13));
+  const driftParticles = [];
+  const leafMaterial = new THREE.MeshStandardMaterial({ color: 0x62864d, roughness: 0.9, side: THREE.DoubleSide });
+  const leafShape = new THREE.Shape();
+  leafShape.moveTo(0, 0);
+  leafShape.quadraticCurveTo(0.09, 0.22, 0.28, 0.52);
+  leafShape.quadraticCurveTo(0.42, 0.88, 0.34, 1);
+  leafShape.quadraticCurveTo(0.12, 0.84, 0.08, 0.55);
+  leafShape.quadraticCurveTo(-0.025, 0.24, 0, 0);
+  const leafGeometry = new THREE.ShapeGeometry(leafShape, 8);
+  const stemMaterial = new THREE.MeshStandardMaterial({ color: 0x71904f, roughness: 0.9 });
+  const grainMaterial = new THREE.MeshStandardMaterial({
+    color: stage.includes('maturity') || stage.includes('grain') ? 0xd6ad55 : 0x9eae62,
+    roughness: 0.82,
+  });
+  const grainGeometry = new THREE.SphereGeometry(0.1, 8, 6);
+  const leafCount = Math.max(3, Math.round(3 + progress / 20));
   const leafNodes = [];
-  for (let index = 0; index < leafCount; index += 1) {
-    const level = 0.25 + (index / leafCount) * height * 0.78;
-    const angle = index * 2.399;
-    const leaf = new THREE.Mesh(new THREE.SphereGeometry(0.5, 9, 6), leafMaterial);
-    leaf.scale.set(0.16, 0.52, 0.075);
-    leaf.position.set(Math.cos(angle) * 0.08, level, Math.sin(angle) * 0.08);
-    leaf.rotation.z = Math.cos(angle) * 0.9;
-    leaf.rotation.y = angle;
-    plant.add(leaf);
-    leafNodes.push({ node: leaf, rotation: leaf.rotation.z });
-  }
-  if (stage.includes('flower') || stage.includes('maturity')) {
-    const flower = new THREE.Mesh(
-      new THREE.SphereGeometry(0.24, 10, 8),
-      new THREE.MeshStandardMaterial({ color: stage.includes('maturity') ? 0xd9b35c : 0xe9d58a, roughness: 0.8 }),
-    );
-    flower.position.y = height + 0.05;
-    plant.add(flower);
+  const tillerOffsets = [[0, 0], [-0.27, -0.16], [0.26, -0.14], [-0.19, 0.22], [0.2, 0.2]];
+  const tillerCount = Math.min(tillerOffsets.length, 2 + Math.floor(progress / 25));
+  for (let tiller = 0; tiller < tillerCount; tiller += 1) {
+    const [offsetX, offsetZ] = tillerOffsets[tiller];
+    const stemHeight = height * (tiller === 0 ? 1 : 0.76 + (tiller % 2) * 0.05);
+    const headOffset = 0.14 + (tiller % 2) * 0.06;
+    const stemCurve = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(offsetX, -0.05, offsetZ),
+      new THREE.Vector3(offsetX - headOffset * 0.28, stemHeight * 0.5, offsetZ),
+      new THREE.Vector3(offsetX + headOffset, stemHeight, offsetZ),
+    ]);
+    const stem = new THREE.Mesh(new THREE.TubeGeometry(stemCurve, 12, 0.035, 6, false), stemMaterial);
+    plant.add(stem);
+    for (let index = 0; index < leafCount; index += 1) {
+      const level = 0.12 + (index / leafCount) * stemHeight * 0.68;
+      const angle = index * 2.399 + tiller * 1.1;
+      const leaf = new THREE.Mesh(leafGeometry, leafMaterial);
+      leaf.position.set(offsetX, level, offsetZ);
+      leaf.rotation.set(-0.13, angle, -0.48 + (index % 2) * 0.18);
+      const length = stemHeight * (0.48 + (index % 3) * 0.08);
+      leaf.scale.setScalar(length);
+      plant.add(leaf);
+      leafNodes.push({ node: leaf, rotation: leaf.rotation.z });
+    }
+
+    if (stage.includes('flower') || stage.includes('grain') || stage.includes('maturity')) {
+      const head = new THREE.CatmullRomCurve3([
+        new THREE.Vector3(offsetX + headOffset, stemHeight, offsetZ),
+        new THREE.Vector3(offsetX + headOffset + 0.08, stemHeight - 0.12, offsetZ),
+        new THREE.Vector3(offsetX + headOffset + 0.25, stemHeight - 0.38, offsetZ + 0.03),
+      ]);
+      plant.add(new THREE.Mesh(new THREE.TubeGeometry(head, 10, 0.018, 5, false), stemMaterial));
+      for (let kernel = 0; kernel < 8; kernel += 1) {
+        const t = 0.12 + kernel * 0.105;
+        const center = head.getPoint(t);
+        const side = kernel % 2 ? 1 : -1;
+        const grain = new THREE.Mesh(grainGeometry, grainMaterial);
+        grain.position.set(center.x + side * 0.075, center.y, center.z + side * 0.025);
+        grain.scale.set(0.58, 1.45, 0.62);
+        grain.rotation.z = -0.42;
+        plant.add(grain);
+      }
+    }
   }
   plant.position.y = -0.05;
   scene.add(plant);
-  return { plant, leafNodes };
+  const pollenMaterial = new THREE.MeshBasicMaterial({
+    color: 0xffe2a0,
+    transparent: true,
+    opacity: 0.72,
+    depthWrite: false,
+  });
+  const pollenGeometry = new THREE.SphereGeometry(0.025, 6, 5);
+  for (let index = 0; index < 12; index += 1) {
+    const particle = new THREE.Mesh(pollenGeometry, pollenMaterial);
+    const x = -1.25 + ((index * 37) % 100) / 100 * 2.5;
+    const y = 0.25 + ((index * 23) % 100) / 100 * 2.2;
+    const z = -0.85 + ((index * 41) % 100) / 100 * 1.7;
+    particle.position.set(x, y, z);
+    particle.scale.setScalar(0.65 + (index % 4) * 0.18);
+    scene.add(particle);
+    driftParticles.push({ node: particle, x, y, z, phase: index * 0.83 });
+  }
+  return { plant, leafNodes, driftParticles };
+}
+
+function createRecommendationLoader(THREE, scene) {
+  const soil = new THREE.Mesh(
+    new THREE.CylinderGeometry(1.05, 1.18, 0.24, 32),
+    new THREE.MeshStandardMaterial({ color: 0x9b7648, roughness: 1 }),
+  );
+  soil.position.y = -0.08;
+  scene.add(soil);
+
+  const plant = new THREE.Group();
+  const stemCurve = new THREE.CatmullRomCurve3([
+    new THREE.Vector3(0, 0.02, 0),
+    new THREE.Vector3(-0.05, 0.42, 0),
+    new THREE.Vector3(0.02, 0.98, 0),
+  ]);
+  plant.add(new THREE.Mesh(
+    new THREE.TubeGeometry(stemCurve, 12, 0.045, 6, false),
+    new THREE.MeshStandardMaterial({ color: 0x508052, roughness: 0.85 }),
+  ));
+  const leafShape = new THREE.Shape();
+  leafShape.moveTo(0, 0);
+  leafShape.quadraticCurveTo(0.18, 0.16, 0.58, 0.36);
+  leafShape.quadraticCurveTo(0.29, 0.48, 0, 0);
+  const leafGeometry = new THREE.ShapeGeometry(leafShape, 8);
+  const leafMaterial = new THREE.MeshStandardMaterial({
+    color: 0x68a765,
+    roughness: 0.8,
+    side: THREE.DoubleSide,
+  });
+  [[-0.02, 0.28, 0.42], [0.02, 0.53, -0.5], [0, 0.74, 0.48]].forEach(([x, y, rotation]) => {
+    const leaf = new THREE.Mesh(leafGeometry, leafMaterial);
+    leaf.position.set(x, y, 0);
+    leaf.rotation.set(0, rotation * 0.3, rotation);
+    plant.add(leaf);
+  });
+  const seed = new THREE.Mesh(
+    new THREE.SphereGeometry(0.16, 12, 8),
+    new THREE.MeshStandardMaterial({ color: 0xe3b663, roughness: 0.7 }),
+  );
+  seed.position.set(0, 0.16, 0.1);
+  plant.add(seed);
+  scene.add(plant);
+
+  const ringMaterial = new THREE.MeshBasicMaterial({
+    color: 0xe3c36d,
+    transparent: true,
+    opacity: 0.72,
+  });
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(1.42, 0.018, 6, 64), ringMaterial);
+  ring.rotation.x = Math.PI / 2;
+  ring.position.y = 0.55;
+  scene.add(ring);
+  const orbit = new THREE.Group();
+  const orbitDotGeometry = new THREE.SphereGeometry(0.045, 8, 6);
+  const orbitDotMaterial = new THREE.MeshBasicMaterial({ color: 0xf4d687 });
+  for (let index = 0; index < 6; index += 1) {
+    const angle = (index / 6) * Math.PI * 2;
+    const dot = new THREE.Mesh(orbitDotGeometry, orbitDotMaterial);
+    dot.position.set(Math.cos(angle) * 1.42, 0.55, Math.sin(angle) * 1.42);
+    orbit.add(dot);
+  }
+  scene.add(orbit);
+  return { loaderPlant: plant, loaderRing: ring, loaderOrbit: orbit, loaderSeed: seed };
+}
+
+function createAmbient(THREE, scene, aspect) {
+  const group = new THREE.Group();
+  const leafShape = new THREE.Shape();
+  leafShape.moveTo(0, 0);
+  leafShape.quadraticCurveTo(0.42, 0.06, 0.82, 0.38);
+  leafShape.quadraticCurveTo(0.5, 0.52, 0, 0);
+  const leafGeometry = new THREE.ShapeGeometry(leafShape, 8);
+  const leafColors = [0x4e8a64, 0x6ca786, 0xb78a4b, 0x5f9a91];
+  const viewWidth = 13.8 * aspect;
+  const leaves = [];
+  for (let index = 0; index < 8; index += 1) {
+    const material = new THREE.MeshBasicMaterial({
+      color: leafColors[index % leafColors.length],
+      transparent: true,
+      opacity: 0.38,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+    });
+    const leaf = new THREE.Mesh(leafGeometry, material);
+    const x = ((index + 0.5) / 8 - 0.5) * viewWidth * 0.95;
+    const y = Math.sin(index * 2.1) * 3.8;
+    const z = -1.5 - (index % 3) * 0.75;
+    leaf.position.set(x, y, z);
+    leaf.rotation.set((index % 3 - 1) * 0.12, (index % 2 ? 1 : -1) * 0.3, index * 1.7);
+    leaf.scale.setScalar(0.75 + (index % 4) * 0.28);
+    group.add(leaf);
+    leaves.push({ node: leaf, x, y, z, rotation: leaf.rotation.z, phase: index * 0.9 });
+  }
+  scene.add(group);
+
+  const particlePositions = [];
+  for (let index = 0; index < 28; index += 1) {
+    particlePositions.push(
+      ((index * 37) % 100) / 100 * viewWidth - viewWidth / 2,
+      ((index * 23) % 100) / 100 * 9 - 4.5,
+      -0.5 - ((index * 13) % 30) / 10,
+    );
+  }
+  const particleGeometry = new THREE.BufferGeometry();
+  particleGeometry.setAttribute('position', new THREE.Float32BufferAttribute(particlePositions, 3));
+  const particles = new THREE.Points(
+    particleGeometry,
+    new THREE.PointsMaterial({
+      color: 0xe6c783,
+      size: 0.075,
+      transparent: true,
+      opacity: 0.6,
+      sizeAttenuation: true,
+      depthWrite: false,
+    }),
+  );
+  scene.add(particles);
+  return { ambientGroup: group, ambientLeaves: leaves, ambientParticles: particles };
 }
 
 async function initializeScene(element) {
@@ -186,10 +365,15 @@ async function initializeScene(element) {
     const isMobile = matchMedia('(max-width: 767px)').matches;
     const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(element.dataset.farmScene === 'plant' ? 37 : 42, rect.width / rect.height, 0.1, 90);
-    if (element.dataset.farmScene === 'plant') camera.position.set(4.3, 4.5, 6.8);
+    const plantScene = element.dataset.farmScene === 'plant';
+    const ambientScene = element.dataset.farmScene === 'ambient';
+    const loaderScene = element.dataset.farmScene === 'loader';
+    const camera = new THREE.PerspectiveCamera(plantScene || loaderScene ? 37 : 42, rect.width / rect.height, 0.1, 90);
+    if (plantScene) camera.position.set(3.2, 3.4, 5);
+    else if (loaderScene) camera.position.set(3.1, 2.8, 5.4);
+    else if (ambientScene) camera.position.set(0, 0, 15);
     else camera.position.set(0, 10.3, 19.5);
-    camera.lookAt(0, element.dataset.farmScene === 'plant' ? 1.15 : 0, 0);
+    camera.lookAt(0, plantScene ? 0.95 : loaderScene ? 0.55 : 0, 0);
 
     const renderer = new THREE.WebGLRenderer({
       canvas,
@@ -198,7 +382,7 @@ async function initializeScene(element) {
       powerPreference: 'low-power',
       depth: true,
     });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isMobile ? 1.2 : 1.65));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, ambientScene ? 1 : isMobile ? 1.2 : 1.65));
     renderer.setSize(rect.width, rect.height, false);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -206,7 +390,9 @@ async function initializeScene(element) {
     addLighting(THREE, scene);
 
     let movingObjects;
-    if (element.dataset.farmScene === 'plant') movingObjects = createPlant(THREE, scene, element);
+    if (plantScene) movingObjects = createPlant(THREE, scene, element);
+    else if (loaderScene) movingObjects = createRecommendationLoader(THREE, scene);
+    else if (ambientScene) movingObjects = createAmbient(THREE, scene, rect.width / rect.height);
     else movingObjects = createField(THREE, scene, isMobile);
 
     let pointerX = 0;
@@ -230,13 +416,16 @@ async function initializeScene(element) {
       pointerX = ((event.clientX - bounds.left) / bounds.width - 0.5) * 0.12;
       pointerY = ((event.clientY - bounds.top) / bounds.height - 0.5) * 0.07;
     };
-    if (!isMobile && element.dataset.farmScene === 'field') element.addEventListener('pointermove', onPointerMove, { passive: true });
+    if (!isMobile) element.addEventListener('pointermove', onPointerMove, { passive: true });
 
     function renderOnce() {
       if (disposed) return;
-      camera.position.x += (pointerX * (element.dataset.farmScene === 'plant' ? 1 : 10) - camera.position.x * 0.0004);
-      camera.position.y += (-pointerY * 4 - (camera.position.y - (element.dataset.farmScene === 'plant' ? 4.5 : 10.3)) * 0.0004);
-      camera.lookAt(0, element.dataset.farmScene === 'plant' ? 1.1 : 0, 0);
+      const baseX = plantScene ? 3.2 : 0;
+      const baseY = plantScene ? 3.4 : loaderScene ? 2.8 : ambientScene ? 0 : 10.3;
+      const pointerScale = plantScene || loaderScene ? 4 : ambientScene ? 0.8 : 10;
+      camera.position.x += (baseX + pointerX * pointerScale - camera.position.x) * 0.04;
+      camera.position.y += (baseY - pointerY * (plantScene || loaderScene ? 1.8 : ambientScene ? 0.5 : 4) - camera.position.y) * 0.04;
+      camera.lookAt(0, plantScene ? 0.95 : loaderScene ? 0.55 : 0, 0);
       renderer.render(scene, camera);
     }
 
@@ -246,10 +435,33 @@ async function initializeScene(element) {
       elapsed += 0.008;
       if (movingObjects.cropGroup) movingObjects.cropGroup.rotation.z = Math.sin(elapsed) * 0.012;
       if (movingObjects.plant) {
-        movingObjects.plant.rotation.z = Math.sin(elapsed) * 0.012;
+        movingObjects.plant.rotation.z = Math.sin(elapsed) * 0.028;
         movingObjects.leafNodes.forEach(({ node, rotation }, index) => {
-          node.rotation.z = rotation + Math.sin(elapsed + index * 0.4) * 0.018;
+          node.rotation.z = rotation + Math.sin(elapsed + index * 0.4) * 0.04;
         });
+        movingObjects.driftParticles.forEach(({ node, x, y, z, phase }) => {
+          node.position.set(
+            x + Math.sin(elapsed * 0.34 + phase) * 0.12,
+            y + Math.sin(elapsed * 0.52 + phase) * 0.12,
+            z + Math.cos(elapsed * 0.3 + phase) * 0.08,
+          );
+        });
+      }
+      if (movingObjects.ambientLeaves) {
+        movingObjects.ambientGroup.rotation.y = pointerX * 0.65;
+        movingObjects.ambientGroup.rotation.x = -pointerY * 0.65;
+        movingObjects.ambientLeaves.forEach(({ node, x, y, z, rotation, phase }) => {
+          node.position.set(x + Math.sin(elapsed * 0.24 + phase) * 0.16, y + Math.sin(elapsed * 0.38 + phase) * 0.2, z);
+          node.rotation.z = rotation + Math.sin(elapsed * 0.3 + phase) * 0.08;
+        });
+        movingObjects.ambientParticles.position.y = Math.sin(elapsed * 0.2) * 0.1;
+      }
+      if (movingObjects.loaderPlant) {
+        movingObjects.loaderPlant.rotation.y = Math.sin(elapsed * 0.35) * 0.16;
+        movingObjects.loaderPlant.rotation.z = Math.sin(elapsed * 0.75) * 0.035;
+        movingObjects.loaderSeed.scale.setScalar(1 + Math.sin(elapsed * 1.8) * 0.06);
+        movingObjects.loaderRing.rotation.z += 0.006;
+        movingObjects.loaderOrbit.rotation.y += 0.012;
       }
       if (movingObjects.clouds) movingObjects.clouds.forEach((cloud, index) => {
         cloud.position.x += 0.0015 * (index % 2 ? -1 : 1);

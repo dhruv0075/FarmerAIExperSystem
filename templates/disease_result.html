@@ -8,7 +8,7 @@
   <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
     <div>
       <h2 class="h3 fw-bold mb-1"><i class="fa-solid fa-microscope text-danger me-2"></i>Crop Problem Report</h2>
-      <p class="text-muted small mb-0">Farmer symptom record for expert review. Image diagnosis is unavailable.</p>
+      <p class="text-muted small mb-0">Farmer-reported symptoms and reference notes. Image screening is a separate feature.</p>
     </div>
     <div>
       <a href="{{ url_for('report_problem_page') }}" class="btn btn-outline-secondary btn-sm">
@@ -21,8 +21,7 @@
   <div class="alert alert-warning py-2 mb-4 d-flex align-items-center shadow-sm">
     <i class="fa-solid fa-triangle-exclamation fs-4 text-warning me-3"></i>
     <div class="small">
-      <strong>Important Diagnostic Notice:</strong> {{ diagnosis.disclaimer }}
-      Never apply chemical pesticides at unverified concentrations. Always cross-check with certified local agronomic authorities.
+      <strong>Report notice:</strong> This page records the reported symptoms and any reference photo. It does not diagnose the problem.
     </div>
   </div>
 
@@ -32,11 +31,10 @@
       <div class="row align-items-center g-4">
         <div class="col-md-8">
           <div class="d-flex align-items-center gap-2 mb-2">
-            <span class="badge bg-danger text-uppercase px-2 py-1">Symptom Record</span>
             <span class="badge bg-light text-dark border">Crop: {{ report.crop }}</span>
             <span class="badge bg-light text-dark border">Part: {{ report.plant_part }}</span>
           </div>
-          <h3 class="fw-bold mb-2 text-dark">Diagnosis unavailable; expert inspection needed</h3>
+          <h3 class="fw-bold mb-2 text-dark">No confirmed diagnosis</h3>
           <p class="text-secondary small mb-3">{{ diagnosis.primary_diagnosis.weather_context }}</p>
 
           <div class="small">
@@ -49,12 +47,12 @@
           </div>
         </div>
 
-        <!-- Optional Image Thumbnail & CV Metrics -->
+        <!-- Optional private image saved with the report -->
         <div class="col-md-4 text-center">
           {% if report.image_path %}
             <img src="{{ url_for('disease_image', report_id=report.id) }}" alt="Plant Leaf Specimen" class="img-fluid rounded-3 shadow-sm mb-2" style="max-height: 180px; object-fit: cover;">
             <div class="small text-muted" style="font-size:0.75rem;">
-              Photo saved with this report. It has not been analyzed by a disease model.
+              Photo saved privately as reference only; it was not screened on this report page.
             </div>
           {% else %}
             <div class="p-4 bg-light rounded-3 text-muted border text-center">

@@ -43,9 +43,18 @@
 	<div class="dashboard-grid">
 		<section class="dashboard-panel" aria-labelledby="progress-title">
 			<div class="d-flex justify-content-between align-items-start gap-3"><div><p class="dashboard-section-label">Crop cycle</p><h2 id="progress-title">Estimated crop progress</h2></div><span class="status-pill">{{ progress|round|int }}%</span></div>
-			<div class="lifecycle-progress" role="progressbar" aria-label="Estimated crop progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ progress|round|int }}"><span style="width: {{ progress }}%"></span></div>
-			<p class="small text-muted mt-2 mb-0">{% if latest_cycle %}Based on {{ latest_cycle.sowing_date }} and configured crop-stage durations; not a field-observed measurement.{% else %}Start a lifecycle after selecting a crop and confirming the sowing date.{% endif %}</p>
-			<a class="product-text-link mt-3" href="{{ url_for('lifecycle_page') }}">Review crop lifecycle <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+			<div class="dashboard-crop-preview">
+				{% if latest_cycle %}
+				<div class="dashboard-crop-preview__scene" data-farm-scene="plant" data-stage="{{ crop_stage }}" data-progress="{{ progress }}" data-scene-state="loading" aria-hidden="true"><canvas></canvas></div>
+				{% else %}
+				<div class="dashboard-crop-preview__empty" aria-hidden="true"><i class="fa-solid fa-seedling"></i></div>
+				{% endif %}
+				<div>
+					<div class="lifecycle-progress" role="progressbar" aria-label="Estimated crop progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ progress|round|int }}"><span style="width: {{ progress }}%"></span></div>
+					<p class="small text-muted mt-2 mb-0">{% if latest_cycle %}Based on {{ latest_cycle.sowing_date }} and configured crop-stage durations; not a field-observed measurement.{% else %}Start a lifecycle after selecting a crop and confirming the sowing date.{% endif %}</p>
+					<a class="product-text-link mt-3" href="{{ url_for('lifecycle_page') }}">Review crop lifecycle <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+				</div>
+			</div>
 		</section>
 
 		<section class="dashboard-panel" aria-labelledby="activity-title">

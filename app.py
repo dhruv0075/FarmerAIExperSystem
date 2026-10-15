@@ -7,11 +7,13 @@ import sqlite3
 import uuid
 import math
 import io
+import base64
 import secrets
 from datetime import date, datetime, timedelta, timezone
 from functools import wraps
 from pathlib import Path
 from typing import Any, Dict, List, Mapping, Optional
+from urllib.parse import urlsplit
 
 from flask import (
     Flask,
@@ -56,6 +58,7 @@ from services.decision_orchestrator import (
 from services.disease_service import (
     analyze_crop_issue,
     get_past_problem_reports,
+    screen_crop_image,
 )
 from services.expert_system import (
     evaluate_expert_system,
@@ -67,6 +70,13 @@ from services.lifecycle_service import (
     get_all_supported_crops,
     get_crop_stage_summary,
     get_lifecycle_profile,
+)
+from services.i18n_service import (
+    DEFAULT_LANGUAGE,
+    SUPPORTED_LANGUAGES,
+    is_supported_language,
+    translate,
+    translate_disease_name,
 )
 from services.location_service import (
     get_default_farm_location,
@@ -325,6 +335,8 @@ def create_app(test_config=None) -> Flask:
     @app.before_request
     def load_global_context():
         session.setdefault('csrf_token', secrets.token_urlsafe(32))
+        if not is_supported_language(session.get("language")):
+            session["language"] = DEFAULT_LANGUAGE
         if request.method == 'POST' and current_app.config.get('CSRF_ENABLED', not current_app.testing):
             supplied = request.form.get('csrf_token') or request.headers.get('X-CSRF-Token', '')
             if not secrets.compare_digest(supplied, session['csrf_token']):
@@ -358,6 +370,12 @@ def create_app(test_config=None) -> Flask:
             "farm": g.get("current_farm"),
             "unread_notifications_count": g.get("unread_notifications", 0),
             "csrf_token": session.get('csrf_token', ''),
+            "current_language": session.get("language", DEFAULT_LANGUAGE),
+            "supported_languages": SUPPORTED_LANGUAGES,
+            "t": lambda key, **values: translate(session.get("language"), key, **values),
+            "td": lambda class_label, english_name: translate_disease_name(
+                session.get("language"), class_label, english_name
+            ),
         }
 
     # ==========================================
@@ -368,6 +386,26 @@ def create_app(test_config=None) -> Flask:
     def health_check():
         get_db().execute('SELECT 1').fetchone()
         return jsonify(status='ok')
+
+    @app.route("/language", methods=["POST"])
+    def set_language():
+        selected_language = request.form.get("language")
+        if not is_supported_language(selected_language):
+            return render_template(
+                "error.html",
+                message="Unsupported language. Choose English, Marathi, or Hindi.",
+            ), 400
+        session["language"] = selected_language
+        next_path = request.form.get("next") or url_for("index")
+        parsed_path = urlsplit(next_path)
+        if (
+            not next_path.startswith("/")
+            or next_path.startswith("//")
+            or parsed_path.scheme
+            or parsed_path.netloc
+        ):
+            next_path = url_for("index")
+        return redirect(next_path)
 
     @app.route("/")
     def index():
@@ -919,7 +957,13 @@ def create_app(test_config=None) -> Flask:
             cycle = get_latest_cycle(farm["id"])
             if cycle:
                 ensure_lifecycle_activities(get_db(), farm["id"], cycle)
-            query = "SELECT a.*, c.crop_name FROM farm_activities a LEFT JOIN crop_cycles c ON c.id = a.crop_cycle_id WHERE a.farm_id = ?"
+            query = """
+                SELECT a.*, c.crop_name, e.amount AS expense_amount
+                FROM farm_activities a
+                LEFT JOIN crop_cycles c ON c.id = a.crop_cycle_id
+                LEFT JOIN farm_expenses e ON e.activity_id = a.id
+                WHERE a.farm_id = ?
+            """
             params = [farm["id"]]
             status_filter = (request.args.get("status") or "").upper()
             if status_filter == "OVERDUE":
@@ -982,7 +1026,7 @@ def create_app(test_config=None) -> Flask:
     def update_activity_status(activity_id):
         farm = get_user_farm(get_current_user()["id"])
         activity = get_db().execute(
-            "SELECT id, activity_type, crop_cycle_id FROM farm_activities WHERE id = ? AND farm_id = ?",
+            "SELECT id, activity_type, crop_cycle_id, title FROM farm_activities WHERE id = ? AND farm_id = ?",
             (activity_id, farm["id"] if farm else 0),
         ).fetchone()
         if not activity:
@@ -1005,6 +1049,16 @@ def create_app(test_config=None) -> Flask:
             flash("Choose a valid activity status.", "danger")
             return redirect(url_for("activities_page"))
 
+        amount_spent = None
+        amount_value = (request.form.get("amount_spent") or "").strip()
+        if status == "COMPLETED" and amount_value:
+            try:
+                amount_spent = float(amount_value)
+            except ValueError:
+                return render_template("error.html", message="Enter a valid amount spent for this activity."), 400
+            if not math.isfinite(amount_spent) or amount_spent <= 0:
+                return render_template("error.html", message="Money spent must be a positive finite amount."), 400
+
         now_str = datetime.now(timezone.utc).isoformat(timespec="seconds")
         completed_at = now_str if status == "COMPLETED" else None
         skipped_at = now_str if status == "SKIPPED" else None
@@ -1017,17 +1071,137 @@ def create_app(test_config=None) -> Flask:
             """,
             (status, completed_at, skipped_at, note, now_str, activity_id, farm["id"]),
         )
+        if status == "COMPLETED" and amount_spent is not None:
+            activity_type = str(activity["activity_type"]).casefold()
+            category = {
+                "irrigation": "IRRIGATION",
+                "fertilizer": "FERTILIZER",
+                "harvest": "LABOR",
+            }.get(activity_type, "OTHER")
+            expense_date = date.today().isoformat()
+            expense_notes = f"Activity: {activity['title']}"
+            if note:
+                expense_notes = f"{expense_notes}. {note}"
+            get_db().execute(
+                """
+                INSERT INTO farm_expenses
+                    (farm_id, crop_cycle_id, activity_id, category, amount, date, vendor, notes)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT DO UPDATE SET
+                    crop_cycle_id = excluded.crop_cycle_id,
+                    category = excluded.category,
+                    amount = excluded.amount,
+                    date = excluded.date,
+                    vendor = excluded.vendor,
+                    notes = excluded.notes
+                """,
+                (
+                    farm["id"], activity["crop_cycle_id"], activity_id, category,
+                    amount_spent, expense_date, activity["activity_type"], expense_notes,
+                ),
+            )
         if status == "COMPLETED" and str(activity["activity_type"]).casefold() == "harvest" and activity["crop_cycle_id"]:
             get_db().execute("UPDATE crop_cycles SET status = 'harvested' WHERE id = ? AND farm_id = ?", (activity["crop_cycle_id"], farm["id"]))
 
         get_db().commit()
-        flash("Activity status recorded. Future advisories use completed actions only.", "success")
+        if amount_spent is not None:
+            flash(f"Activity completed and ₹{amount_spent:,.2f} recorded as a farm expense.", "success")
+        else:
+            flash("Activity status recorded. Future advisories use completed actions only.", "success")
         return redirect(url_for("activities_page"))
 
 
     # ==========================================
     # CROP PROBLEM / DISEASE REPORTING & DIAGNOSIS
     # ==========================================
+
+    @app.route("/disease-detection", methods=["GET", "POST"])
+    @login_required
+    def disease_detection_page():
+        class_names = []
+        class_mapping_available = True
+        class_file = BASE_DIR / "agriwise_disease_model" / "class_names.json"
+        try:
+            loaded_class_names = json.loads(class_file.read_text(encoding="utf-8"))
+            if (
+                not isinstance(loaded_class_names, list)
+                or any(not isinstance(label, str) or "___" not in label for label in loaded_class_names)
+            ):
+                raise ValueError("Disease model class mapping is invalid.")
+            class_names = loaded_class_names
+        except (OSError, json.JSONDecodeError, ValueError):
+            current_app.logger.exception("Disease model class mapping could not be loaded")
+            class_mapping_available = False
+
+        dataset_classes = []
+        for label in class_names:
+            crop, disease = label.split("___", 1)
+            dataset_classes.append(
+                {
+                    "crop": crop.replace("_", " "),
+                    "disease": disease.replace("_", " ").strip(),
+                    "label": label,
+                }
+            )
+        crop_options = sorted({item["crop"] for item in dataset_classes})
+
+        error_message = None
+        screening = None
+        image_preview = None
+        selected_crop = ""
+        if request.method == "POST":
+            selected_crop = (request.form.get("crop") or "").strip()
+            image_file = request.files.get("photo")
+            if not class_mapping_available:
+                error_message = "detection.error_class_mapping"
+            elif not selected_crop or len(selected_crop) > 80:
+                error_message = "detection.error_crop_required"
+            elif not image_file or not image_file.filename:
+                error_message = "detection.error_photo_required"
+            elif (
+                not allowed_file(image_file.filename)
+                or image_file.mimetype not in {"image/jpeg", "image/png", "image/webp"}
+            ):
+                error_message = "detection.error_photo_type"
+            else:
+                image_bytes = image_file.read()
+                if len(image_bytes) > MAX_IMAGE_UPLOAD_BYTES:
+                    error_message = "detection.error_photo_size"
+                else:
+                    try:
+                        with Image.open(io.BytesIO(image_bytes)) as uploaded:
+                            if uploaded.format not in {"JPEG", "PNG", "WEBP"}:
+                                raise ValueError("Upload a valid JPEG, PNG, or WebP image.")
+                            if uploaded.width * uploaded.height > 24_000_000:
+                                raise Image.DecompressionBombError
+                            image_format = uploaded.format
+                            uploaded.verify()
+                    except Image.DecompressionBombError:
+                        error_message = "detection.error_photo_dimensions"
+                    except (ValueError, OSError, UnidentifiedImageError):
+                        error_message = "detection.error_photo_type"
+                    else:
+                        screening = screen_crop_image(
+                            crop_name=selected_crop,
+                            image_bytes=image_bytes,
+                            image_filename=image_file.filename,
+                            predictor=current_app.config.get("DISEASE_PREDICTOR"),
+                        )
+                        image_mime = {"JPEG": "image/jpeg", "PNG": "image/png", "WEBP": "image/webp"}[image_format]
+                        image_preview = (
+                            f"data:{image_mime};base64,"
+                            f"{base64.b64encode(image_bytes).decode('ascii')}"
+                        )
+
+        return render_template(
+            "disease_detection.html",
+            screening=screening,
+            image_preview=image_preview,
+            selected_crop=selected_crop,
+            crop_options=crop_options,
+            dataset_classes=dataset_classes,
+            error_message=error_message,
+        )
 
     @app.route("/report-problem", methods=["GET", "POST"])
     @login_required
@@ -1071,9 +1245,11 @@ def create_app(test_config=None) -> Flask:
                         with Image.open(io.BytesIO(image_bytes)) as uploaded:
                             if uploaded.format not in {'JPEG', 'PNG', 'WEBP'}:
                                 raise ValueError
+                            if uploaded.width * uploaded.height > 24_000_000:
+                                return render_template("error.html", message="Image dimensions are too large to process."), 400
                             uploaded.verify()
                         file.seek(0)
-                    except (ValueError, OSError, UnidentifiedImageError):
+                    except (ValueError, OSError, UnidentifiedImageError, Image.DecompressionBombError):
                         return render_template("error.html", message="Upload a valid JPEG, PNG, or WebP image."), 400
                 if file and file.filename and allowed_file(file.filename):
                     filename = secure_filename(file.filename)
@@ -1099,7 +1275,8 @@ def create_app(test_config=None) -> Flask:
                 symptoms_text=symptoms,
                 category=category,
                 weather_data=weather_data,
-                image_bytes=image_bytes,
+                duration_days=duration,
+                affected_area_pct=affected_area,
                 severity=severity,
             )
 
@@ -1126,7 +1303,7 @@ def create_app(test_config=None) -> Flask:
             )
             get_db().commit()
 
-            flash("Symptom report saved. Expert inspection is needed for diagnosis.", "success")
+            flash("Symptom report saved. Reference photos are not screened on this page.", "success")
             return redirect(url_for("disease_result_page", report_id=report_id))
 
         past_reports = get_past_problem_reports(farm["id"] if farm else 0, get_db())
@@ -1160,7 +1337,23 @@ def create_app(test_config=None) -> Flask:
         ).fetchone()
 
         diagnosis = json.loads(pred_row["recommendations_json"]) if pred_row and pred_row["recommendations_json"] else {}
-        return render_template("disease_result.html", report=dict(rep_row), diagnosis=diagnosis, farm=farm)
+        image_analysis = diagnosis.get("image_analysis")
+        if isinstance(image_analysis, dict):
+            image_analysis.pop("suggestion", None)
+            image_analysis.update(
+                {
+                    "screening_status": "not_requested",
+                    "reason": "problem_report_reference_only",
+                    "message": "Problem Report stores reference photos; use Disease Detection to screen an image separately.",
+                    "has_image": bool(rep_row["image_path"]),
+                }
+            )
+        return render_template(
+            "disease_result.html",
+            report=dict(rep_row),
+            diagnosis=diagnosis,
+            farm=farm,
+        )
 
     # ==========================================
     # FERTILIZER & NUTRIENT ADVISORY
@@ -1369,27 +1562,8 @@ def create_app(test_config=None) -> Flask:
         if not farm:
             return redirect(url_for("farm_setup"))
 
-        category = (request.form.get("category") or "Other").strip()
-        item_name = (request.form.get("vendor") or request.form.get("item_name") or "").strip()
-        try:
-            amount = float(request.form.get("amount", 0.0))
-            expense_date = date.fromisoformat((request.form.get('date') or request.form.get('expense_date') or date.today().isoformat()).strip())
-            if not math.isfinite(amount) or amount <= 0 or expense_date > date.today():
-                raise ValueError
-        except ValueError:
-            return render_template('error.html', message='Enter a positive finite amount and an expense date no later than today.'), 400
-        notes = (request.form.get("notes") or "").strip()
-
-        get_db().execute(
-            """
-            INSERT INTO farm_expenses (farm_id, category, vendor, amount, date, notes)
-            VALUES (?, ?, ?, ?, ?, ?)
-            """,
-            (farm["id"], category, item_name, amount, expense_date.isoformat(), notes),
-        )
-        get_db().commit()
-        flash(f"Expense of ₹{amount:,.0f} recorded under {category}.", "success")
-        return redirect(url_for("expenses_page"))
+        flash("Record money spent by completing a farm activity and entering its cost.", "info")
+        return redirect(url_for("activities_page"))
 
     @app.route("/add-sale", methods=["POST"])
     @login_required

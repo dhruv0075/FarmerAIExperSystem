@@ -411,6 +411,7 @@ def init_db(database_path: Path | str = DB_PATH) -> None:
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 farm_id INTEGER NOT NULL,
                 crop_cycle_id INTEGER,
+                activity_id INTEGER,
                 category TEXT NOT NULL,
                 amount REAL NOT NULL,
                 date TEXT NOT NULL,
@@ -419,7 +420,8 @@ def init_db(database_path: Path | str = DB_PATH) -> None:
                 receipt_path TEXT,
                 created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY(farm_id) REFERENCES farms(id) ON DELETE CASCADE,
-                FOREIGN KEY(crop_cycle_id) REFERENCES crop_cycles(id) ON DELETE SET NULL
+                FOREIGN KEY(crop_cycle_id) REFERENCES crop_cycles(id) ON DELETE SET NULL,
+                FOREIGN KEY(activity_id) REFERENCES farm_activities(id) ON DELETE SET NULL
             )
             """
         )
@@ -577,3 +579,10 @@ def _apply_migrations(conn: sqlite3.Connection) -> None:
         conn.execute("ALTER TABLE farm_activities ADD COLUMN evidence TEXT")
     if "rescheduled_date" not in act_cols:
         conn.execute("ALTER TABLE farm_activities ADD COLUMN rescheduled_date TEXT")
+
+    expense_cols = {row[1] for row in conn.execute("PRAGMA table_info(farm_expenses)").fetchall()}
+    if "activity_id" not in expense_cols:
+        conn.execute("ALTER TABLE farm_expenses ADD COLUMN activity_id INTEGER REFERENCES farm_activities(id) ON DELETE SET NULL")
+    conn.execute(
+        "CREATE UNIQUE INDEX IF NOT EXISTS idx_expenses_activity ON farm_expenses(activity_id) WHERE activity_id IS NOT NULL"
+    )

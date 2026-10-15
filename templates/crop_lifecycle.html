@@ -11,7 +11,6 @@
   {% if cycle %}
   <section class="lifecycle-overview" aria-labelledby="lifecycle-crop-title">
     <div class="lifecycle-scene" data-farm-scene="plant" data-stage="{{ cycle.current_stage }}" data-progress="{{ cycle.progress }}" data-scene-state="loading" aria-hidden="true">
-      <img src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1200&q=75" alt="" loading="lazy">
       <canvas></canvas>
     </div>
     <div class="lifecycle-stage-copy">
@@ -35,7 +34,7 @@
     </ol>
   </section>
 
-  <section class="dashboard-panel" aria-labelledby="stage-tasks-title">
+  <section class="dashboard-panel lifecycle-tasks" aria-labelledby="stage-tasks-title">
     <p class="dashboard-section-label">Optional actions</p><h2 id="stage-tasks-title">Tasks for this stage</h2>
     {% for item in cycle.activities %}
     <div class="dashboard-activity"><strong>{{ item }}</strong><form method="post" action="{{ url_for('create_activity') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="title" value="{{ item }}"><input type="hidden" name="activity_type" value="Field inspection"><input type="hidden" name="description" value="Recommended for the {{ cycle.current_stage }} stage."><input type="hidden" name="due_date" value="{{ today }}"><button class="btn btn-sm btn-outline-success" type="submit">Add as pending</button></form></div>
@@ -59,4 +58,3 @@
   </section>
 </div>
 {% endblock %}
-{% block scripts %}<script type="module" src="{{ url_for('static', filename='js/farm-scene.js') }}"></script>{% endblock %}

@@ -17,6 +17,7 @@ Farmers often require guidance from crop selection to harvesting, but most syste
 - SQLite-backed persistence for users, farms, and records
 - Explainable AI outputs that show why a crop was recommended
 - Educational agricultural disclaimers and safe decision-support language
+- Private crop-problem reports with conservative disease-image screening
 
 ## Architecture
 
@@ -52,6 +53,12 @@ The application follows a simple layered architecture:
    - Windows: .venv\Scripts\activate
 4. Install dependencies:
    pip install -r requirements.txt
+
+To enable optional disease-image screening, install:
+
+   pip install -r requirements-disease.txt
+
+See [disease detection](docs/disease_detection.md) for model limitations and evaluation requirements.
 
 ## Dataset Placement
 
@@ -205,5 +212,6 @@ The crop classifier's 0.9955 held-out accuracy is a **local benchmark result**.
 The training dataset's provider, licence, collection geography and collection
 period are not established, and no geographic or temporal holdout was performed.
 No Pune, Maharashtra or India-wide accuracy claim is made or should be inferred.
-There is no disease image classifier in this repository, and no email, SMS or
-push notification delivery exists.
+The optional 38-class disease-image screener is non-diagnostic until independent
+calibration and held-out evaluation are available. No disease-accuracy claim is
+made. There is no email, SMS or push notification delivery.

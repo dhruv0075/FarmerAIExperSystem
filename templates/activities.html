@@ -49,6 +49,8 @@
           <td>
             <form class="d-flex flex-column gap-2" method="post" action="{{ url_for('update_activity_status', activity_id=item.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
               <input class="form-control form-control-sm" name="farmer_note" maxlength="1000" value="{{ item.farmer_note or '' }}" placeholder="Optional note" aria-label="Farmer note">
+              <input class="form-control form-control-sm" name="amount_spent" type="number" min="0.01" step="0.01" value="{{ '%.2f'|format(item.expense_amount) if item.expense_amount else '' }}" placeholder="Money spent (₹, optional)" aria-label="Money spent in rupees, optional">
+              <small class="text-muted">Saved only when marked completed.</small>
               <div class="d-flex flex-wrap gap-1">
                 <button class="btn btn-sm btn-success" name="status" value="COMPLETED" type="submit">Completed</button>
                 <button class="btn btn-sm btn-outline-secondary" name="status" value="SKIPPED" type="submit">Skipped</button>

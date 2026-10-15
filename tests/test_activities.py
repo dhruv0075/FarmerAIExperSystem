@@ -60,6 +60,89 @@ def test_activity_completion_skip_and_user_isolation(tmp_path):
     assert b"Activity not found" in response.data
 
 
+def test_completed_activity_records_one_linked_expense(tmp_path):
+    database = tmp_path / "activity_expense.db"
+    app = create_app({"TESTING": True, "SECRET_KEY": "test", "DATABASE": str(database)})
+    client = app.test_client()
+    register(client, "ExpenseFarmer")
+    client.post("/farm", data={
+        "farm_name": "Expense Field", "area": "2",
+        "nitrogen": 90, "phosphorus": 42, "potassium": 43, "ph": 6.5,
+    })
+    client.post("/activities/create", data={
+        "title": "Apply organic fertilizer", "activity_type": "Fertilizer",
+        "due_date": date.today().isoformat(),
+    })
+
+    with sqlite3.connect(database) as connection:
+        activity_id = connection.execute(
+            "SELECT id FROM farm_activities WHERE title = 'Apply organic fertilizer'"
+        ).fetchone()[0]
+
+    response = client.post(f"/activities/{activity_id}/status", data={
+        "status": "COMPLETED", "amount_spent": "125.50",
+    })
+    assert response.status_code == 302
+    with sqlite3.connect(database) as connection:
+        expense = connection.execute(
+            "SELECT activity_id, category, amount FROM farm_expenses"
+        ).fetchone()
+    assert expense == (activity_id, "FERTILIZER", 125.5)
+
+    client.post(f"/activities/{activity_id}/status", data={
+        "status": "COMPLETED", "amount_spent": "150.25",
+    })
+    with sqlite3.connect(database) as connection:
+        expenses = connection.execute(
+            "SELECT activity_id, amount FROM farm_expenses"
+        ).fetchall()
+    assert expenses == [(activity_id, 150.25)]
+
+    activity_page = client.get("/activities")
+    assert "Money spent (₹, optional)".encode() in activity_page.data
+    assert b"150.25" in activity_page.data
+    expenses_page = client.get("/expenses")
+    assert b'href="/expenses"' in expenses_page.data
+    assert b"Add Expense" not in expenses_page.data
+    assert b"Apply organic fertilizer" in expenses_page.data
+    assert b"150" in expenses_page.data
+
+
+def test_invalid_activity_spend_does_not_complete_or_record_expense(tmp_path):
+    database = tmp_path / "invalid_activity_expense.db"
+    app = create_app({"TESTING": True, "SECRET_KEY": "test", "DATABASE": str(database)})
+    client = app.test_client()
+    register(client, "InvalidExpenseFarmer")
+    client.post("/farm", data={
+        "farm_name": "Expense Field", "area": "2",
+        "nitrogen": 90, "phosphorus": 42, "potassium": 43, "ph": 6.5,
+    })
+    client.post("/activities/create", data={
+        "title": "Check irrigation", "activity_type": "Irrigation",
+        "due_date": date.today().isoformat(),
+    })
+
+    with sqlite3.connect(database) as connection:
+        activity_id = connection.execute(
+            "SELECT id FROM farm_activities WHERE title = 'Check irrigation'"
+        ).fetchone()[0]
+
+    response = client.post(f"/activities/{activity_id}/status", data={
+        "status": "COMPLETED", "amount_spent": "-10",
+    })
+    assert response.status_code == 400
+    assert b"positive finite amount" in response.data
+    with sqlite3.connect(database) as connection:
+        status = connection.execute(
+            "SELECT status FROM farm_activities WHERE id = ?", (activity_id,)
+        ).fetchone()[0]
+        expense_count = connection.execute(
+            "SELECT COUNT(*) FROM farm_expenses"
+        ).fetchone()[0]
+    assert status == "PENDING"
+    assert expense_count == 0
+
+
 def test_overdue_activity_is_derived_not_saved_as_completion(tmp_path):
     database = tmp_path / "overdue.db"
     app = create_app({"TESTING": True, "SECRET_KEY": "test", "DATABASE": str(database)})

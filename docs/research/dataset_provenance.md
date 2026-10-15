@@ -77,6 +77,9 @@ estimated values where the farmer has provided that distinction.
 
 ## Disease data and model
 
-No disease image dataset and no trained image classifier exist in this
-repository. Disease reporting is manual and contextual. No diagnostic
-probability is produced, and none should be inferred.
+A 38-class PlantVillage checkpoint and class mapping are included, but the
+original training dataset files, training configuration, and independent
+labeled evaluation manifest are not included. The checkpoint metadata is not
+independent verification of accuracy. User-facing disease labels remain
+suppressed until the model is calibrated and evaluated on separate labeled
+data.

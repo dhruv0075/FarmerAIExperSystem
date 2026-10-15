@@ -14,8 +14,8 @@ are advertised in the normal navigation.
 | Lifecycle | PARTIAL | Require actual sowing date; reject future date and unsupported crop; calculate current stage for advice |
 | Dashboard | PARTIAL | Removed index/charts overload; crop, stage, weather, main advisory, pending tasks, progress, forecast and history |
 | Advisory history | PARTIAL | Added saved farm advisories to History |
-| Disease image inference | PLACEHOLDER | Removed unused heuristic image-diagnosis code; no disease inference exposed |
-| Problem reports/photos | WORKING | Retained private uploads; contextual symptom/humidity inspection guidance, no diagnosis/confidence |
+| Disease image inference | PARTIAL | Added optional 38-class PlantVillage checkpoint screening; raw class labels/confidence remain suppressed until independent calibration/evaluation |
+| Problem reports/photos | WORKING | Retained private uploads; optional model screening is stored as uncertain; contextual symptom/humidity inspection guidance, no diagnosis claim |
 | Market prices | PARTIAL / external blocker | Cache-only reads, explicit bounded refresh, concurrency guard; provider still unreachable from this machine |
 | Market forecasts/sell planner | PARTIAL | Hidden from core UI; no fabricated prices exposed |
 | Profit projection/resource discovery | PLACEHOLDER / external blocker | Hidden from core navigation; existing data/routes retained |

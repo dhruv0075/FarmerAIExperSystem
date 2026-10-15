@@ -41,7 +41,7 @@ Scope: Existing local Flask application, local Edge browser workflow, and unauth
 | Local Edge journey | Registration, manual location, setup, 12 core routes, clickable sidebar, notification, daily/seven-day CTA | All checked routes returned HTTP 200 | PASS |
 | Crop journey | Live weather API, weather autofill UI, model prediction, crop selection, lifecycle start | Open-Meteo returned available data; prediction and lifecycle completed | PASS |
 | Activity journey | Create pending, complete with note, reload, leave second task pending | Status and farmer note persisted; pending task remained pending | PASS |
-| Problem report journey | Upload valid PNG and open report result | Report saved; page explicitly stated image diagnosis unavailable | PASS |
+| Problem report journey | Upload valid PNG and open report result | Automated checks run the supplied checkpoint through the authenticated report route, persist the image and uncertain result, and suppress the raw disease label. | PASS (automated); disease accuracy NOT MEASURED |
 | Account journey | Change password, login with new password, logout, browser Back, direct dashboard, login again | Protected access redirected to login after logout; no private sidebar restored | PASS |
 | Responsive browser checks | Desktop 1366 px, tablet 768 px, mobile 390 px | No horizontal overflow; mobile sidebar toggle and dashboard assertions passed | PASS |
 | Browser console/resource scan | Page errors, failed requests, HTTP errors | Final run: 0 JavaScript errors, 0 failed requests, 0 HTTP errors | PASS |
@@ -82,6 +82,7 @@ Scope: Existing local Flask application, local Edge browser workflow, and unauth
 - A complete 8-row irrigation decision truth table was NOT EXECUTED. Existing tests cover completed irrigation suppression, pending/skipped not-as-completed semantics, and heavy-rain conflict avoidance, but not every combination of recent irrigation × heavy rain × low moisture.
 - Explicit browser geolocation grant was NOT EXECUTED. The browser exercised detect-location failure/denial fallback to manual map, and manual coordinates were submitted successfully.
 - Browser checks did not click every control on every page. They covered main navigation, topbar notifications, dashboard plan links, crop selection, weather autofill, activity create/complete, report upload, password change, logout and responsive sidebar.
+- The disease classifier has no labeled calibration, independent held-out, or real-world manifest. No disease accuracy score can be reported; the standalone page shows only an unverified top-class suggestion and explicitly warns that the raw model score is not accuracy. Problem Report does not run the model. The full image dataset is linked externally and is not bundled in the app.
 - Cross-account content isolation was tested for dashboard, history, activity and problem-report pages, plus activity ID and private image/report ID access in the existing integrity suite. Every possible object ID route (including finance/advisory/crop-cycle permutations) was NOT EXECUTED.
 - No explicit maximum farm area is defined; a finite area of `1e100` is accepted. Current documented validation requires area greater than zero, so this was recorded as behavior, not a failure against a defined maximum.
 - Vercel `/tmp` remains ephemeral and per-instance. Live deployment durability, cross-instance database sharing, provider networking from Vercel, and authenticated multi-instance behavior are NOT EXECUTED.
@@ -89,7 +90,7 @@ Scope: Existing local Flask application, local Edge browser workflow, and unauth
 ## Readiness
 
 - Demo readiness: YES for a local/demo environment using synthetic farmer data. The crop classifier, core journey, activity confirmations and honest problem-report flow were exercised. Market pricing must be described as unavailable when the official source cannot be reached.
-- Production-style readiness: NO. Remaining blockers include ephemeral per-instance SQLite/uploads on Vercel, no shared durable session/account store or rate limiter, no email password-reset provider, blocked market API connectivity from this environment, and no independent field validation of the crop dataset. Disease image diagnosis is intentionally unavailable and must not be presented as a diagnosis.
+- Production-style readiness: NO. Remaining blockers include ephemeral per-instance SQLite/uploads on Vercel, no shared durable session/account store or rate limiter, no email password-reset provider, blocked market API connectivity from this environment, and no independent field validation of the crop dataset. Disease screening remains non-diagnostic pending independent evaluation.
 
 Commands executed:
 

@@ -28,10 +28,21 @@ def test_unknown_soil_never_claimed_measured():
 
 def test_real_html_finance_form_fields(tmp_path):
     _, client, db = setup_client(tmp_path)
-    client.post('/add-expense', data={'category': 'SEEDS', 'amount': 250, 'date': '2026-01-01', 'vendor': 'Test'})
+    client.post('/activities/create', data={
+        'title': 'Apply test fertilizer', 'activity_type': 'Fertilizer',
+    })
+    with sqlite3.connect(db) as conn:
+        activity_id = conn.execute(
+            "SELECT id FROM farm_activities WHERE title = 'Apply test fertilizer'"
+        ).fetchone()[0]
+    client.post(f'/activities/{activity_id}/status', data={
+        'status': 'COMPLETED', 'amount_spent': '250',
+    })
     client.post('/add-sale', data={'commodity': 'Rice', 'quantity_sold': 5, 'price_per_unit': 2000, 'unit': 'Quintal'})
     with sqlite3.connect(db) as conn:
-        assert conn.execute('SELECT date, vendor FROM farm_expenses').fetchone() == ('2026-01-01', 'Test')
+        assert conn.execute('SELECT date, vendor, amount FROM farm_expenses').fetchone() == (
+            date.today().isoformat(), 'Fertilizer', 250,
+        )
         assert conn.execute('SELECT total_amount, unit FROM sales').fetchone() == (10000, 'Quintal')
 
 
@@ -56,7 +67,11 @@ def test_csrf_rejects_unverified_post(tmp_path):
     assert client.post('/add-expense', data={'amount': 10}).status_code == 400
     with client.session_transaction() as session:
         token = session['csrf_token']
-    assert client.post('/add-expense', data={'amount': 10, 'csrf_token': token}).status_code == 302
+    response = client.post('/add-expense', data={'amount': 10, 'csrf_token': token})
+    assert response.status_code == 302
+    assert response.headers['Location'].endswith('/activities')
+    with sqlite3.connect(app.config['DATABASE']) as conn:
+        assert conn.execute('SELECT COUNT(*) FROM farm_expenses').fetchone()[0] == 0
 
 
 def test_rescheduled_task_is_not_completed(tmp_path):

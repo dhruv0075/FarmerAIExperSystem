@@ -123,8 +123,19 @@ def test_financial_routes_reject_invalid_values_without_writes(tmp_path):
     from test_extended_flows import setup_client
 
     _, client, database = setup_client(tmp_path)
-    assert client.post("/add-expense", data={"amount": "not-a-number", "date": date.today().isoformat()}).status_code == 400
-    assert client.post("/add-expense", data={"amount": "50", "date": "not-a-date"}).status_code == 400
+    client.post("/activities/create", data={"title": "Check irrigation", "activity_type": "Irrigation"})
+    with sqlite3.connect(database) as connection:
+        activity_id = connection.execute(
+            "SELECT id FROM farm_activities WHERE title = 'Check irrigation'"
+        ).fetchone()[0]
+    assert client.post(
+        f"/activities/{activity_id}/status",
+        data={"status": "COMPLETED", "amount_spent": "not-a-number"},
+    ).status_code == 400
+    assert client.post(
+        f"/activities/{activity_id}/status",
+        data={"status": "COMPLETED", "amount_spent": "-50"},
+    ).status_code == 400
     assert client.post("/add-sale", data={"commodity": "Rice", "quantity_sold": "bad", "price_per_unit": "10"}).status_code == 400
     assert client.post("/add-sale", data={
         "commodity": "Rice", "quantity_sold": "5", "price_per_unit": "10", "sale_date": "not-a-date",

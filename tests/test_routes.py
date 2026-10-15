@@ -39,9 +39,15 @@ def test_registration_and_login_flow(tmp_path):
     response = client.get('/dashboard')
     assert response.status_code == 200
 
-    for path in ['/farm', '/crop-recommendation', '/weather', '/lifecycle', '/advisories', '/history', '/activities', '/compare-crops', '/what-if', '/risk-analysis', '/ml-analytics', '/expert-system', '/research', '/report']:
+    for path in ['/farm', '/crop-recommendation', '/weather', '/lifecycle', '/advisories', '/history', '/activities', '/expenses', '/compare-crops', '/what-if', '/risk-analysis', '/ml-analytics', '/expert-system', '/research', '/report']:
         response = client.get(path)
         assert response.status_code == 200, path
+        if path == '/crop-recommendation':
+            assert b'id="recommendationLoader"' in response.data
+            assert b'data-farm-scene="loader"' in response.data
+        if path == '/expenses':
+            assert b'href="/expenses"' in response.data
+            assert b'Add Expense' not in response.data
 
     response = client.post('/logout')
     assert response.status_code == 302

@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block title %}{{ t('detection.title') }} — AgriWise AI{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0" style="max-width: 960px;">
+  <div class="mb-4">
+    <p class="text-success small fw-semibold text-uppercase mb-1">{{ t('detection.kicker') }}</p>
+    <h1 class="h2 fw-bold mb-2"><i class="fa-solid fa-microscope text-success me-2"></i>{{ t('detection.title') }}</h1>
+    <p class="text-muted mb-0">{{ t('detection.intro') }}</p>
+  </div>
+
+  <div class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-white py-3">
+      <h2 class="h5 fw-bold mb-0">{{ t('detection.form_title') }}</h2>
+    </div>
+    <div class="card-body p-4">
+      <form method="POST" action="{{ url_for('disease_detection_page') }}" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <div class="row g-3 align-items-end">
+          <div class="col-md-6">
+            <label class="form-label fw-semibold" for="disease-crop">{{ t('detection.crop_label') }}</label>
+            <input class="form-control" id="disease-crop" name="crop" list="disease-crop-options" value="{{ selected_crop }}" maxlength="80" required>
+            <datalist id="disease-crop-options">
+              {% for crop in crop_options %}
+                <option value="{{ crop }}">
+              {% endfor %}
+            </datalist>
+            <div class="form-text">{{ t('detection.crop_help') }}</div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold" for="disease-photo">{{ t('detection.photo_label') }}</label>
+            <input class="form-control" id="disease-photo" type="file" name="photo" accept=".jpg,.jpeg,.png,.webp" required>
+            <div class="form-text">{{ t('detection.photo_help') }}</div>
+          </div>
+          <div class="col-12">
+            <button class="btn btn-success px-4" type="submit"><i class="fa-solid fa-magnifying-glass me-2"></i>{{ t('detection.submit') }}</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  {% if error_message %}
+    <div class="alert alert-danger" role="alert">{{ t(error_message) }}</div>
+  {% endif %}
+
+  {% if screening %}
+    <section class="card shadow-sm border-0 mb-4" aria-labelledby="screening-result-heading">
+      <div class="card-header bg-white py-3">
+        <h2 class="h5 fw-bold mb-0" id="screening-result-heading">{{ t('detection.result_title') }}</h2>
+      </div>
+      <div class="card-body p-4">
+        <div class="row align-items-start g-4">
+          <div class="col-md-4 text-center">
+            {% if image_preview %}
+              <img src="{{ image_preview }}" alt="Uploaded plant image" class="img-fluid rounded-3 border" style="max-height: 280px; object-fit: contain;">
+              <p class="small text-muted mt-2 mb-0">{{ t('detection.preview_only') }}</p>
+            {% endif %}
+          </div>
+          <div class="col-md-8">
+            <span class="badge bg-{{ 'success' if screening.screening_status == 'suggestion' else 'warning text-dark' }} text-uppercase mb-2">
+              {{ t('detection.status_' ~ screening.screening_status) }}
+            </span>
+            {% if screening.screening_status == 'suggestion' and screening.suggestion %}
+              <h3 class="h5 fw-bold">{{ t('detection.closest_match', crop=screening.suggestion.crop, disease=td(screening.suggestion.class_label, screening.suggestion.disease)) }}</h3>
+              {% if current_language != 'en' %}
+                <p class="small text-muted">{{ t('detection.disease_column') }}: {{ screening.suggestion.disease }}</p>
+              {% endif %}
+              <p class="small text-muted"><code>{{ screening.suggestion.class_label }}</code></p>
+              <p>{{ t('detection.raw_score') }} <strong>{{ screening.suggestion.model_score }}%</strong></p>
+              <p class="small">{{ t('detection.score_explanation') }}</p>
+              <p class="mb-2">{{ t('detection.message_unverified') }}</p>
+              <p class="small mb-0">{{ t('detection.safe_next_step') }} {{ t('detection.safe_no_treatment') }}</p>
+            {% else %}
+              <h3 class="h5 fw-bold">{{ t('detection.no_suggestion') }}</h3>
+            {% endif %}
+            {% if screening.reason == 'crop_mismatch' %}
+              <p class="mb-0">{{ t('detection.message_crop_mismatch', crop=screening.suggested_crop) }}</p>
+            {% elif screening.reason == 'model_unavailable' %}
+              <p class="mb-0">{{ t('detection.message_model_unavailable') }}</p>
+            {% elif screening.reason == 'invalid_model_response' %}
+              <p class="mb-0">{{ t('detection.message_invalid_model') }}</p>
+            {% elif screening.reason != 'unverified_model_suggestion' %}
+              <p class="mb-0">{{ t('detection.message_screening_unavailable') }}</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </section>
+  {% endif %}
+
+  <section class="card shadow-sm border-0 mb-4" aria-labelledby="dataset-heading">
+    <div class="card-header bg-white py-3">
+      <h2 class="h5 fw-bold mb-0" id="dataset-heading"><i class="fa-solid fa-database text-success me-2"></i>{{ t('detection.dataset_title') }}</h2>
+    </div>
+    <div class="card-body p-4">
+      <p>{{ t('detection.dataset_summary') }}</p>
+      <div class="d-flex flex-wrap gap-2 mb-3">
+        <a class="btn btn-outline-success" href="https://huggingface.co/datasets/mohanty/PlantVillage/viewer/color/train" target="_blank" rel="noopener noreferrer">
+          <i class="fa-solid fa-arrow-up-right-from-square me-2"></i>{{ t('detection.dataset_browse') }}
+        </a>
+        <a class="btn btn-outline-secondary" href="https://huggingface.co/datasets/mohanty/PlantVillage" target="_blank" rel="noopener noreferrer">
+          {{ t('detection.dataset_download') }}
+        </a>
+      </div>
+      <p class="small text-muted">{{ t('detection.dataset_instructions') }}</p>
+      <details>
+        <summary class="fw-semibold">{{ t('detection.show_classes', count=dataset_classes|length) }}</summary>
+        {% if dataset_classes %}
+          <div class="table-responsive mt-3" style="max-height: 360px;">
+            <table class="table table-sm table-striped align-middle mb-0">
+              <thead><tr><th scope="col">{{ t('detection.crop_column') }}</th><th scope="col">{{ t('detection.disease_column') }}</th><th scope="col">{{ t('detection.class_id_column') }}</th></tr></thead>
+              <tbody>
+                {% for item in dataset_classes %}
+                  <tr><td>{{ item.crop }}</td><td>{{ td(item.label, item.disease) }}{% if current_language != 'en' %} <span class="small text-muted">({{ item.disease }})</span>{% endif %}</td><td><code>{{ item.label }}</code></td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <p class="small text-warning mt-2">{{ t('detection.classes_unavailable') }}</p>
+        {% endif %}
+      </details>
+    </div>
+  </section>
+
+  <div class="alert alert-warning small mb-0" role="note">
+    <strong>{{ t('detection.safety_notice') }}</strong> {{ t('detection.safe_next_step') }}
+  </div>
+</div>
+{% endblock %}

@@ -125,7 +125,7 @@ No task is marked VERIFIED without recorded evidence.
 |---|---|---|
 | L1 | Official market API never returned a successful live response | External blocker. No successful HTTP response has been observed. Cannot be fixed in code. |
 | L2 | No price forecasting possible | No verified historical price observations exist. |
-| L3 | No disease image classifier | No legitimate dataset or model exists. Integrating an unvalidated model would be dishonest. |
+| L3 | No calibrated disease diagnosis or labeled evaluation set | A standalone Disease Detection page runs the 38-class PlantVillage model and shows only an unverified suggestion when it matches the selected crop; mismatches are suppressed. Problem Report stores symptoms/reference photos without model inference. The full dataset is linked online and is not bundled locally; no calibration/held-out manifest exists, so accuracy cannot be scored. |
 | L4 | No notification delivery mechanism | No email/SMS/push integration exists; not claimed. |
 | L5 | CSRF disabled under `TESTING` by design | Intentional for tests. Explicitly covered with `CSRF_ENABLED=True`. |
 | L6 | Single-process cache locking | Multi-worker shared locking not implemented; documented rather than guessed at. |

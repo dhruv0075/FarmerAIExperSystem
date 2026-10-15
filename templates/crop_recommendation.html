@@ -81,11 +81,39 @@
       </form>
     </div>
   </div>
+  <div class="recommendation-loader" id="recommendationLoader" role="status" aria-live="polite" aria-atomic="true" aria-hidden="true" hidden>
+    <div class="recommendation-loader__panel">
+      <p class="recommendation-loader__eyebrow">AgriWise AI · Field analysis</p>
+      <div class="recommendation-loader__scene" data-farm-scene="loader" data-scene-state="loading" aria-hidden="true"><canvas></canvas></div>
+      <h2>Finding the right crop for your field</h2>
+      <p>Matching your soil nutrients, moisture and climate conditions.</p>
+      <div class="recommendation-loader__progress" role="progressbar" aria-label="Analyzing crop suitability"><span></span></div>
+    </div>
+  </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script>
+const cropForm = document.getElementById('cropForm');
+const recommendationLoader = document.getElementById('recommendationLoader');
+if (cropForm && recommendationLoader) {
+  cropForm.addEventListener('submit', function(event) {
+    if (cropForm.dataset.submitting === 'true') {
+      event.preventDefault();
+      return;
+    }
+    event.preventDefault();
+    cropForm.dataset.submitting = 'true';
+    cropForm.setAttribute('aria-busy', 'true');
+    recommendationLoader.hidden = false;
+    recommendationLoader.setAttribute('aria-hidden', 'false');
+    window.requestAnimationFrame(() => window.requestAnimationFrame(() => {
+      window.setTimeout(() => HTMLFormElement.prototype.submit.call(cropForm), 650);
+    }));
+  });
+}
+
 document.getElementById('btnAutofillWeather').addEventListener('click', function() {
   const btn = this;
   btn.disabled = true;

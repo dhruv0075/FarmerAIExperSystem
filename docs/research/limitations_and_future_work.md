@@ -45,9 +45,11 @@ blocker. None is softened.
 
 ## Feature limitations
 
-15. **No disease image classifier.** No trained model or dataset exists in this
-    repository. Disease reporting is manual and contextual. No diagnostic
-    probability is produced, and none should be claimed.
+15. **Disease image screening is uncalibrated.** The supplied 38-class
+    PlantVillage checkpoint is integrated, but no labeled calibration,
+    independent held-out, or real-world evaluation manifest exists here.
+    The top class is shown only as an unverified suggestion; no disease-accuracy
+    score or diagnostic probability should be claimed.
 16. **No notification delivery mechanism.** Notifications are stored and shown
     in-app only. No email, SMS or push delivery exists, and none is claimed.
 17. **Reminders are in-app only** for the same reason.

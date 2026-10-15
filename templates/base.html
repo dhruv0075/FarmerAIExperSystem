@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="{{ current_language|default('en') }}">
   <head>
     <meta charset="utf-8">
     <meta name="csrf-token" content="{{ csrf_token }}">
@@ -28,6 +28,7 @@
   <body class="{% block body_class %}{% endblock %}">
     <!-- Keyboard users can bypass repeated navigation. -->
     <a class="skip-link" href="#main-content">Skip to main content</a>
+    <div class="site-atmosphere" data-farm-scene="ambient" data-scene-state="loading" aria-hidden="true"><canvas></canvas></div>
     <!-- Top Navigation Bar -->
     <header class="app-navbar d-flex align-items-center justify-content-between">
       <div class="d-flex align-items-center">
@@ -56,6 +57,17 @@
 
       <!-- Right Profile & Notifications -->
       <div class="d-flex align-items-center gap-2">
+        <form method="POST" action="{{ url_for('set_language') }}" class="d-flex align-items-center gap-1">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+          <input type="hidden" name="next" value="{{ request.path }}">
+          <label for="app-language" class="visually-hidden">{{ t('language.label') }}</label>
+          <select id="app-language" name="language" class="form-select form-select-sm" aria-label="{{ t('language.label') }}">
+            <option value="en" {% if current_language == 'en' %}selected{% endif %}>English</option>
+            <option value="mr" {% if current_language == 'mr' %}selected{% endif %}>मराठी</option>
+            <option value="hi" {% if current_language == 'hi' %}selected{% endif %}>हिन्दी</option>
+          </select>
+          <button class="btn btn-sm btn-outline-success" type="submit">{{ t('language.save') }}</button>
+        </form>
         {% if session.get('user_id') %}
           <a href="{{ url_for('notifications_page') }}" class="btn btn-light position-relative rounded-circle p-2 text-secondary" title="Notifications" aria-label="Notifications">
             <i class="fa-regular fa-bell" aria-hidden="true"></i>
@@ -97,7 +109,9 @@
             <a class="sidebar-link {% if request.endpoint == 'crop_recommendation' %}active{% endif %}" href="{{ url_for('crop_recommendation') }}"><i class="fa-solid fa-seedling"></i> Crop Recommendation</a>
             <a class="sidebar-link {% if request.endpoint == 'lifecycle_page' %}active{% endif %}" href="{{ url_for('lifecycle_page') }}"><i class="fa-solid fa-calendar"></i> Crop Lifecycle</a>
             <a class="sidebar-link {% if request.endpoint == 'activities_page' %}active{% endif %}" href="{{ url_for('activities_page') }}"><i class="fa-solid fa-list-check"></i> Activities</a>
+            <a class="sidebar-link {% if request.endpoint == 'expenses_page' %}active{% endif %}" href="{{ url_for('expenses_page') }}"><i class="fa-solid fa-wallet"></i> Expenses</a>
             <a class="sidebar-link {% if request.endpoint == 'weather_page' %}active{% endif %}" href="{{ url_for('weather_page') }}"><i class="fa-solid fa-cloud-sun"></i> Weather</a>
+            <a class="sidebar-link {% if request.endpoint == 'disease_detection_page' %}active{% endif %}" href="{{ url_for('disease_detection_page') }}"><i class="fa-solid fa-microscope"></i> Disease Detection</a>
             <a class="sidebar-link {% if request.endpoint == 'report_problem_page' %}active{% endif %}" href="{{ url_for('report_problem_page') }}"><i class="fa-solid fa-clipboard"></i> Problem Report</a>
             <form method="POST" action="{{ url_for('logout') }}" class="m-0"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="sidebar-link w-100 border-0 bg-transparent text-start" type="submit"><i class="fa-solid fa-right-from-bracket"></i> Logout</button></form>
 
@@ -143,6 +157,7 @@
       }
     </script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script type="module" src="{{ url_for('static', filename='js/farm-scene.js') }}"></script>
     {% block scripts %}{% endblock %}
   </body>
 </html>

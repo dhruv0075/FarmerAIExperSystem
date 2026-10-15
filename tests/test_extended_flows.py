@@ -25,12 +25,45 @@ def test_all_get_pages(tmp_path):
 
 def test_expense_and_sale_persist_in_existing_schema(tmp_path):
     _, client, db = setup_client(tmp_path)
-    client.post('/add-expense', data={'category': 'SEEDS', 'amount': 500, 'expense_date': date.today().isoformat()})
+    client.post('/activities/create', data={
+        'title': 'Apply fertilizer', 'activity_type': 'Fertilizer',
+        'due_date': date.today().isoformat(),
+    })
+    with sqlite3.connect(db) as conn:
+        activity_id = conn.execute(
+            "SELECT id FROM farm_activities WHERE title = 'Apply fertilizer'"
+        ).fetchone()[0]
+    client.post(f'/activities/{activity_id}/status', data={
+        'status': 'COMPLETED', 'amount_spent': '500',
+    })
     client.post('/add-sale', data={'crop_name': 'Rice', 'quantity_kg': 100, 'price_per_kg': 25})
     with sqlite3.connect(db) as conn:
-        assert conn.execute('SELECT amount FROM farm_expenses').fetchone()[0] == 500
+        assert conn.execute('SELECT amount, category, activity_id FROM farm_expenses').fetchone() == (500, 'FERTILIZER', activity_id)
         assert conn.execute('SELECT total_amount, unit FROM sales').fetchone() == (2500, 'kg')
     assert client.get('/expenses').status_code == 200
+
+
+def test_legacy_add_expense_endpoint_redirects_without_writing(tmp_path):
+    _, client, db = setup_client(tmp_path)
+    response = client.post('/add-expense', data={'category': 'SEEDS', 'amount': 500})
+    assert response.status_code == 302
+    assert response.headers['Location'].endswith('/activities')
+    with sqlite3.connect(db) as conn:
+        assert conn.execute('SELECT COUNT(*) FROM farm_expenses').fetchone()[0] == 0
+
+
+def test_active_crop_scene_is_shown_on_lifecycle_and_dashboard(tmp_path):
+    _, client, _ = setup_client(tmp_path)
+    client.post('/lifecycle', data={
+        'crop_name': 'rice',
+        'sowing_date': date.today().isoformat(),
+    })
+
+    lifecycle = client.get('/lifecycle')
+    dashboard = client.get('/dashboard')
+    assert b'data-farm-scene="plant"' in lifecycle.data
+    assert b'data-farm-scene="plant"' in dashboard.data
+    assert b'farm-scene.js' in dashboard.data
 
 
 def test_problem_report_persists(tmp_path):

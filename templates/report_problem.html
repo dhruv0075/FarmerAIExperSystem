@@ -6,7 +6,11 @@
 <div class="container-fluid px-0" style="max-width: 860px;">
   <div class="mb-4">
     <h2 class="h3 fw-bold mb-1"><i class="fa-solid fa-bug text-danger me-2"></i>Report a Crop Problem</h2>
-    <p class="text-muted small mb-0">Save observed symptoms and optional photos for reference when consulting an agricultural expert. Image diagnosis is currently unavailable.</p>
+    <p class="text-muted small mb-0">Record crop symptoms and optional reference photos for later review.</p>
+  </div>
+
+  <div class="alert alert-info py-2 small mb-4">
+    Need to screen an image? Open the separate <a href="{{ url_for('disease_detection_page') }}" class="alert-link">Disease Detection</a> page.
   </div>
 
   <div class="card shadow-sm border-0 mb-4">
@@ -71,9 +75,9 @@
           </div>
 
           <div class="col-md-6">
-            <label class="form-label small fw-semibold">Upload Plant / Leaf Photo <span class="text-muted">(Max 5MB)</span></label>
+            <label class="form-label small fw-semibold">Reference Photo (not screened here) <span class="text-muted">(Max 5MB)</span></label>
             <input type="file" class="form-control" name="photo" accept=".jpg,.jpeg,.png,.webp">
-            <small class="text-muted" style="font-size:0.75rem;">Supported formats: JPG, PNG, WEBP. High-resolution closeup recommended.</small>
+            <small class="text-muted" style="font-size:0.75rem;">Attached to this symptom record only. Use Disease Detection to screen a photo separately.</small>
           </div>
 
           <div class="col-12">
@@ -83,12 +87,12 @@
         </div>
 
         <div class="alert alert-info py-2 small mt-4 mb-3">
-          <i class="fa-solid fa-circle-info me-1"></i><strong>Diagnostic Disclaimer:</strong> This form saves a manual symptom report. No validated disease classifier is installed, and submitting a report does not contact an expert automatically.
+          <i class="fa-solid fa-circle-info me-1"></i><strong>Report notice:</strong> This page saves the symptoms and optional reference photo. It does not run disease image screening or contact an expert.
         </div>
 
         <div class="text-center mt-4">
           <button type="submit" class="btn btn-danger btn-lg px-5 shadow-sm">
-            <i class="fa-solid fa-microscope me-2"></i>Save Symptom Report
+            <i class="fa-solid fa-microscope me-2"></i>Save Problem Report
           </button>
         </div>
       </form>
