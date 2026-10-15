@@ -7,7 +7,6 @@ import sqlite3
 import uuid
 import math
 import io
-import base64
 import secrets
 from datetime import date, datetime, timedelta, timezone
 from functools import wraps
@@ -58,7 +57,6 @@ from services.decision_orchestrator import (
 from services.disease_service import (
     analyze_crop_issue,
     get_past_problem_reports,
-    screen_crop_image,
 )
 from services.expert_system import (
     evaluate_expert_system,
@@ -76,7 +74,6 @@ from services.i18n_service import (
     SUPPORTED_LANGUAGES,
     is_supported_language,
     translate,
-    translate_disease_name,
 )
 from services.location_service import (
     get_default_farm_location,
@@ -373,9 +370,6 @@ def create_app(test_config=None) -> Flask:
             "current_language": session.get("language", DEFAULT_LANGUAGE),
             "supported_languages": SUPPORTED_LANGUAGES,
             "t": lambda key, **values: translate(session.get("language"), key, **values),
-            "td": lambda class_label, english_name: translate_disease_name(
-                session.get("language"), class_label, english_name
-            ),
         }
 
     # ==========================================
@@ -1115,100 +1109,6 @@ def create_app(test_config=None) -> Flask:
     # CROP PROBLEM / DISEASE REPORTING & DIAGNOSIS
     # ==========================================
 
-    @app.route("/disease-detection", methods=["GET", "POST"])
-    @login_required
-    def disease_detection_page():
-        user = get_current_user()
-        farm = get_user_farm(user["id"]) if user else None
-        cycle = get_latest_cycle(farm["id"]) if farm else None
-        lifecycle_crop = cycle["crop_name"] if cycle else ""
-        class_names = []
-        class_mapping_available = True
-        class_file = BASE_DIR / "agriwise_disease_model" / "class_names.json"
-        try:
-            loaded_class_names = json.loads(class_file.read_text(encoding="utf-8"))
-            if (
-                not isinstance(loaded_class_names, list)
-                or any(not isinstance(label, str) or "___" not in label for label in loaded_class_names)
-            ):
-                raise ValueError("Disease model class mapping is invalid.")
-            class_names = loaded_class_names
-        except (OSError, json.JSONDecodeError, ValueError):
-            current_app.logger.exception("Disease model class mapping could not be loaded")
-            class_mapping_available = False
-
-        dataset_classes = []
-        for label in class_names:
-            crop, disease = label.split("___", 1)
-            dataset_classes.append(
-                {
-                    "crop": crop.replace("_", " "),
-                    "disease": disease.replace("_", " ").strip(),
-                    "label": label,
-                }
-            )
-        crop_options = sorted({item["crop"] for item in dataset_classes})
-
-        error_message = None
-        screening = None
-        image_preview = None
-        selected_crop = lifecycle_crop
-        if request.method == "POST":
-            if not lifecycle_crop:
-                selected_crop = (request.form.get("crop") or "").strip()
-            image_file = request.files.get("photo")
-            if not class_mapping_available:
-                error_message = "detection.error_class_mapping"
-            elif not selected_crop or len(selected_crop) > 80:
-                error_message = "detection.error_crop_required"
-            elif not image_file or not image_file.filename:
-                error_message = "detection.error_photo_required"
-            elif (
-                not allowed_file(image_file.filename)
-                or image_file.mimetype not in {"image/jpeg", "image/png", "image/webp"}
-            ):
-                error_message = "detection.error_photo_type"
-            else:
-                image_bytes = image_file.read()
-                if len(image_bytes) > MAX_IMAGE_UPLOAD_BYTES:
-                    error_message = "detection.error_photo_size"
-                else:
-                    try:
-                        with Image.open(io.BytesIO(image_bytes)) as uploaded:
-                            if uploaded.format not in {"JPEG", "PNG", "WEBP"}:
-                                raise ValueError("Upload a valid JPEG, PNG, or WebP image.")
-                            if uploaded.width * uploaded.height > 24_000_000:
-                                raise Image.DecompressionBombError
-                            image_format = uploaded.format
-                            uploaded.verify()
-                    except Image.DecompressionBombError:
-                        error_message = "detection.error_photo_dimensions"
-                    except (ValueError, OSError, UnidentifiedImageError):
-                        error_message = "detection.error_photo_type"
-                    else:
-                        screening = screen_crop_image(
-                            crop_name=selected_crop,
-                            image_bytes=image_bytes,
-                            image_filename=image_file.filename,
-                            predictor=current_app.config.get("DISEASE_PREDICTOR"),
-                        )
-                        image_mime = {"JPEG": "image/jpeg", "PNG": "image/png", "WEBP": "image/webp"}[image_format]
-                        image_preview = (
-                            f"data:{image_mime};base64,"
-                            f"{base64.b64encode(image_bytes).decode('ascii')}"
-                        )
-
-        return render_template(
-            "disease_detection.html",
-            screening=screening,
-            image_preview=image_preview,
-            selected_crop=selected_crop,
-            lifecycle_crop=bool(lifecycle_crop),
-            crop_options=crop_options,
-            dataset_classes=dataset_classes,
-            error_message=error_message,
-        )
-
     @app.route("/report-problem", methods=["GET", "POST"])
     @login_required
     def report_problem_page():
@@ -1281,6 +1181,8 @@ def create_app(test_config=None) -> Flask:
                 symptoms_text=symptoms,
                 category=category,
                 weather_data=weather_data,
+                image_bytes=image_bytes,
+                image_filename=saved_filename,
                 duration_days=duration,
                 affected_area_pct=affected_area,
                 severity=severity,
@@ -1309,7 +1211,7 @@ def create_app(test_config=None) -> Flask:
             )
             get_db().commit()
 
-            flash("Symptom report saved. Reference photos are not screened on this page.", "success")
+            flash("Symptom report saved. Reference photos are not analyzed.", "success")
             return redirect(url_for("disease_result_page", report_id=report_id))
 
         past_reports = get_past_problem_reports(farm["id"] if farm else 0, get_db())
@@ -1350,7 +1252,7 @@ def create_app(test_config=None) -> Flask:
                 {
                     "screening_status": "not_requested",
                     "reason": "problem_report_reference_only",
-                    "message": "Problem Report stores reference photos; use Disease Detection to screen an image separately.",
+                    "message": "Problem Report stores reference photos for later review; no image screening is performed.",
                     "has_image": bool(rep_row["image_path"]),
                 }
             )

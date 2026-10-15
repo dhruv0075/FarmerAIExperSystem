@@ -8,4 +8,4 @@ market_data.json and resource_catalog.json were generated locally. They are pres
 
 Weather: Open-Meteo modeled conditions/forecast, not on-farm sensor observations. Farmer activities/expenses/sales/soil are explicitly farmer-entered.
 
-Disease screening: the repository contains a MobileNetV3 Small checkpoint (`agriwise_disease_model/best_model.pth`), a 38-class mapping and inference code. The full PlantVillage image dataset is external and is not bundled. The checkpoint's exact training data/split, provenance and training metrics are not established; no labeled calibration, independent held-out or real-world evaluation manifest is present. Disease performance is unmeasured. The UI presents only an unverified same-crop suggestion, not a confirmed diagnosis. See `disease_detection.md`.
+Disease image screening and its bundled checkpoint have been removed. Problem Report may store a private reference image with farmer-entered symptoms but does not classify the image. Crop recommendation continues to use the original `data/Crop_recommendation.csv`; its provider, license, geography, and collection period remain unverified as described above.

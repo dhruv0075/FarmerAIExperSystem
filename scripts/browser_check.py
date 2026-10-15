@@ -142,17 +142,10 @@ def main():
                 assert 'Farmer-reported symptoms and reference notes' in page.locator('main').inner_text()
                 results.append({'path': 'problem-report-workflow', 'status': 200})
                 page.goto('http://127.0.0.1:5056/disease-detection')
-                page.fill('[name=crop]', 'Tomato')
-                image = io.BytesIO()
-                Image.new('RGB', (3, 3), color='green').save(image, format='PNG')
-                page.set_input_files('[name=photo]', {'name': 'test-leaf.png', 'mimeType': 'image/png', 'buffer': image.getvalue()})
-                page.locator('form[action="/disease-detection"] button[type=submit]').click()
-                page.wait_for_load_state('domcontentloaded')
-                detection_text = page.locator('main').inner_text()
-                assert 'Image screening result' in detection_text
-                assert 'not a confirmed diagnosis' in detection_text
-                assert '54,306 images' in detection_text
-                results.append({'path': 'standalone-disease-detection-workflow', 'status': 200})
+                assert page.locator('body').inner_text()
+                assert page.url.endswith('/disease-detection')
+                assert page.locator('main').count() == 0
+                results.append({'path': 'standalone-disease-detection-removed', 'status': 404})
                 page.goto('http://127.0.0.1:5056/activities')
                 page.locator('details summary').click()
                 page.fill('#activity-title', 'Browser completed irrigation check')

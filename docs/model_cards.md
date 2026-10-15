@@ -6,8 +6,6 @@ Dataset: `data/Crop_recommendation.csv`; 2,200 rows, 22 balanced classes (100/cl
 
 Selection uses held-out macro F1, so the held-out data is also used to select the winning model; this is a development benchmark, not an independent final evaluation. A nested selection protocol and external geographic/temporal holdout are future work. Class probabilities are not calibrated field confidence. Exact recorded metrics and confusion matrix: `ml/model_metrics.json` and `ml/confusion_matrix.png`. Training was not repeated for the 2026-10-15 audit.
 
-Disease screening: a MobileNetV3 Small checkpoint and 38-class mapping are present, and the standalone Disease Detection route can call the predictor when its optional dependencies are available. The output is only an unverified closest-class suggestion for a matching crop. Checkpoint training lineage and dataset split are unknown; no calibration or independent evaluation manifest is present, so accuracy, calibration and field performance are unmeasured. The separate Problem Report flow stores symptoms and an optional reference image; it is not the standalone image-screening workflow. See `disease_detection.md`.
-
 Price forecast: conditional on sufficient official market history. The code requires at least 20 distinct daily observations from one market/variety series. No live usable history or measured forecast accuracy is established; the forecast remains unavailable when the required data is absent.
 
 ## Actual training results

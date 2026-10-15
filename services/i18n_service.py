@@ -57,11 +57,3 @@ def translate(language: Any, key: str, **values: Any) -> str:
     if not isinstance(value, str):
         return key
     return value.format(**values) if values else value
-
-
-def translate_disease_name(language: Any, class_label: str, english_name: str) -> str:
-    selected_language = language if is_supported_language(language) else DEFAULT_LANGUAGE
-    value = _lookup(_load_resource(selected_language), f"disease_names.{class_label}")
-    if not isinstance(value, str):
-        value = _lookup(_load_resource(DEFAULT_LANGUAGE), f"disease_names.{class_label}")
-    return value if isinstance(value, str) else english_name

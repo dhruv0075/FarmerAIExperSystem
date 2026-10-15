@@ -4,7 +4,6 @@
 **Scope:** repository evidence in the current checkout; source, data and test
 inspection; current full automated test run; bounded literature-source checks.
 **Change boundary:** this audit and its follow-up update documentation only.
-They do not alter application code, datasets, model artifacts or configuration.
 After the initial package was created, a follow-up pass corrected the
 existing documentation conflicts listed in
 [DOCUMENTATION_SOURCE_OF_TRUTH.md](DOCUMENTATION_SOURCE_OF_TRUTH.md).
@@ -12,21 +11,20 @@ existing documentation conflicts listed in
 ## Executive assessment
 
 AgriWise AI is a Flask/Jinja and SQLite decision-support prototype. The
-repository contains one active crop-classification pipeline, a bundled
-MobileNetV3 Small disease-image checkpoint exposed as a conservative
-suggestion, rules and heuristics for farm planning, external weather/geocoding
-adapters, and a conditionally usable official-market-data adapter. It is not a
+repository contains one active crop-classification pipeline, rules and
+heuristics for farm planning, external weather/geocoding adapters, and a
+conditionally usable official-market-data adapter. Problem Report records
+symptoms and optional reference photos without image inference. It is not a
 field-validated autonomous agronomy system.
 
 The crop model's recorded 0.9955 held-out accuracy and macro F1 are local
 benchmark results on a balanced 2,200-row dataset whose provider, license,
 geography and collection period are not established in this checkout. The
 held-out split is also used to choose the winning model. These facts preclude
-interpreting the figure as independent or field accuracy. The disease
-checkpoint's source split, training metrics and calibrated/independent
-evaluation are unknown; disease performance is unmeasured.
+interpreting the figure as independent or field accuracy. Disease image
+classification has been removed from the current application.
 
-The current full test command completed with **183 passed, 1 environment
+The current full test command completed with **164 passed, 1 environment
 warning, 0 failures**. This is software-test evidence, not evidence that
 recommendations improve farm outcomes. The warning is joblib's inability to
 discover physical CPU cores on this Windows host; it falls back to logical
@@ -37,7 +35,7 @@ cores.
 | File | Purpose |
 |---|---|
 | [PROJECT_INVENTORY.md](PROJECT_INVENTORY.md) | Application structure, request paths, feature map and SQLite entities. |
-| [ML_AND_DATASET_AUDIT.md](ML_AND_DATASET_AUDIT.md) | Crop/disease models, datasets, rules, metrics, provenance and limits. |
+| [ML_AND_DATASET_AUDIT.md](ML_AND_DATASET_AUDIT.md) | Crop model, datasets, rules, metrics, provenance and limits. |
 | [API_AND_DEPLOYMENT_AUDIT.md](API_AND_DEPLOYMENT_AUDIT.md) | API routes, third-party integrations, security and deployment constraints. |
 | [TESTING_AUDIT.md](TESTING_AUDIT.md) | Current execution record, test inventory, coverage limits and older-test evidence. |
 | [RESEARCH_EVIDENCE_INVENTORY.md](RESEARCH_EVIDENCE_INVENTORY.md) | Claim/evidence matrix, checked references and research gaps. |
@@ -66,7 +64,7 @@ The test suite was run with:
 .\.venv\Scripts\python.exe -m pytest -q --no-header -p no:cacheprovider
 ```
 
-Result: **183 passed, 1 warning, 0 failed, 117.80 seconds**. The model-training
+Result: **164 passed, 1 warning, 0 failed**. The model-training
 test passes temporary output paths and did not retrain the checked-in model.
 However, importing `app.py` constructs its module-level Flask app and calls
 database initialization. In this audit environment the configured path
@@ -88,6 +86,6 @@ The implementation is suitable to describe as a working software prototype
 with an experimentally evaluated crop classifier on a provenance-limited
 benchmark. A research paper may accurately report system architecture,
 software behavior and the recorded benchmark protocol/results with their
-limitations. Claims of field accuracy, disease accuracy, validated agronomic
-benefit, farmer outcome improvement, operational market forecasts, novelty,
-or national suitability are not supported by the evidence inspected here.
+limitations. Claims of field accuracy, validated agronomic benefit, farmer
+outcome improvement, operational market forecasts, novelty, or national
+suitability are not supported by the evidence inspected here.

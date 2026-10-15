@@ -15,7 +15,7 @@ Repository-relative equivalent of the invoked repository-venv command:
 Observed output:
 
 ```text
-183 passed, 1 warning in 117.80s
+164 passed, 1 warning
 ```
 
 There were **0 failures**. The warning came from
@@ -51,9 +51,7 @@ in focused tests; the full suite itself is not a live integration result.
 | `tests/test_activities.py` | Activity lifecycle, status, linking and state behavior. |
 | `tests/test_black_box.py` | User-input partitions, validation, registration and workflow behavior. |
 | `tests/test_core_journey.py` | Farm journey integration using temporary data and controlled weather. |
-| `tests/test_disease_detection.py` | Disease screen/report separation, upload validation, crop match and lifecycle crop behavior. |
-| `tests/test_disease_model.py` | Model/predictor response contract and uncertainty copy; not accuracy evaluation. |
-| `tests/test_disease_model_evaluation.py` | Evaluator input/split validation with synthetic test images/manifests. |
+| `tests/test_disease_detection.py` | Confirms the removed image-screening URL is not registered, Problem Report retains photos as private references, and crop recommendation uses the original dataset. |
 | `tests/test_extended_flows.py` | Page renders and finance/report flows. |
 | `tests/test_i18n.py` | Locale selection/persistence, invalid language handling, fallback and selected route strings. |
 | `tests/test_integrity.py` | Form/database field consistency, upload and ownership/integrity cases. |
@@ -80,9 +78,8 @@ inspection.
 - Crop-model training code can run on a small synthetic dataset when explicit
   temporary output paths are supplied; inference return contract can be
   exercised with the checked-in model in the configured test environment.
-- Disease test cases cover runtime/workflow response shape and separate
-  screening from saved problem reports. They do not assess model
-  generalization.
+- Problem-report tests cover photo handling, report storage, and the original
+  crop-recommendation dataset path.
 - Localization is tested on selected routes and translation failure/invalid
   selection cases. It does not prove every phrase and dynamic message across
   every page is translated.
@@ -98,7 +95,6 @@ inspection.
 | Browser visual/responsive automation | NOT RUN | Existing browser script writes artifacts and starts an application; the current audit was constrained to documentation-only changes and did not create new artifacts. Earlier browser runs are historical and predate the latest homepage redesign. |
 | Live weather, geocoding, market requests | NOT RUN | Automated tests mock provider behavior; no current external transaction is needed for a source audit. |
 | Crop model retraining | NOT RUN | Would overwrite checked-in model/evaluation artifacts. |
-| Disease accuracy evaluation | NOT RUN | No labeled manifest with independent splits is present; evaluator writes an output report. |
 | Load/performance testing | NOT RUN | No performance benchmark or current latency result was produced. |
 | Accessibility audit | NOT RUN | No automated axe/Lighthouse run was performed in this audit. |
 | Field or user study | NOT STARTED | Requires participants, protocol and appropriate ethics/consent review. |
@@ -108,7 +104,7 @@ inspection.
 
 `docs/test_inventory.md`, `docs/research/experimental_results.md` and
 `README.md` contain earlier results such as **145 passed** and a prior
-browser run. This audit's current full run is **183 passed**. Cite the
+browser run. This audit's current full run is **164 passed**. Cite the
 execution record above for this date; do not present the historical run as
 current.
 

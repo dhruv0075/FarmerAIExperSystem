@@ -17,7 +17,7 @@ Farmers often require guidance from crop selection to harvesting, but most syste
 - SQLite-backed persistence for users, farms, and records
 - Explainable AI outputs that show why a crop was recommended
 - Educational agricultural disclaimers and safe decision-support language
-- Private crop-problem reports with conservative disease-image screening
+- Private Problem Reports with farmer-entered symptoms and reference photos
 
 ## Architecture
 
@@ -54,15 +54,9 @@ The application follows a simple layered architecture:
 4. Install dependencies:
    pip install -r requirements.txt
 
-To enable optional disease-image screening, install:
-
-   pip install -r requirements-disease.txt
-
-See [disease detection](docs/disease_detection.md) for model limitations and evaluation requirements.
-
 ## Dataset Placement
 
-The project expects a crop dataset at:
+The crop recommendation model uses the original dataset at:
 
 `data/Crop_recommendation.csv`
 
@@ -215,15 +209,15 @@ The crop classifier's 0.9955 held-out accuracy is a **local benchmark result**.
 The training dataset's provider, licence, collection geography and collection
 period are not established, and no geographic or temporal holdout was performed.
 No Pune, Maharashtra or India-wide accuracy claim is made or should be inferred.
-The optional 38-class disease-image screener is non-diagnostic until independent
-calibration and held-out evaluation are available. No disease-accuracy claim is
-made. There is no email, SMS or push notification delivery.
+The standalone disease-image screener has been removed. Problem Report can save
+symptoms and a private reference photo but does not analyze the image. There is
+no email, SMS or push notification delivery.
 
 ## Audit update (2026-10-15)
 
 The full automated test suite was run with
 `.\.venv\Scripts\python.exe -m pytest -q --no-header -p no:cacheprovider`:
-**183 passed, 1 warning, 0 failed** in 117.80 seconds. The warning is joblib's
+**164 passed, 1 warning, 0 failed**. The warning is joblib's
 Windows physical-core discovery fallback. Importing `app.py` also initializes
 the configured default database; during this run that path resolved to
 `database.db`. Its contents were not inspected and pre-run file metadata was

@@ -28,9 +28,10 @@ Runtime paths:
 /tmp/agriwise/generated/           # reserved, no runtime report writer currently
 ```
 
-Uploads are served by the authenticated, owner-checked `/disease-image/<id>` route.
+Problem Report photos are served by the authenticated, owner-checked
+`/disease-image/<id>` route.
 The old static-upload path is read only for existing local records; direct HTTP
-access to it is blocked. No disease module import creates a directory.
+access to it is blocked.
 SQLite schema initialization writes only to the configured database. Model
 loading never trains or overwrites model artifacts. Matplotlib imports are
 deferred to explicit training, and its config cache resolves under DATA_DIR.

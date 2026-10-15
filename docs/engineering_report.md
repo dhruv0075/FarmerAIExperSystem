@@ -23,8 +23,8 @@ AgriWise was repaired in place and is running locally. It is **not fully complia
 13. **Market integration:** supplied key stored only in ignored .env; API-key placement/query/SSL settings verified in standalone script, but key validity cannot be established without an HTTP response. Nonblocking single background refresh, bounded retry/cooldown, atomic official-response cache and fresh/cached/stale/unavailable statuses. Filter wiring tested with fixtures, not live records.
 14. **Price forecasting:** no verified historical observations; unavailable. Existing baseline changed to chronological holdout and minimum 20 observations.
 15. **Price metrics:** unavailable; no claimed forecast score from fabricated history.
-16. **Disease AI:** the current repository contains a MobileNetV3 Small checkpoint, 38-class mapping and inference code. The standalone Disease Detection page may display an unverified same-crop suggestion. The separate Problem Report flow saves symptoms/reference images and is not that image-screening route. The 2026-09-30 “unavailable” statement is stale.
-17. **Disease dataset/metrics:** a full PlantVillage image dataset is not bundled. Exact checkpoint training data/split and training metrics are not established; no calibration or independent labeled evaluation manifest is present. Disease performance is unmeasured.
+16. **Disease image classification:** removed from the current application, including model artifacts and the standalone route. Problem Report records symptoms and optional private reference photos only; it does not classify images.
+17. **Crop recommendation dataset:** recommendation training continues to use the original `data/Crop_recommendation.csv` file (2,200 rows, 22 labels). Its original source/license/geography remain unverified, and the existing score is not field validation.
 18. **Expert groups:** wind/spraying, rainfall/harvest, irrigation/moisture, recent irrigation/fertilizer, humidity/heat, N/P/K. Facts, triggers and conflict explanations displayed. Agronomic thresholds remain unvalidated heuristics.
 19. **Activities:** persisted pending/completed/skipped; overdue derived; reschedule returns to pending with new date; owner-scoped updates and duplicate advisory-task prevention.
 20. **Action-aware example:** confirmed irrigation within recent interval suppresses repeat irrigation; pending/skipped events do not count as completed. Recent fertilizer suppresses immediate repeat advice.
@@ -36,11 +36,11 @@ AgriWise was repaired in place and is running locally. It is **not fully complia
 26. **Demonstrated differentiators:** persisted confirmed-action history, activity-sensitive rules, explainable facts, shared FarmState and unified daily plan. No superiority or scientific validation claimed.
 27. **Automated result (historical 2026-09-30 run):** `python -m pytest -q --tb=short`.
 28. **Passed:** 32 in that historical run.
-29. **Failed:** 0 in that historical run. The latest full suite result is 183 passed, 1 warning, 0 failed on 2026-10-15; see `docs/research_audit/TESTING_AUDIT.md`.
-30. **Manual end-to-end:** full 61-step manual scenario incomplete. Browser and Flask-client flows cover subsets; blocked market/disease steps cannot be represented as completed.
+29. **Failed:** 0 in that historical run. The latest full suite result is 164 passed, 1 warning, 0 failed on 2026-10-15; see `docs/research_audit/TESTING_AUDIT.md`.
+30. **Manual end-to-end:** full 61-step manual scenario incomplete. Browser and Flask-client flows cover subsets; blocked market steps cannot be represented as completed.
 31. **Browser:** headless Microsoft Edge registration/manual setup with CSRF enabled; 11 page checks including weather, daily/seven-day plans, resources, market, expenses, report and ML analytics; last recorded run had zero page JavaScript exceptions. Mobile dashboard screenshot inspected. No claim of exhaustive control/console/network validation.
 32. **Known internal limitations:** economic what-if, feedback workflow, notification event coverage, comprehensive future stage scheduling, multilingual support, independent report exports, exhaustive validation and research comparisons incomplete. Existing legacy services need further consolidation under coverage.
-33. **External limitations:** official market-data availability/history, disease checkpoint evaluation lineage, original crop-dataset provenance, and traceable crop cost/yield references. Historical diagnostics disagree on the network stage for data.gov.in; see item 6 and `docs/api_integrations.md`.
+33. **External limitations:** official market-data availability/history, original crop-dataset provenance, and traceable crop cost/yield references. Historical diagnostics disagree on the network stage for data.gov.in; see item 6 and `docs/api_integrations.md`.
 34. **Install:** python -m pip install -r requirements.txt.
 35. **Train:** python ml/train_model.py.
 36. **Run:** python app.py then http://127.0.0.1:5000. Current running session uses existing database and stable local secret.

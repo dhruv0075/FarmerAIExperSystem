@@ -23,7 +23,7 @@ full suite never accesses the configured database.
 | Full automated suite (historical, 2026-10-14) | `.venv\Scripts\python.exe -m pytest -q --no-header -p no:cacheprovider` | **145 passed, 1 warning, 0 failed** in 80.67s |
 | Security suite (historical targeted run) | `.venv\Scripts\python.exe -m pytest tests/test_security.py -q --no-header -p no:cacheprovider` | **11 passed** in ~15s |
 | Browser automation (historical) | `.venv\Scripts\python.exe scripts\browser_check.py` | See "Browser automation" below; does not verify current homepage. |
-| Full automated suite (latest, 2026-10-15) | `.\.venv\Scripts\python.exe -m pytest -q --no-header -p no:cacheprovider` | **183 passed, 1 warning, 0 failed** in 117.80s. See side-effect disclosure above and [current audit](research_audit/TESTING_AUDIT.md). |
+| Full automated suite (latest, 2026-10-15) | `.\.venv\Scripts\python.exe -m pytest -q --no-header -p no:cacheprovider` | **164 passed, 1 warning, 0 failed**. See side-effect disclosure above and [current audit](research_audit/TESTING_AUDIT.md). |
 
 The historical baseline/delta above describes the earlier repair session,
 not the 2026-10-15 run.
@@ -75,7 +75,6 @@ Windows host) and is not an application defect.
 | Accessibility automated audit | NOT RUN | No axe/Lighthouse integration present; accessibility changes are manual and reviewed by inspection only |
 | Performance benchmarks | NOT RUN | No load-testing tool present. No latency numbers are claimed anywhere in this repository |
 | Market live integration | BLOCKED | No successful live HTTP response has ever been observed |
-| Disease classification performance | NOT MEASURED | A 38-class inference checkpoint is present, but training lineage and independent labeled evaluation data are not established. |
 | Farmer user study | NOT STARTED | Requires participants and ethics approval |
 
 ## 5. Browser automation (historical evidence)

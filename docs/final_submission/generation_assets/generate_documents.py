@@ -395,10 +395,10 @@ def build_diagrams() -> dict[str, Path]:
                           ["7 numeric inputs", "Validate feature bounds", "Random Forest artifact inference",
                            "Candidate / explanation", "Store and render result"],
                           "Artifact metrics are benchmark results; recommendation is not field-validated advice."),
-        "disease": draw_flow("disease_detection_workflow", "Disease image screening workflow",
-                             ["User image + lifecycle crop", "Type / size / dimensions validation", "RGB 224×224 + normalization",
-                              "MobileNetV3 Small top class", "Match-filtered suggestion + safety copy"],
-                             "38-class closed-set output; accuracy, calibration and field performance are unmeasured."),
+        "problem_report": draw_flow("problem_report_workflow", "Problem report and reference-photo workflow",
+                                    ["Farmer symptoms + optional photo", "Validate and privately store", "Rule-based inspection guidance",
+                                     "Store symptoms and photo reference", "Expert review for confirmation"],
+                                    "The saved photo is reference material only; it is not sent to an image model."),
         "training": draw_flow("ml_training_pipeline", "Crop classifier training and evaluation path",
                               ["2,200-row CSV", "Clean + stratified 80/20 split", "4 candidate classifiers + training-fold CV",
                                "Choose by held-out macro-F1", "Save model / metrics / confusion matrix"],
@@ -408,7 +408,7 @@ def build_diagrams() -> dict[str, Path]:
                              "Separate limitations", "Plan external validation"]),
         "testing": draw_flow("software_testing_workflow", "Software test workflow and evidence boundary",
                              ["Pytest cases", "Controlled fixtures / temp DBs", "Route + service assertions",
-                              "183 passed in recorded run", "No proof of field efficacy or live provider uptime"]),
+                              "164 passed in current run", "No proof of field efficacy or live provider uptime"]),
         "i18n": draw_flow("multilingual_translation_flow", "Translation resource lookup flow",
                           ["Language selector", "Validated en / mr / hi session", "UTF-8 JSON key lookup",
                            "English fallback", "Rendered template; model IDs unchanged"]),
@@ -448,10 +448,10 @@ REFERENCES = [
 
 DOSSIER = [
     ("Executive summary", [
-        "AgriWise AI is a Flask/Jinja and SQLite software prototype that brings farm records, crop classification, weather-aware workflows, rule-based advisories, lifecycle tracking, optional disease-image screening, and financial/market pages into one application. Its purpose is decision support and record organization, not autonomous agronomy.",
+        "AgriWise AI is a Flask/Jinja and SQLite software prototype that brings farm records, crop classification, weather-aware workflows, rule-based advisories, lifecycle tracking, problem reporting, and financial/market pages into one application. Its purpose is decision support and record organization, not autonomous agronomy.",
         "Repository evidence establishes that the crop classifier is trained on a balanced 2,200-row, 22-label CSV with seven numeric features and that the checked-in metrics artifact reports Random Forest held-out accuracy and macro-F1 of 0.9955. The source provider, license, geography, and collection period are not established. The held-out split is used to select the candidate model, so these numbers are development-benchmark evidence rather than independent field accuracy.",
-        "A MobileNetV3 Small checkpoint and 38 disease classes are present. The app can produce a crop-matched, unverified closest-class suggestion; disease accuracy, training lineage, calibration, and field robustness are unknown. Other outputs are a mixture of deterministic rules, statistical calculations, provider data, and farmer records.",
-        "The full project test run recorded on 15 October 2026 was 183 passed, one Windows joblib warning, and zero failures. That verifies covered software behavior only. The project has not established improved yields, farmer outcomes, disease accuracy, operational live market history, or field efficacy."
+        "Problem Report stores farmer-entered symptoms and an optional private reference photo. Other outputs are a mixture of crop classification, deterministic rules, statistical calculations, provider data, and farmer records.",
+        "The full project test run recorded on 15 October 2026 completed with 164 passed, one Windows joblib warning, and zero failures. That verifies covered software behavior only. The project has not established improved yields, farmer outcomes, operational live market history, or field efficacy."
     ]),
     ("Problem statement and motivation", [
         "Agricultural decisions are coupled: soil and climate conditions influence crop choice, weather changes the timing of operations, crop stage shapes monitoring needs, and farmers need a durable record of what was planned and completed. Disconnected applications can force users to repeat data entry and make it difficult to trace why a suggestion appeared.",
@@ -460,12 +460,11 @@ DOSSIER = [
     ]),
     ("Research objectives and questions", [
         "Completed engineering objective: implement a web application that connects farmer/farm records with crop classification, lifecycle workflows, rules, and selected external data adapters. Evidence is in routes, services, templates, database schema and tests.",
-        "Completed engineering objective: maintain crop recommendation and disease screening as distinct workflows with explicit caveats. Disease reports and transient image screening have separate persistence and interaction paths.",
+        "Completed engineering objective: preserve a farmer-entered Problem Report workflow with optional private reference-photo storage. Photos are not classified and reports are not diagnoses.",
         "Partially completed objective: provide reusable English/Marathi/Hindi translation infrastructure and translated screens. Locale resources, selection persistence and fallback exist, but complete page-by-page and dynamic-message coverage is not certified.",
-        "Research questions for an empirical follow-up are: (RQ1) How does crop classification generalize under geographically and temporally independent evaluation? (RQ2) What is the accuracy and calibration of disease screening on independent field images? (RQ3) Does coordinated lifecycle/weather/task display reduce missed operations or improve decision traceability? These questions are not answered by the available benchmark or software tests."
+        "Research questions for an empirical follow-up are: (RQ1) How does crop classification generalize under geographically and temporally independent evaluation? (RQ2) Does coordinated lifecycle/weather/task display reduce missed operations or improve decision traceability? These questions are not answered by the available benchmark or software tests."
     ]),
     ("Literature review", [
-        "Plant disease image classification has been explored using deep convolutional networks on curated image repositories. Mohanty, Hughes and Salathé evaluated deep learning on PlantVillage-style images and made a dataset-driven case for image diagnosis research [1], [2]. Their work also reports a sharp performance reduction on images captured under different conditions, which cautions against transferring curated-image results to field use.",
         "Crop recommendation using soil and weather-related inputs is represented in prior work; Chauhan and Chaudhary describe Random Forest and Decision Tree approaches [3]. Ertaza and Hossain report soil/climate features and SHAP/LIME explanations in an abstract-level record [9]. Neither paper validates AgriWise's classifier.",
         "Weather-and-irrigation decision support is represented by Sexton's Opticane work, which discusses forecast scale and local-climate fit [10]. India-specific price forecasting examples include onion/potato market forecasting and anomaly detection [11] and daily NCDEX commodity price comparisons among ARIMA, TDNN and LSTM models [12]. These are research precedents, not evidence that AgriWise's provider or price forecast is operational.",
         "Tan et al. review agricultural expert systems across crop, water and soil management categories [13]. Rajkhowa and Qaim report associations between personalized digital extension and agricultural performance for Indian smallholders, using matching methods to address selection concerns [14]. This does not establish causal impact or local-language performance for AgriWise.",
@@ -475,41 +474,40 @@ DOSSIER = [
         "The table summarizes the role of selected publications and documentation. Research findings are attributed to those works; AgriWise-specific statements are separately identified as repository evidence."
     ]),
     ("Existing-system analysis and research gap", [
-        "Existing research addresses focused tasks such as image classification, prediction, sensing, and automation. AgriWise's engineering contribution is an integrated prototype workflow: user-owned farm records connect to a crop recommendation page, lifecycle planning, deterministic rules, a separate disease screen, and supporting data pages.",
+        "Existing research addresses focused tasks such as image classification, prediction, sensing, and automation. AgriWise's engineering contribution is an integrated prototype workflow: user-owned farm records connect to a crop recommendation page, lifecycle planning, deterministic rules, Problem Report, and supporting data pages.",
         "The defensible gap for this project is not that earlier work lacks these components. Rather, the prototype demonstrates how such workflows are wired together while making evidence boundaries visible. Whether that integration is novel, more usable, more accurate, or beneficial has not been established by comparative research.",
-        "Unresolved research gaps include external validation of the crop classifier, disease model provenance/evaluation, calibrated uncertainty, a validated all-14-crop recommendation dataset, farmer-centered usability and accessibility, a measured effect on decision quality, and successful live market-history acquisition."
+        "Unresolved research gaps include external validation of the crop classifier, calibrated uncertainty, farmer-centered usability and accessibility, a measured effect on decision quality, and successful live market-history acquisition."
     ]),
     ("Proposed contributions and evidence", [
         "Contribution A — implemented software integration: Flask routes and services coordinate farm inputs, model inference, rules, records, and browser pages. Evidence: source inspection and the recorded automated test suite. Not proven: production scalability or improved agricultural outcomes.",
-        "Contribution B — separate safety boundaries: image screening returns only a crop-matched suggestion; problem reports store farmer-reported symptoms separately. Evidence: route/service separation and regression tests. Not proven: diagnostic accuracy.",
+        "Contribution B — reference-only symptom reporting: Problem Report stores farmer-reported symptoms and optional private photos without image inference or a diagnosis. Evidence: route/service implementation and regression tests.",
         "Contribution C — reusable localization: UTF-8 JSON resources, supported language validation, session persistence, and English fallback. Evidence: service and selected rendered-route tests. Not proven: total translation coverage or native-speaker acceptance.",
         "Contribution D — measured crop model benchmark: stored comparison of four classifiers on a balanced CSV. Evidence: model_metrics.json and training procedure. Not proven: independent generalization because the held-out set selects the winner and dataset provenance is unresolved."
     ]),
     ("Dataset analysis", [
         "The primary recommendation dataset is data/Crop_recommendation.csv. It contains 2,200 rows: 100 for each of 22 labels. Predictors are N, P, K, temperature, humidity, ph, and rainfall; label is the crop class. recommendationData.csv is byte-identical in the audited checkout and must not be counted as extra evidence. Repository evidence does not establish the original author/provider, license, collection protocol, period, units documentation, or geography.",
         "The class balance is exact in the saved artifact. A stratified 80/20 split with random_state=42 yields 1,760 training and 440 held-out records; five-fold stratified cross-validation is applied to the training partition. Invalid and exact duplicate rows are filtered by the training utility.",
-        "The disease model uses a 38-label mapping associated with a MobileNetV3 Small checkpoint. The full PlantVillage image collection is external, not bundled. The precise checkpoint training subset, labels-to-image mapping, train/validation/test partitions, deduplication, training code and metrics are unknown.",
-        "The recommendation benchmark and disease model crop identities are not identical. After common-name normalization, their overlap is four crop identities (apple, maize/corn, grape/grapes and orange); an approved, traceable data source covering all 14 disease-model crops has not been established. Do not synthesize rows to make class coverage appear complete.",
+        "Problem Report records farmer-entered symptoms and may retain a private reference photo. Crop recommendation remains on the original tabular dataset and predicts crop labels.",
         "Validity risks include source/near-duplicate leakage, non-independent rows, unknown geography and measurement units, label construction, selection on the held-out test set, and differences between benchmark features and actual farm constraints. An external, grouped geographic/temporal split and prospective field data are required."
     ]),
     ("Methodology", [
         "The software-development methodology is evidence-first source inspection followed by test execution and bounded claims. The crop training path loads and validates tabular data, coerces numerical features, filters invalid records, splits stratified data, evaluates candidate classifiers, compares held-out macro-F1, and writes artifacts. K-nearest neighbors uses a StandardScaler pipeline. Metric definitions and averaging behavior follow the scikit-learn evaluation reference [16].",
-        "At application inference, the crop route validates seven input fields and calls the saved model through the crop service, then builds an explanation and persists the recommendation. Disease inference validates the uploaded image, converts it to RGB, resizes to 224×224, normalizes using ImageNet channel statistics, calls the checkpoint, and conditionally presents a top class when its crop matches the selected/lifecycle crop.",
+        "At application inference, the crop route validates seven input fields and calls the saved model through the crop service, then builds an explanation and persists the recommendation. Problem Report validates and privately stores optional reference photos; it does not perform image inference.",
         "The broader application composes weather adapters, deterministic rules, lifecycle calculations, user records, and conditional market analysis. Open-Meteo documents weather-model forecasts, not sensor readings [5]. These methods are not interchangeable: a rule engine is not a trained predictor; external weather is not a sensor; a price forecast is not a guaranteed offer."
     ]),
     ("Experimental results", [
         "The stored crop metrics artifact reports Random Forest as selected with accuracy 0.9955, macro precision 0.9957, macro recall 0.9955 and macro-F1 0.9955. Its training-fold five-fold CV accuracy is 0.9943 ± 0.0051. Decision Tree reports 0.9818 accuracy / 0.9817 macro-F1; KNN 0.9795 / 0.9793; Gradient Boosting 0.9886 / 0.9886.",
         "These values are artifact-reported, not regenerated in this documentation task. The model-selection procedure uses held-out macro-F1, so the held-out score is optimistic as a final unbiased estimate. It must not be described as field accuracy, regional accuracy, or expected harvest success.",
-        "The disease checkpoint has no verified independent metric in the repository evidence. No current live market-data record set, market-forecast accuracy, field trial, inference-latency benchmark, coverage estimate, or user study was established. Software tests recorded 183 passed, one environment warning, zero failures."
+        "No current live market-data record set, market-forecast accuracy, field trial, inference-latency benchmark, coverage estimate, or user study was established. The full project test run recorded 164 passed, one environment warning, zero failures."
     ]),
     ("Discussion", [
-        "The evidence demonstrates a functioning software prototype with a measurable crop benchmark and test-covered workflows. It demonstrates engineering feasibility and selected interface/service contracts. It does not establish that the crop model is suitable for Maharashtra, that disease screening is accurate, or that users benefit.",
+        "The evidence demonstrates a functioning software prototype with a measurable crop benchmark and test-covered workflows. It demonstrates engineering feasibility and selected interface/service contracts. It does not establish that the crop model is suitable for Maharashtra or that users benefit.",
         "A 99.55% score on a balanced, provenance-limited random split can coexist with poor real-world generalization. Field measurements may differ in scale, season, instrumentation, crop variety and management. Likewise, high softmax scores are not calibrated probabilities, and a closed-set image model may confidently assign an unsupported image to a known class.",
         "The integrated presentation can improve traceability if the user can see input, source and caveat. That usability proposition must be tested with farmers and agricultural experts."
     ]),
     ("Threats to validity", [
-        "Construct validity: benchmark crop labels may encode a synthetic/curated recommendation task rather than field outcomes; disease labels and confidence do not equal confirmed diagnoses.",
-        "Internal validity: selection on the held-out test set and potential source-level duplication may bias reported crop performance; the disease model's training lineage is unknown.",
+        "Construct validity: benchmark crop labels may encode a synthetic/curated recommendation task rather than field outcomes.",
+        "Internal validity: selection on the held-out test set and potential source-level duplication may bias reported crop performance.",
         "External validity: no independent location, season, cultivar, device, field, or farmer evaluation exists. API reliability and market histories vary with network, key and provider conditions.",
         "Reproducibility: training code exists, but original dataset provenance is unresolved; model artifacts and recorded metrics were not retrained in the latest audit. The full test suite's module-level import may initialize the configured database, so the recorded test run cannot be called database-side-effect-free.",
         "Operational validity: browser visual auditing, accessibility, load testing, penetration testing, deployment smoke testing and user studies were not performed in the audit represented here."
@@ -517,7 +515,6 @@ DOSSIER = [
     ("Future research", [
         "Priority 1: identify and license a traceable agronomic dataset covering the intended crop classes and define feature units/collection contexts before any retraining.",
         "Priority 2: use nested model selection or a sealed independent test set; split by source, site, time or farm where identifiers permit; report confidence intervals and per-class metrics.",
-        "Priority 3: obtain an independently labeled disease image set with field photographs, plant-part metadata and expert adjudication; report calibration, sensitivity, specificity, abstention and OOD behavior.",
         "Priority 4: conduct farmer-centered usability and accessibility studies with consent, a prespecified protocol, local-language review and appropriate ethics approval.",
         "Priority 5: verify external API contracts with bounded live tests; monitor freshness, provenance and failure behavior; add independent audit logs and operational metrics without exposing secrets."
     ]),
@@ -541,25 +538,20 @@ LITERATURE_MATRIX = [
 MANUAL = [
     ("Product overview and boundaries", [
         "AgriWise AI is a local-first Flask application with a server-rendered Jinja interface and SQLite persistence. It is intended to organize farm information and present crop-classifier outputs, lifecycle estimates, weather context, configurable rule-based advice, and records. It is a prototype; it is not a certified agronomic, diagnostic, financial, or emergency service.",
-        "The app contains multiple machine and decision-support approaches. Crop recommendation is a supervised tabular classifier. Disease screening is a deep image classifier with unverified evaluation. Lifecycle and expert-system features use configured profiles and rules. Weather and geocoding depend on external providers. Market retrieval is conditional and live usable responses remain unverified."
+        "Crop recommendation is a supervised tabular classifier. Lifecycle and expert-system features use configured profiles and rules. Problem Report stores farmer-entered symptoms and optional reference photos. Weather and geocoding depend on external providers. Market retrieval is conditional and live usable responses remain unverified."
     ]),
     ("Technology stack", [
-        "Verified runtime dependencies include Python 3.12.4 in the project environment, Flask 3.0.3, SQLite, pandas 2.2.2, NumPy 2.0.2, scikit-learn 1.5.1, joblib 1.4.2, requests 2.32.3, Pillow 11.3.0, and python-dotenv. The optional disease stack includes PyTorch/torchvision in the inspected environment. HTML is rendered with Jinja; Bootstrap and icon/chart/map assets may be loaded from CDNs. Render configuration uses Gunicorn.",
+        "Verified runtime dependencies include Python 3.12.4 in the project environment, Flask 3.0.3, SQLite, pandas 2.2.2, NumPy 2.0.2, scikit-learn 1.5.1, joblib 1.4.2, requests 2.32.3, Pillow 11.3.0, and python-dotenv. HTML is rendered with Jinja; Bootstrap and icon/chart/map assets may be loaded from CDNs. Render configuration uses Gunicorn.",
         "The dependency manifest is the authoritative installation source; the exact runtime inventory may vary by environment. The project `.venv` is not required to be committed or copied to production."
     ]),
     ("Architecture and request flow", [
         "The application factory in app.py configures Flask, middleware-like request hooks, CSRF behavior, session settings and routes. Flask's factory pattern allows differently configured instances for tests and applications [9]. Routes perform request validation and call domain services. Services contain classification, lifecycle, weather, market, risk, rules, reporting, resources and finance logic. Templates display results. SQLite stores user and operational records. Model artifacts are loaded from local paths. External calls are made through provider adapters.",
-        "The database has 23 tables. Core declared relationships include users→farms; farms→soil, recommendations, cycles, weather, advisories, notifications, activities, disease reports, fertilizer records, expenses, sales, what-if runs and risk snapshots; cycles→stages, activities, advisories, disease reports, expenses and sales; reports→predictions; resources→resource prices. Market prices, forecasts and mandis are standalone in the declared FK graph."
+        "The database has 23 tables. Core declared relationships include users→farms; farms→soil, recommendations, cycles, weather, advisories, notifications, activities, problem reports, fertilizer records, expenses, sales, what-if runs and risk snapshots; cycles→stages, activities, advisories, problem reports, expenses and sales; resources→resource prices. Market prices, forecasts and mandis are standalone in the declared FK graph."
     ]),
     ("Crop recommendation implementation", [
         "The route accepts seven numeric features: N, P, K, temperature, humidity, pH and rainfall. It validates input, invokes services/crop_service.py to load the saved ml/crop_model.pkl artifact, generates a class suggestion and explanation, and persists the result and submitted context. ml/train_model.py calls the active candidate evaluation path in services/crop_ml_service.py.",
         "The dataset contains 2,200 balanced rows and 22 labels. The artifact's best candidate is Random Forest; recorded held-out accuracy and macro-F1 are both 0.9955. Candidate selection itself uses that held-out score, so these values are development results. No regional holdout or field outcome is present. Model probabilities are not calibrated field confidence.",
         "Do not run the training command casually: it writes model, metric and confusion-matrix artifacts. Preserve a copy and use explicit temporary output paths for experiments."
-    ]),
-    ("Disease image screening", [
-        "The repository contains a MobileNetV3 Small 38-class checkpoint and class_names.json. The predictor converts to RGB, resizes to 224×224 and applies ImageNet mean/standard-deviation normalization before inference. The app validates image type, decoded format, size (5 MiB maximum) and pixel dimensions (24 million maximum).",
-        "The route uses the active lifecycle crop when available and prevents an uploaded crop string from overriding that crop. If there is no active lifecycle crop, the user may specify one. A top-class result is presented only as an unverified suggestion when the crop matches; this is not a diagnosis. Confidence is an uncalibrated softmax score. Training lineage and independent performance are unknown.",
-        "Problem Report is a separate workflow for farmer-described symptoms and an optional private reference image. It does not run the standalone image classifier; the disease result page clearly communicates that no confirmed diagnosis exists. No pesticide prescription should be inferred from either workflow."
     ]),
     ("Lifecycle, activities and rules", [
         "Crop cycles, stages and activities are persisted with farm ownership and status. Lifecycle dates/stages are computed from configured crop profiles and calendar rules, not observed plant phenology. Activity tasks may be suggested or manually entered; completion is a farmer-confirmed event.",
@@ -576,7 +568,7 @@ MANUAL = [
     ]),
     ("Fertilizer, resources and safe agronomy", [
         "Fertilizer and resource services present configured reference logic, nutrient status and directory information. Their existence does not prove that underlying rates, products, local availability, or efficacy are validated. Community-listed resource entries may be stale or inaccurate.",
-        "The interface must not convert an unverified image class or generic nutrient range into a chemical prescription. Any fertilizer/pesticide dosage requires crop-, stage-, soil-, product-label- and region-specific evidence and qualified local review."
+        "Any fertilizer/pesticide dosage requires crop-, stage-, soil-, product-label- and region-specific evidence and qualified local review."
     ]),
     ("Multilingual support", [
         "English is the default/fallback; Marathi and Hindi are supported by UTF-8 JSON resources in locales/en.json, mr.json and hi.json. Jinja translation helpers resolve dotted keys and missing strings fall back to English. The language POST route validates codes and stores the choice in the Flask session; its return path is constrained to a local destination.",
@@ -594,18 +586,18 @@ MANUAL = [
         "From the repository root in PowerShell, create/use the project Python 3.12 environment, install the runtime requirements, and start the Flask application. Commands below match repository paths; consult README.md and deployment docs if manifests change. This project also constructs a module-level app at import time."
     ]),
     ("Testing and verification record", [
-        "Recorded command: .\\.venv\\Scripts\\python.exe -m pytest -q --no-header -p no:cacheprovider. Observed result on 2026-10-15: 183 passed, one joblib Windows physical-core discovery warning, zero failures, in 117.80 seconds.",
-        "Tests cover routes, core workflow, model contracts, disease input validation, lifecycle, rules, weather/market parsing with mocks, security regressions and selected localization. They do not measure field agronomic performance, disease accuracy, live provider uptime, performance under load, accessibility, or all translation strings.",
+        "Recorded result on 2026-10-15: 164 passed, one joblib Windows physical-core discovery warning, zero failures.",
+        "Tests cover routes, core workflow, crop model contracts, problem-report photo storage, lifecycle, rules, weather/market parsing with mocks, security regressions and selected localization. They do not measure field agronomic performance, live provider uptime, performance under load, accessibility, or all translation strings.",
         "The full suite imported app.py and triggered module-level app/database initialization. Because no pre-run database metadata or contents were collected, the run cannot be described as guaranteed not to touch existing local database state. The generator does not execute application tests."
     ]),
     ("Deployment and troubleshooting", [
         "render.yaml specifies a paid Starter web instance, one instance, Gunicorn one worker/four threads, a 120-second timeout, /healthz, a 1 GB persistent disk mounted at /var/data, production environment settings, generated secret and optional market API key. This is configuration only; no deployed service or live deployment check was verified.",
         "Vercel documentation describes ephemeral /tmp storage; SQLite and uploads in an ephemeral or multi-instance environment can be lost or inconsistent. The app's in-memory provider cache/lock is process-local. Do not claim serverless persistence without a durable shared database/storage design.",
-        "If crop prediction fails, verify the saved artifact path and seven numeric inputs. If disease model loading fails, verify the optional ML dependencies/checkpoint and report the unavailable state; do not imply image results. For weather, inspect coordinates/network and whether a cached result is stale. For market, verify secret configuration privately, provider response status and record count. Never print or paste an API key."
+        "If crop prediction fails, verify the saved artifact path and seven numeric inputs. For Problem Report, confirm that photos are treated as private reference material only. For weather, inspect coordinates/network and whether a cached result is stale. For market, verify secret configuration privately, provider response status and record count. Never print or paste an API key."
     ]),
     ("Developer handover and priorities", [
-        "Key files: app.py (factory, routes, request/session flow); db.py (SQLite schema and migrations); services/crop_service.py and crop_ml_service.py (prediction/training paths); services/disease_service.py and agriwise_disease_model/disease_predictor.py (screening); services/weather_service.py, official_market_service.py, decision_orchestrator.py, expert_system.py, lifecycle_service.py and i18n_service.py; locales/*.json; templates/*.html; tests/*.py; render.yaml.",
-        "Priority sequence: establish dataset provenance/license and all-target crop coverage; make model selection unbiased and evaluate geographically; independently evaluate/calibrate disease screening; complete localization and native review; isolate test databases; verify APIs and deployment; then conduct accessibility, security, load and farmer field studies."
+        "Key files: app.py (factory, routes, request/session flow); db.py (SQLite schema and migrations); services/crop_service.py and crop_ml_service.py (prediction/training paths); services/disease_service.py (Problem Report guidance); services/weather_service.py, official_market_service.py, decision_orchestrator.py, expert_system.py, lifecycle_service.py and i18n_service.py; locales/*.json; templates/*.html; tests/*.py; render.yaml.",
+        "Priority sequence: establish dataset provenance/license; make model selection unbiased and evaluate geographically; complete localization and native review; isolate test databases; verify APIs and deployment; then conduct accessibility, security, load and farmer field studies."
     ]),
 ]
 
@@ -614,7 +606,6 @@ TECHNOLOGY_ROWS = [
     ["Web/backend", "Python 3.12.4; Flask 3.0.3; Jinja templates", "Current environment/requirements", "Source exists; route tests pass"],
     ["Database", "SQLite via sqlite3; 23 tables", "db.py DDL", "Local persistence; production concurrency constrained"],
     ["Crop ML", "pandas, NumPy, scikit-learn, joblib; Random Forest artifact", "ml/ and services/", "Stored benchmark metrics; no field validation"],
-    ["Disease ML", "PyTorch/torchvision; MobileNetV3 Small checkpoint", "disease model package", "Inference integrated; accuracy unknown"],
     ["Weather", "Open-Meteo HTTP adapter, requests", "services/weather_service.py", "Historical single live observation; mocked tests"],
     ["Market", "data.gov.in adapter; optional API key", "services/official_market_service.py", "Live usable records unverified"],
     ["Deployment", "Gunicorn; Render blueprint", "render.yaml", "Configuration inspected, not deployed"],
@@ -635,38 +626,37 @@ SETUP_COMMANDS = [
 IEEE_SECTIONS = [
     ("I. INTRODUCTION", [
         "Farm decision support often spans data entry, crop choice, crop-stage tracking, weather context and operational records. AgriWise AI is a Flask-based prototype designed to connect these workflows while presenting distinct ML, rule-based and provider-derived outputs. Digital agriculture is a broad and context-sensitive area; ICT for sustainable agriculture is discussed by FAO, while the World Bank indicator supplies economic context rather than an impact measure [6], [7].",
-        "This paper reports the implementation and evidence boundaries of the prototype. It does not claim a novel classifier, field efficacy, diagnostic accuracy or farmer outcome improvement. Its concrete engineering contribution is an integrated workflow with explicit separation of supervised crop recommendation, optional disease-image screening, deterministic rules, external weather/market adapters and farm records."
+        "This paper reports the implementation and evidence boundaries of the prototype. It does not claim a novel classifier, field efficacy or farmer outcome improvement. Its concrete engineering contribution is an integrated workflow combining supervised crop recommendation, deterministic rules, external weather/market adapters and farm records."
     ]),
     ("II. RELATED WORK", [
-        "Plant disease classification research demonstrates that convolutional networks can classify curated leaf-image datasets [1], [2]. Mohanty et al. report 99.35% best accuracy on a 54,306-image, 38-class PlantVillage dataset and a drop to just above 31% on images captured under different conditions [1]. This motivates but does not validate AgriWise's disease checkpoint, whose exact training set and evaluation split are unknown. Crop recommendation using soil and weather-related inputs has also been studied with machine-learning algorithms [3], while agricultural expert systems have a documented history [4].",
+        "Crop recommendation using soil and weather-related inputs has been studied with machine-learning algorithms [3], while agricultural expert systems have a documented history [4].",
         "Explainable crop recommendation with SHAP/LIME features is described in an abstract-level publication [9]. Weather-and-irrigation decision support [10], Indian commodity price forecasting [11], [12], and agricultural expert-system reviews [13] provide further component-level context. A personalized extension study in India reports associations, not direct evidence about this prototype [14].",
         "Evaluation must be interpreted against sampling, target definition and split design. Standard metrics such as accuracy, precision, recall and F1 are summaries of a defined sample; they cannot by themselves demonstrate calibration, regional generalization or user utility [16]."
     ]),
     ("III. RESEARCH GAP AND CONTRIBUTIONS", [
         "The study addresses an engineering question: how can a web prototype connect crop classification, farm records, lifecycle tasks and contextual decision support while preserving distinct evidence and safety boundaries? The repository demonstrates an implementation of this integration. It does not establish scientific novelty or superiority over a comparator.",
-        "Contributions are (1) a source-auditable, multi-workflow implementation; (2) a crop-classifier benchmark reporting its selection caveat; (3) a separated, crop-matched disease suggestion path with a separate farmer symptom-report route; and (4) a reusable multilingual resource layer with selected-page testing. The last contribution is partial because not every page/dynamic message is verified in all languages."
+        "Contributions are (1) a source-auditable, multi-workflow implementation; (2) a crop-classifier benchmark reporting its selection caveat; (3) farmer-entered symptom reporting with optional private reference-photo storage; and (4) a reusable multilingual resource layer with selected-page testing. The last contribution is partial because not every page/dynamic message is verified in all languages."
     ]),
     ("IV. SYSTEM AND METHODS", [
         "The application uses Flask routes and Jinja templates, domain services, SQLite and local artifacts [15], [17]. Crop recommendation consumes seven numeric fields (N, P, K, temperature, humidity, pH and rainfall) and calls the saved Random Forest model. Explanatory text and records are generated/stored in the application. Weather calls the Open-Meteo forecast adapter [5]; market data uses a bounded official-data adapter but live usable records are unverified.",
         "The crop training utility reads a balanced 2,200-row CSV with 22 labels, applies data cleaning, uses a stratified 80/20 split (random_state=42), compares four classifiers, computes five-fold stratified accuracy on the training portion, and selects by held-out macro-F1. This split is consequently part of model selection, not an independent untouched test.",
-        "Disease screening uses a MobileNetV3 Small model with 38 outputs. Uploaded images are decoded, converted to RGB, resized to 224×224 and normalized using ImageNet statistics. The interface shows a suggestion only when the predicted class crop matches the lifecycle/selected crop. Softmax is uncalibrated and the checkpoint evaluation is unknown."
     ]),
     ("V. DATASET AND EXPERIMENTAL SETUP", [
         "The crop CSV has 2,200 rows, 22 balanced classes and seven numeric features. The duplicate recommendationData.csv has the same SHA-256 in the audited checkout and is not an independent dataset. Dataset publisher, license, collection geography, period, units and collection protocol are not established. A random row split cannot exclude source-level leakage or prove geographic/temporal independence.",
         "The checked-in metrics artifact reports 1,760 training and 440 test examples. Candidate values are: Decision Tree 98.18% accuracy, 98.17% macro-F1; Random Forest 99.55%, 99.55%; KNN 97.95%, 97.93%; Gradient Boosting 98.86%, 98.86%. Random Forest five-fold training-split CV accuracy is 99.43% ± 0.51%. Values are recorded artifacts and were not reproduced in this documentation run.",
-        "No disease accuracy, calibration, field image evaluation, inference latency, live market forecast error, field trial or usability study is available. The project test suite passed 183 tests with one environment warning in a recorded run; software tests do not measure agronomic efficacy. WCAG's page-language guidance is relevant to assistive technology but does not verify translation quality [8]."
+        "No live market forecast error, field trial or usability study is available. The current project test suite completed with 164 passes and one environment warning; software tests do not measure agronomic efficacy. WCAG's page-language guidance is relevant to assistive technology but does not verify translation quality [8]."
     ]),
     ("VI. RESULTS AND DISCUSSION", [
         "The tabular benchmark shows strong separability under its recorded random-split protocol. Because the held-out score selects the winning candidate, an independent test set is needed to estimate final performance. Unknown dataset provenance also prevents confident claims about target-population fit. The result should be treated as a software/model-development benchmark only.",
-        "The disease route proves integration and input-validation behavior, not model validity. Its 38-class mapping and checkpoint do not reveal training lineage. Field deployment would require externally labeled images, class-level performance, calibration, robustness testing, and a safe abstention policy.",
+        "Problem Report stores farmer-described symptoms and optional reference photos.",
         "The application test record supports covered route/service behavior. The market adapter's existence does not prove API success; the current usable-data state remains unverified. Therefore the paper reports an implemented prototype rather than a validated farm decision system."
     ]),
     ("VII. LIMITATIONS AND FUTURE WORK", [
-        "Threats include undocumented dataset provenance, selection bias in the crop test protocol, possible source-level data dependence, no external regional data, no calibrated confidence, unknown disease model lineage, unverified market data, network dependency, and no farmer-outcome study. Multilingual rendering is tested on selected screens but not certified across the whole application; page language metadata supports assistive technology but does not assure translation quality [8].",
-        "Future work should establish licensed representative data, use nested or sealed geographic/time holdouts, independently evaluate and calibrate both ML tasks, test safety/abstention, conduct local-language review, and perform a prespecified farmer study with ethics and consent. API and deployment claims need reproducible live tests."
+        "Threats include undocumented dataset provenance, selection bias in the crop test protocol, possible source-level data dependence, no external regional data, no calibrated confidence, unverified market data, network dependency, and no farmer-outcome study. Multilingual rendering is tested on selected screens but not certified across the whole application; page language metadata supports assistive technology but does not assure translation quality [8].",
+        "Future work should establish licensed representative crop data, use nested or sealed geographic/time holdouts, conduct local-language review, and perform a prespecified farmer study with ethics and consent. API and deployment claims need reproducible live tests."
     ]),
     ("VIII. CONCLUSION", [
-        "AgriWise AI is an integrated agricultural decision-support prototype whose source and tests show multiple connected workflows. Its crop classifier has a recorded high benchmark score under a development split, but no independent field validation. Disease performance and market-provider success remain unmeasured or unverified. The defensible conclusion is software integration feasibility and a clear research agenda—not proven agronomic impact."
+        "AgriWise AI is an integrated agricultural decision-support prototype whose source and tests show multiple connected workflows. Its crop classifier has a recorded benchmark score under a development split, but no independent field validation. Market-provider success remains unverified. The defensible conclusion is software integration feasibility and a clear research agenda—not proven agronomic impact."
     ]),
 ]
 
@@ -682,16 +672,16 @@ def add_references(doc: Document):
 
 VIVA_GROUPS = {
     "Project foundations": [
-        ("What is AgriWise AI?", "It is a Flask/Jinja and SQLite agricultural decision-support prototype. It combines farm records, crop-classification suggestions, lifecycle tracking, rule-based guidance, weather context, and a separate optional disease-image screen."),
+        ("What is AgriWise AI?", "It is a Flask/Jinja and SQLite agricultural decision-support prototype. It combines farm records, crop-classification suggestions, lifecycle tracking, rule-based guidance, weather context, and symptom reporting."),
         ("What problem does it address?", "It coordinates several farm workflows that otherwise may be disconnected: entering farm context, reviewing a crop suggestion, tracking a crop cycle, recording activities, and viewing contextual data. It has not been proven to improve yields or income."),
         ("Who are the intended users?", "Farmers and project demonstrators who can provide farm and soil information. Real-world use requires local-language, accessibility, agronomic and privacy validation."),
         ("Why did you select this project?", "It provides a concrete application of web engineering and machine learning to a significant domain, while making it possible to study how data, models, rules and user workflows interact."),
         ("What are the main objectives?", "Build connected farm workflows, expose a crop classifier, track lifecycle and activities, add contextual services, and preserve clear limitations. The system objectives are implemented to varying verification levels; research outcomes such as farmer benefit remain unproven."),
-        ("What are the major modules?", "Authentication/farm profile, crop recommendation, lifecycle/activities, dashboard/plans, expert rules/advisories, weather/location, disease screening and problem reports, market/finance, resources/fertilizer, reports, and localization."),
+        ("What are the major modules?", "Authentication/farm profile, crop recommendation, lifecycle/activities, dashboard/plans, expert rules/advisories, weather/location, Problem Report, market/finance, resources/fertilizer, reports, and localization."),
         ("Is it an autonomous farming system?", "No. It presents decision-support information and records. It does not operate equipment, guarantee outcomes or replace a farmer or qualified agronomist."),
-        ("What is outside the scope?", "Verified diagnosis, pesticide prescription, guaranteed yield/profit, national suitability, continuous sensor ingestion, and autonomous farm control."),
-        ("What is the strongest evidence of completion?", "Source implementation and the recorded 183-pass automated software test run support that covered workflows execute as tested. This is not evidence of agricultural effectiveness."),
-        ("What is the weakest area?", "Independent empirical validity: crop data provenance and external generalization are unresolved; disease evaluation is unknown; market live usable data is unverified; no field/user study exists."),
+        ("What is outside the scope?", "Pesticide prescription, guaranteed yield/profit, national suitability, continuous sensor ingestion, and autonomous farm control."),
+        ("What is the strongest evidence of completion?", "Source implementation and the recorded 164-pass automated software test run support that covered workflows execute as tested. This is not evidence of agricultural effectiveness."),
+        ("What is the weakest area?", "Independent empirical validity: crop data provenance and external generalization are unresolved; market live usable data is unverified; no field/user study exists."),
     ],
     "Research and contribution": [
         ("What is the research gap?", "The project explores engineering integration of farm records, classification, lifecycle and contextual guidance with explicit boundaries. It does not claim that prior work lacks these components or that this prototype is novel without comparative evidence."),
@@ -700,7 +690,6 @@ VIVA_GROUPS = {
         ("Why is the project research-worthy?", "It raises measurable questions about independent generalization, safe model communication, translation coverage, and workflow utility. The prototype itself is a platform for those studies."),
         ("Have you proved novelty?", "No. Novelty requires systematic literature comparison and a clearly differentiated method/result. Integrating known modules is not sufficient."),
         ("Have you proved farmer benefit?", "No. There is no controlled farmer study or measured outcome comparison."),
-        ("What would strengthen the paper?", "A licensed independent dataset, sealed geographic/time test, external disease-image evaluation, calibration, baseline comparisons, usability study, and transparent reproducibility materials."),
         ("What is a threat to validity?", "A condition that could make the inference from an experiment unreliable. Here, unknown dataset provenance and selecting a model on the held-out test set threaten generalization claims."),
         ("Why not claim superiority over existing systems?", "No head-to-head evaluation with equivalent data, metrics and users was performed."),
         ("What is your hypothesis?", "A future testable hypothesis could be that a coordinated workflow improves task completion or decision traceability relative to disconnected tools. It remains a proposal until tested."),
@@ -731,7 +720,7 @@ VIVA_GROUPS = {
     ],
     "Database and SQL": [
         ("Why SQLite?", "It is simple and file-based, requiring no separate database server. It suits a local prototype, but concurrent production writes and multi-instance deployment need stronger shared persistence."),
-        ("How many tables are defined?", "The current db.py creates 23 application tables, including users, farms, soil, recommendations, cycles, activities, weather, market, disease and finance records."),
+        ("How many tables are defined?", "The current db.py creates 23 application tables, including users, farms, soil, recommendations, cycles, activities, weather, market, problem reports and finance records."),
         ("What is a primary key?", "A column or column set that uniquely identifies a row. The main entities use integer primary keys."),
         ("What is a foreign key?", "A constraint linking a child record to a parent row, helping enforce referential integrity when enabled."),
         ("What is normalization?", "Organizing relational data to reduce unwanted duplication and update anomalies. The schema separates users, farms, cycles and related records."),
@@ -742,7 +731,7 @@ VIVA_GROUPS = {
         ("How should backups work?", "Use consistent snapshots/backups, test restore procedures, protect them like user data, and avoid copying a live DB file without accounting for journaling/WAL state."),
     ],
     "Machine-learning fundamentals": [
-        ("AI versus ML versus deep learning?", "AI is the broad area of machine decision behavior; ML learns patterns from data; deep learning is ML using multi-layer neural networks. AgriWise contains all three types only in the broad product sense: one tabular ML model, one deep image model, and non-ML rules."),
+        ("AI versus ML versus deep learning?", "AI is the broad area of machine decision behavior; ML learns patterns from data; deep learning is ML using multi-layer neural networks. AgriWise uses a tabular crop classifier and non-ML rules."),
         ("Classification versus regression?", "Classification predicts a category, such as crop label; regression predicts a numeric value, such as a price trend."),
         ("What are features and labels?", "Features are input variables; a label is the target class. The crop model uses seven numeric features and a crop-name label."),
         ("Training, validation and test sets?", "Training data fits parameters; validation data supports choices; a final test set estimates generalization after choices are fixed. In this project, the held-out score is used for candidate selection, so it is not a pristine final test."),
@@ -768,22 +757,10 @@ VIVA_GROUPS = {
         ("Does it represent Maharashtra?", "That is unknown. The repository does not establish dataset geography, collection methods or units, so regional representativeness cannot be claimed."),
         ("Is the probability a success chance?", "No. It is a model class score and is not calibrated to probability of suitability, yield, profit or successful harvest."),
         ("How can it be improved?", "Establish provenance, validate units, obtain representative regional data, use nested/sealed evaluation and report site/time holdouts and class-wise uncertainty."),
-        ("Why is a new all-14 dataset not used?", "No acceptable traceable licensed source covering all 14 disease crops with compatible features was established. Invented or duplicated rows would create false evidence."),
-    ],
-    "Disease detection and computer vision": [
-        ("What architecture is present?", "MobileNetV3 Small with a 38-output classifier in the bundled checkpoint/inference code."),
-        ("What is transfer learning?", "Reusing a model pretrained on a large dataset and adapting it to a target task, often by replacing/fine-tuning the output head."),
-        ("Why resize images?", "The model expects a fixed spatial input shape; the implementation resizes to 224×224."),
-        ("Why normalize images?", "To make pixel channel values match the distribution expected by the model's training/pretraining process. The code applies ImageNet mean and standard deviation."),
-        ("What does softmax represent?", "A normalized set of scores over known classes. Without calibration and representative data it is not a trustworthy probability of correctness."),
-        ("Is the suggestion a diagnosis?", "No. The app labels it unverified and keeps it separate from farmer symptom reports and treatment guidance."),
-        ("What happens with a mismatched crop?", "The service suppresses the disease suggestion when the predicted class crop does not match the selected or active lifecycle crop."),
-        ("How are invalid images handled?", "The flow checks allowed formats, decodability, a 5 MiB limit and a 24-million-pixel ceiling."),
-        ("What are supported classes?", "There are 38 class labels mapped to 14 crop identities. The exact machine labels are in agriwise_disease_model/class_names.json."),
-        ("Is accuracy known?", "No. Training lineage, exact split, calibration and independent evaluation are unknown; do not claim disease accuracy."),
+        ("Why retain the original crop dataset?", "Crop recommendation continues to use the original data/Crop_recommendation.csv file; its provenance and license still require verification."),
     ],
     "Other decision-support logic": [
-        ("Which modules use trained ML?", "The crop classifier and the optional disease image classifier. A simple conditional market regression exists when sufficient history is available."),
+        ("Which modules use trained ML?", "The crop classifier. A simple conditional market regression exists when sufficient history is available."),
         ("What is an expert system?", "A knowledge-based system that applies explicit rules to facts. AgriWise's expert system is deterministic IF/THEN logic, not a trained neural model."),
         ("What is explainability here?", "The app can present input context and rule/explanation text. This is not a formal guarantee that every model decision is causally explained."),
         ("How should contradictions be handled?", "Show the conflicting context and uncertainty, avoid unsafe automatic action, and request qualified human review. Rule priorities are code-defined and require domain validation."),
@@ -792,7 +769,7 @@ VIVA_GROUPS = {
         ("How is lifecycle tracked?", "The application stores crop cycles and stages and calculates dates from configured profiles; stages are estimates, not field sensor observations."),
         ("Are activities automatically confirmed?", "No. Completion is recorded from farmer/user confirmation."),
         ("Can recommendations be reported as ground truth?", "No. They are model or rule outputs; confirmed outcomes require independently recorded observations."),
-        ("What separates problem reports from disease screen?", "The report workflow stores symptoms and optional reference imagery; the image-screening page calls the model. The report route does not itself confirm a diagnosis."),
+        ("What does Problem Report store?", "Farmer-described symptoms and an optional private reference photo for later review."),
     ],
     "Weather, market and finance": [
         ("How is weather fetched?", "The weather service requests Open-Meteo forecast data using farm coordinates, with an 8-second timeout and 30-minute in-memory cache."),
@@ -810,7 +787,7 @@ VIVA_GROUPS = {
         ("Which languages are supported?", "English (default/fallback), Marathi and Hindi through JSON translation resources."),
         ("How is language selected?", "A shared selector submits a supported code to POST /language; the code is validated and stored in the Flask session."),
         ("What happens for a missing key?", "The i18n helper tries English; if missing there too it returns the key instead of a blank string."),
-        ("Does translation change model output?", "No. Translation changes displayed copy only. Crop class IDs, disease class IDs and prediction calculations are language-independent."),
+        ("Does translation change model output?", "No. Translation changes displayed copy only. Crop class IDs and prediction calculations are language-independent."),
         ("How is Devanagari supported?", "Locale resources are UTF-8 JSON and templates render Unicode strings; browser/system fonts handle glyph presentation."),
         ("Is the entire app translated?", "No. Some hard-coded and dynamic strings remain. Selected screens have rendered tests, but there is no full-app coverage certification."),
         ("Are stored advisories translated?", "Not necessarily. Generated/stored text and user-entered values may remain in their source language."),
@@ -825,7 +802,7 @@ VIVA_GROUPS = {
         ("What is white-box testing?", "Testing informed by internal paths, branches and logic."),
         ("What is boundary-value analysis?", "Testing values near valid limits, such as image size, numeric range or empty values."),
         ("What is mocking?", "Replacing an external dependency with a controlled substitute so tests are deterministic and do not require live services."),
-        ("What is the latest recorded test outcome?", "183 passed, one joblib environment warning, zero failures on 15 October 2026. This is the recorded audit run, not a newly executed run during document generation."),
+        ("What is the latest recorded test outcome?", "164 passed, one joblib environment warning, zero failures on 15 October 2026. This is the recorded audit run, not a newly executed run during document generation."),
         ("Does pytest prove model accuracy?", "No. Software tests verify contracts/logic. Model validity requires a labeled independent evaluation design."),
         ("Was coverage measured?", "No coverage report was generated in the cited audit."),
         ("Were live APIs tested in that run?", "No. Provider behavior was tested with mocks/fixtures; live market/weather checks were not part of that run."),
@@ -834,7 +811,7 @@ VIVA_GROUPS = {
         ("How are passwords stored?", "The source uses Werkzeug password hashing helpers, not plaintext password storage."),
         ("Authentication versus authorization?", "Authentication verifies identity; authorization checks permission for a requested resource. Farm-owned data access must be checked at route level."),
         ("What is CSRF?", "Cross-site request forgery tricks a logged-in browser into submitting an unwanted action. The app uses a per-session token for state-changing requests."),
-        ("How are uploads validated?", "The disease routes use allowlisted image types, decoded format checks, size and dimension limits, secure names and authenticated image access."),
+        ("How are uploads validated?", "Problem Report accepts validated reference photos, which are stored privately and accessed through authenticated, owner-checked routes."),
         ("How are API keys protected?", "Keys are read from environment settings and excluded from committed files. Never log or share the actual value."),
         ("Is the app penetration-tested?", "No comprehensive penetration test is established. Observed source controls are not a security certification."),
         ("What does Render config specify?", "One Starter instance, one Gunicorn worker/four threads, 120-second timeout, health endpoint and 1 GB persistent disk, plus environment settings."),
@@ -846,24 +823,23 @@ VIVA_GROUPS = {
         ("Why should farmers trust this application?", "They should not be asked to trust it uncritically. The app should show sources, dates, limitations and uncertainty; independent agronomic evaluation and local expert review are prerequisites for stronger claims."),
         ("How do you know the model generalizes to farms?", "We do not know from the current benchmark. A geographic/time-held-out dataset collected under a documented protocol is required."),
         ("What is genuinely novel?", "No formal novelty claim is established. The verified contribution is an integrated prototype and an explicit evidence/safety boundary; novelty needs literature and comparator review."),
-        ("How can wrong disease predictions harm users?", "They can delay treatment or prompt inappropriate actions. The interface labels predictions as unverified, restricts crop mismatch suggestions and avoids presenting a confirmed diagnosis."),
         ("What happens if the network is unavailable?", "Local pages/model may continue where dependencies are present; provider-dependent weather/geocoding/market features can show cached, stale or unavailable states. It is not an offline-complete system."),
         ("What happens when training data are biased?", "The model can systematically misclassify underrepresented contexts. We need documented sampling, stratified and subgroup evaluation, geographic external tests and feedback mechanisms."),
         ("How would you run a Maharashtra field evaluation?", "Define target crops and sites; obtain ethics/consent; collect measured inputs and expert adjudication across seasons; seal site/time groups; pre-register outcomes; report uncertainty and safety; involve local agricultural experts."),
         ("What would you improve with six months?", "First obtain licensed data and independent evaluations; then improve uncertainty/abstention, complete translation, conduct accessibility/usability studies, verify deployment/API operations, and publish reproducible results."),
         ("What are the ethical risks?", "Misleading confidence, inequitable performance, privacy exposure, poor translation of safety advice, and users treating suggestions as guarantees. Mitigate with evidence labels, human oversight, consent, security and careful evaluation."),
-        ("What cannot you prove?", "Field accuracy, yield or income improvement, disease performance, national suitability, model calibration, live market integration success, complete multilingual coverage, and scientific novelty."),
+        ("What cannot you prove?", "Field accuracy, yield or income improvement, national suitability, model calibration, live market integration success, complete multilingual coverage, and scientific novelty."),
     ],
     "Live demonstration and rapid revision": [
         ("How would you demonstrate registration?", "Use a test account; show validation and successful login without exposing real user data. Relevant routes are register/login in app.py; a common failure is stale local DB state."),
         ("How would you demonstrate crop recommendation?", "Use plausible test inputs, submit the form, show the suggested class and caveat, then point to the model artifact and documented split limitation."),
-        ("How would you demonstrate disease screening?", "Use an allowed test image and an active lifecycle crop; show validation and the unverified suggestion behavior. If the optional checkpoint cannot load, report that truthfully."),
+        ("How would you demonstrate Problem Report?", "Record symptoms and optionally attach a private reference photo; explain that the workflow stores the information but does not provide a confirmed diagnosis."),
         ("How would you demonstrate lifecycle?", "Create/select a crop cycle and show estimated stages and activity state; clarify that these are configured date estimates, not sensor-observed phenology."),
         ("How would you demonstrate language support?", "Select Marathi/Hindi and show a tested page and shared navigation. State that the entire app is not certified as fully localized."),
         ("How would you demonstrate weather?", "Show the displayed coordinate/context, timestamp/cache state and provider data. Do not call it a local sensor."),
         ("How would you demonstrate market data?", "Show cached/provider freshness and failure state if available. Do not promise a live result; current usable integration is unverified."),
-        ("What is a one-minute explanation?", "AgriWise AI is a web-based agricultural decision-support prototype. It stores farm context, gives a crop-classification suggestion from seven soil/climate inputs, tracks a crop cycle and activities, and shows rule-based and provider-derived context. It also includes a separate image-screening feature. The software workflows are tested, but model generalization, disease accuracy and farm benefit still need independent field validation."),
-        ("What mistakes should you avoid in viva?", "Do not call an unverified suggestion a diagnosis, quote benchmark accuracy as field accuracy, imply a live API worked without evidence, claim every module uses ML, or say all screens are translated."),
+        ("What is a one-minute explanation?", "AgriWise AI is a web-based agricultural decision-support prototype. It stores farm context, gives a crop-classification suggestion from seven soil/climate inputs, tracks a crop cycle and activities, and shows rule-based and provider-derived context. The software workflows are tested, but model generalization and farm benefit still need independent validation."),
+        ("What mistakes should you avoid in viva?", "Do not quote benchmark accuracy as field accuracy, imply a live API worked without evidence, claim every module uses ML, or say all screens are translated."),
         ("What should you verify before demo day?", "Use a disposable test account/database, confirm model assets and dependencies, check network-dependent pages, prepare a fallback screenshot/workflow diagram, avoid secret display, and rehearse the limitation statements."),
     ],
 }
@@ -903,20 +879,13 @@ def make_viva_questions():
         "Machine-learning fundamentals": [
             ("What is stratification?", "Preserving approximate class proportions across a split or fold, useful for classification."),
             ("What is a confidence interval?", "A statistical interval procedure quantifying uncertainty in an estimate under assumptions. The market page's heuristic band is not such an interval."),
-            ("What is calibration?", "Agreement between predicted probabilities and empirical frequencies. It has not been established for the disease model."),
+            ("What is calibration?", "Agreement between predicted probabilities and empirical frequencies, assessed with representative independent data."),
             ("What is an OOD sample?", "An input outside the distribution/classes the model was trained to handle. A closed-set classifier may still assign it a known class."),
         ],
         "Crop recommendation model": [
             ("How many classes are in the crop dataset?", "Twenty-two, with 100 rows each in the audited CSV."),
             ("Why use macro-F1 for selection?", "It gives equal weight to each class's F1, avoiding large classes dominating the selection metric. The file is balanced, but the choice still defines selection."),
             ("What does random_state=42 do?", "It makes the pseudo-random split reproducible under the same data/code/library behavior; it does not eliminate sampling bias."),
-            ("What is the dataset overlap with the disease model crops?", "Only four normalized crop identities overlap in the audit: apple, maize/corn, grape/grapes and orange."),
-        ],
-        "Disease detection and computer vision": [
-            ("What is a tensor?", "A multi-dimensional numeric array. Image models typically receive a batch × channels × height × width tensor."),
-            ("What is a false negative in disease screening?", "A diseased sample predicted as non-diseased or another class; it may delay follow-up. No current disease sensitivity estimate is available."),
-            ("What is a false positive?", "A healthy or other-condition sample predicted as a disease; it can cause unnecessary concern or action."),
-            ("Why separate disease reporting from model screening?", "Farmer symptoms and reference notes are not equivalent to an image model output. Separation avoids implying that a report was machine-diagnosed."),
         ],
         "Other decision-support logic": [
             ("What is conflict resolution in rules?", "A strategy to choose among simultaneously matched rules, often based on priorities. The configured priority scheme requires agricultural validation."),
@@ -950,7 +919,6 @@ def make_viva_questions():
             ("What is your evaluation endpoint?", "For software, routes/services and regression behavior. For agronomic efficacy, a prespecified independent field outcome is still needed."),
         ],
         "Live demonstration and rapid revision": [
-            ("What if the disease model is unavailable during the demo?", "Show the explicit unavailable/error state and explain the optional dependency/checkpoint requirement. Do not fabricate a result."),
             ("What if the selected language misses a string?", "The lookup falls back to English; note that a key absent in all resources can display its key, which is why catalog auditing matters."),
             ("What is the difference between a recommendation and a prediction?", "A prediction is a model output for a target label; a recommendation implies decision relevance. The UI should not imply that the label is a validated agronomic action."),
         ],
@@ -991,8 +959,6 @@ def build_research_dossier(diagrams: dict[str, Path]) -> Path:
             add_table(doc, ["Item", "Verified evidence", "Limitation"], [
                 ["Recommendation data", "2,200 rows; 22 labels; 7 predictors; 100 rows/class", "Provider, license, geography, period and units unresolved"],
                 ["Duplicate copy", "recommendationData.csv has identical SHA-256", "Not an independent sample"],
-                ["Disease model", "38 output classes; 14 crop identities; MobileNetV3 Small artifact", "Training lineage and independent evaluation unknown"],
-                ["Crop-name overlap", "4 normalized identities across tasks", "No verified all-14 recommendation set"],
             ])
             add_caption(doc, "Table 2", "Dataset inventory based on repository evidence.")
         if title == "Methodology":
@@ -1008,7 +974,6 @@ def build_research_dossier(diagrams: dict[str, Path]) -> Path:
     doc.add_heading("Evidence register and academic completion checklist", level=1)
     add_table(doc, ["Claim area", "Evidence state", "What would strengthen it"], [
         ["Crop classifier benchmark", "Artifact-reported; selection split caveat", "Sealed geographic/time holdout; repeated reproduction"],
-        ["Disease classifier", "Checkpoint integrated; performance unknown", "Labeled independent field set, calibration, subgroup analysis"],
         ["Weather", "Adapter and mocked tests; historical single live observation", "Current controlled integration checks and freshness logging"],
         ["Market", "Adapter configured; live usable data unverified", "Verified key/resource response, complete series and forecast evaluation"],
         ["Localization", "Infrastructure and selected-screen tests", "Complete per-template/dynamic audit and native reviewer acceptance"],
@@ -1039,7 +1004,7 @@ def build_manual(diagrams: dict[str, Path]) -> Path:
                 ["Agronomic observations", "soil_records, weather_records", "Each record references a farm."],
                 ["Crop planning", "crop_recommendations, crop_cycles, crop_stages", "Cycles belong to farms; stages belong to cycles."],
                 ["Operations", "advisories, notifications, farm_activities", "Activities may reference farm, cycle and advisory."],
-                ["Disease", "disease_reports, disease_predictions", "Predictions reference a report; reports can reference farm/cycle."],
+                ["Problem reports", "disease_reports", "Farmer-entered problem reports can reference farm/cycle."],
                 ["Finance", "farm_expenses, sales", "Records may reference farm/cycle; expenses may link activity."],
                 ["Market and resources", "market_prices, market_forecasts, mandis, resources, resource_prices", "Resource prices reference resources; market entities have no declared FK in current DDL."],
                 ["Decision outputs", "fertilizer_recommendations, what_if_runs, risk_snapshots, recommendation_feedback", "Farm/user scope follows declared DDL; see db.py for exact columns."],
@@ -1049,8 +1014,6 @@ def build_manual(diagrams: dict[str, Path]) -> Path:
             add_figure(doc, diagrams["crop"], "Figure 4", "Crop recommendation inference path.")
             add_figure(doc, diagrams["training"], "Figure 5", "Training and candidate selection path.")
             add_metric_tables(doc)
-        if title == "Disease image screening":
-            add_figure(doc, diagrams["disease"], "Figure 6", "Disease-screening path and its evidence boundary.")
         if title == "Multilingual support":
             add_figure(doc, diagrams["i18n"], "Figure 7", "Language selection and resource fallback.")
         if title == "Testing and verification record":
@@ -1064,7 +1027,6 @@ def build_manual(diagrams: dict[str, Path]) -> Path:
         if title == "Deployment and troubleshooting":
             add_table(doc, ["Symptom", "Likely cause", "Diagnostic / action"], [
                 ["Crop prediction unavailable", "Artifact missing, invalid inputs or import/runtime issue", "Check artifact path and server logs; verify all seven finite numeric fields."],
-                ["Disease screen unavailable", "Optional dependency/checkpoint not loadable", "Check package/artifact presence; state unavailable rather than guessing."],
                 ["Weather stale/unavailable", "Provider timeout, connectivity, coordinates", "Check farm coordinates and freshness label; do not relabel stale data as live."],
                 ["No market prices", "Key/resource/provider response unverified or no usable records", "Check sanitized diagnostic privately; never expose key or fabricate rows."],
                 ["Language partly English", "Missing key or hard-coded/dynamic content", "Check locale key lookup and template; English fallback is expected for missing keys."],
@@ -1075,7 +1037,6 @@ def build_manual(diagrams: dict[str, Path]) -> Path:
     add_table(doc, ["Feature", "Status", "Evidence / boundary"], [
         ["Registration/login", "Implemented; route/security tests", "Source and tests; not a full security audit"],
         ["Crop recommendation", "Implemented; artifact benchmark", "Split selection caveat; no field validity"],
-        ["Disease image screen", "Integrated; performance unknown", "38-class checkpoint; no independent evaluation"],
         ["Lifecycle and activities", "Implemented; tests cover core behavior", "Stage timings are configured estimates"],
         ["Weather", "Implemented adapter; mocked tests", "Historical single live response only"],
         ["Market prices", "Adapter implemented; live data unverified", "At most 10 records/query"],
@@ -1121,11 +1082,11 @@ def build_ieee(diagrams: dict[str, Path]) -> Path:
     authors.add_run("[Author Name], [Department], [Institution], [City, Country]\n[Email / ORCID — fill in]").font.size = Pt(9)
     doc.add_heading("Abstract", level=2)
     doc.add_paragraph(
-        "This paper describes AgriWise AI, a Flask-based agricultural decision-support prototype integrating farm records, crop classification, lifecycle tracking, deterministic rules, weather context and optional plant-image screening. The crop classifier uses seven numeric features from a 2,200-row, 22-class CSV. The checked-in metrics artifact reports a Random Forest held-out accuracy and macro-F1 of 0.9955 under a stratified 80/20 split. Because the held-out score is used to select the winning candidate and dataset provenance is unresolved, this result is a development benchmark rather than independent or field accuracy. A MobileNetV3 Small disease-screening checkpoint with 38 outputs is integrated, but its training lineage, calibration and independent performance are unknown. Automated software tests recorded 183 passes, one environment warning and zero failures; these tests do not establish agronomic efficacy. The work demonstrates a connected software prototype and identifies the independent data, safety and user studies required before field claims."
+        "This paper describes AgriWise AI, a Flask-based agricultural decision-support prototype integrating farm records, crop classification, lifecycle tracking, deterministic rules, weather context and symptom reporting. The crop classifier uses seven numeric features from a 2,200-row, 22-class CSV. The checked-in metrics artifact reports a Random Forest held-out accuracy and macro-F1 of 0.9955 under a stratified 80/20 split. Because the held-out score is used to select the winning candidate and dataset provenance is unresolved, this result is a development benchmark rather than independent or field accuracy. Automated software tests recorded 164 passes, one environment warning and zero failures; these tests do not establish agronomic efficacy. The work demonstrates a connected software prototype and identifies the independent data and user studies required before field claims."
     )
     p = doc.add_paragraph()
     p.add_run("Index Terms—").bold = True
-    p.add_run("agricultural decision support, crop classification, plant disease screening, lifecycle management, model evaluation, multilingual interface.")
+    p.add_run("agricultural decision support, crop classification, lifecycle management, model evaluation, multilingual interface.")
     sec2 = doc.add_section(WD_SECTION.CONTINUOUS)
     sec2.page_width, sec2.page_height = Inches(8.27), Inches(11.69)
     sec2.top_margin, sec2.bottom_margin = Inches(0.62), Inches(0.62)
@@ -1163,7 +1124,7 @@ def build_viva() -> Path:
     doc.add_heading("How to use this guide", level=1)
     add_paragraphs(doc, [
         "Answers are intentionally honest and concise enough to speak aloud. For implementation-specific claims, cite the repository artifact or test and state the evidence limit. If asked about missing evidence, say so directly and propose the experiment needed.",
-        "Do not claim that the crop benchmark is field accuracy, that a disease class is a confirmed diagnosis, that live market data was successfully fetched, or that every page is fully translated."
+        "Do not claim that the crop benchmark is field accuracy, that live market data was successfully fetched, or that every page is fully translated."
     ])
     total = 0
     for group, items in make_viva_questions():
@@ -1200,24 +1161,20 @@ def build_viva() -> Path:
         ("Crop inputs?", "N, P, K, temperature, humidity, pH and rainfall."),
         ("Recorded best accuracy?", "0.9955 held-out artifact metric; not field accuracy."),
         ("Selection caveat?", "The held-out score selects the winner."),
-        ("Disease architecture?", "MobileNetV3 Small, 38 output classes."),
-        ("Disease accuracy?", "Unknown/unmeasured from current evidence."),
-        ("Disease score?", "Raw uncalibrated softmax score."),
         ("Weather provider?", "Open-Meteo forecast API."),
         ("Market provider?", "data.gov.in/Agmarknet adapter; live usable records unverified."),
         ("Expert system?", "Deterministic IF/THEN rules."),
         ("Lifecycle timing?", "Configured estimates, not sensor-observed stages."),
         ("Language codes?", "en, mr, hi."),
         ("Language fallback?", "English."),
-        ("Test result?", "Recorded 183 passed, 1 warning, 0 failures."),
+        ("Test result?", "Recorded 164 passed, 1 warning, 0 failures."),
         ("Field trial?", "Not established."),
         ("Training data provenance?", "Unresolved in repository evidence."),
         ("Recommendation-data duplicate?", "recommendationData.csv is byte-identical in the audited checkout."),
-        ("Dataset overlap?", "Four normalized crop identities with disease labels."),
         ("CSRF control?", "Per-session token for state-changing requests."),
         ("Password storage?", "Werkzeug password hashing helpers."),
         ("Upload maximum?", "5 MiB; also a 24-million-pixel ceiling."),
-        ("Report vs screening?", "Separate workflows; report is not a diagnosis."),
+        ("Problem report?", "Stores farmer-entered symptoms and optional private reference photos."),
         ("Render storage?", "Persistent disk configured in blueprint; not proof of deployment."),
         ("Offline?", "Not fully; provider features depend on network."),
         ("Farmer outcome evidence?", "None established."),
@@ -1231,12 +1188,12 @@ def build_viva() -> Path:
         p.add_run(atext)
     doc.add_heading("One-minute project explanation", level=1)
     doc.add_paragraph(
-        "AgriWise AI is a web-based agricultural decision-support prototype. It stores farm context, provides a crop-classification suggestion from seven soil and climate inputs, tracks crop cycles and activities, and presents rule-based and provider-derived context. It also includes a separate plant-image screening workflow. The application is built with Flask, Jinja and SQLite. The crop model's recorded benchmark is high, but its dataset provenance is unresolved and the held-out data selected the model. Disease accuracy and field benefit are unmeasured. So the project demonstrates connected software workflows, while independent agronomic validation remains future work."
+        "AgriWise AI is a web-based agricultural decision-support prototype. It stores farm context, provides a crop-classification suggestion from seven soil and climate inputs, tracks crop cycles and activities, and presents rule-based and provider-derived context. The application is built with Flask, Jinja and SQLite. The crop model's recorded benchmark is high, but its dataset provenance is unresolved and the held-out data selected the model. Field benefit is unmeasured. The project demonstrates connected software workflows, while independent agronomic validation remains future work."
     )
     doc.add_heading("Three-minute project explanation and five-minute presentation outline", level=1)
     add_paragraphs(doc, [
-        "Three-minute version: introduce the coordination problem; show the actual architecture; explain the crop model's seven inputs and evidence caveat; distinguish rules, weather and market data from ML; demonstrate lifecycle and records; show disease screening as an unverified suggestion separate from symptom reports; finish with the test record and external-validation priorities.",
-        "Five-minute outline: 0:00–0:35 problem and objectives; 0:35–1:15 system architecture; 1:15–2:00 crop recommendation and dataset; 2:00–2:40 lifecycle/rules/weather; 2:40–3:20 disease-screen safety boundary; 3:20–4:00 multilingual interface and data persistence; 4:00–4:35 tests and measured metrics; 4:35–5:00 limitations and next experiments."
+        "Three-minute version: introduce the coordination problem; show the actual architecture; explain the crop model's seven inputs and evidence caveat; distinguish rules, weather and market data from ML; demonstrate Problem Report, lifecycle and records; finish with the test record and external-validation priorities.",
+        "Five-minute outline: 0:00–0:35 problem and objectives; 0:35–1:15 system architecture; 1:15–2:00 crop recommendation and dataset; 2:00–2:40 lifecycle/rules/weather; 2:40–3:20 Problem Report and privacy boundaries; 3:20–4:00 multilingual interface and data persistence; 4:00–4:35 tests and measured metrics; 4:35–5:00 limitations and next experiments."
     ])
     doc.add_heading("Demonstration checklist", level=1)
     add_table(doc, ["Workflow", "Demonstrate", "Dependency / common failure", "Follow-up answer"], [
@@ -1244,7 +1201,7 @@ def build_viva() -> Path:
         ["Farm setup", "Save farm context and location", "Geocoding/network may fail", "Coordinate text fallback can be used; provider success varies."],
         ["Crop recommendation", "Submit seven finite numeric inputs", "Model artifact / input validation", "Metric is a development benchmark, not field accuracy."],
         ["Lifecycle/activity", "Create cycle; view stages; mark an activity", "Configured profiles and database state", "Dates are estimates; completion is user confirmed."],
-        ["Disease screen", "Upload valid image and show crop matching", "Optional checkpoint/dependencies", "Suggestion is unverified; score is uncalibrated."],
+        ["Problem Report", "Record symptoms and optionally attach a reference photo", "Keep reference photos private", "The workflow records symptoms; it does not provide a diagnosis."],
         ["Language", "Switch to Marathi/Hindi on a tested page", "Missing strings fall back to English", "Not all pages/dynamic content are fully translated."],
         ["Weather", "Show forecast and freshness context", "Internet/API timeout", "Model forecast, not sensor observation."],
         ["Market", "Show returned/cached/unavailable state", "API key/provider response", "Live usable data is unverified; no fabricated prices."],
@@ -1257,7 +1214,7 @@ def build_viva() -> Path:
         "Prepare a backup demonstration path for network-dependent weather/market screens.",
         "Never display API keys, .env contents, real farmer records or personal photos.",
         "Explain the 0.9955 crop metric with its dataset provenance and test-selection caveats.",
-        "Say disease accuracy and field benefit are unmeasured; do not improvise a metric.",
+        "Do not present the crop-model benchmark as field performance.",
         "Clearly distinguish ML, deterministic rules, external data and user-entered records.",
         "State incomplete translation coverage and the English fallback.",
         "Answer unknowns with the experiment or documentation needed to resolve them.",
@@ -1290,7 +1247,7 @@ def write_readme(paths: list[Path], viva_count: int) -> None:
         "- Replace only the clearly marked student, institution, supervisor, email/ORCID and term placeholders.\n"
         "- Update the Word table-of-contents field in Microsoft Word before submission.\n"
         "- The IEEE-style manuscript is a conference-layout draft, not an official venue template or publication guarantee.\n"
-        "- Metrics and test outcomes are reported with their evidence date and limitations. No field study, disease accuracy, live market success, or complete app-wide localization is claimed.\n"
+        "- Metrics and test outcomes are reported with their evidence date and limitations. No field study, live market success, or complete app-wide localization is claimed.\n"
         "- Inspect all pages in Word/LibreOffice and adapt the final format to institutional and venue requirements.\n",
         encoding="utf-8",
     )

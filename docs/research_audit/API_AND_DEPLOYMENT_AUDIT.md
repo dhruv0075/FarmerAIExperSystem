@@ -28,8 +28,7 @@ POSTs are subject to the app's CSRF check when enabled.
 - farm setup/reverse geocoding uses Nominatim first and BigDataCloud fallback.
 - `/market` reads the official-data adapter cache; `/market/refresh` invokes a
   bounded explicit request.
-- disease image screening is local inference and independent from the
-  separately stored symptom-report route.
+- Problem Report stores farmer symptoms and optional private reference photos.
 
 ## External integrations
 
@@ -60,7 +59,7 @@ security assessment.
 | CSRF | Per-session random token, `secrets.compare_digest`, hidden template fields/header support; POST check enabled unless testing or explicitly overridden. | [`load_global_context`](../../app.py#L336), `CSRF_ENABLED` config. Tests cover rejection of a bad token. |
 | Headers | `nosniff`, `DENY`, strict-origin referrer policy, restricted Permissions Policy, CSP directives for `base-uri`, `object-src`, `frame-ancestors`. | `set_security_headers` at [`app.py`](../../app.py#L324). This is not a comprehensive restrictive script/style CSP. |
 | SQL | Inspected authentication and core data queries use SQLite parameter binding. | Route/service source; not a proof that every SQL statement is injection-free. |
-| Upload validation | JPEG/PNG/WebP allowlist; MIME and decoded image format checks; 5 MiB image limit; 24M-pixel dimension ceiling; `secure_filename` plus UUID prefix for saved reports. | [`disease_detection_page`](../../app.py#L1118), [`report_problem_page`](../../app.py#L1212). |
+| Upload validation | JPEG/PNG/WebP allowlist; MIME and decoded image format checks; 5 MiB image limit; `secure_filename` plus UUID prefix for privately saved report photos. | [`report_problem_page`](../../app.py). |
 | Upload access | Report images are retrieved through an authenticated route with report ownership lookup; direct static upload path is blocked. | `/disease-image/<report_id>` and `load_global_context`; review route before production changes. |
 | Error disclosure | Unexpected JSON API errors are logged server-side and replaced with generic response text in the inspected location/weather/recommendation handlers. | [`app.py`](../../app.py#L1860); regression checks in `test_security.py`. |
 | Secrets | Environment variables are read for secret/API key. `.env` is ignored; `.env.example` is a blank placeholder per existing docs. | `config.py`, `render.yaml`, `.gitignore`. Secret values were not opened or included in the audit. |
@@ -72,7 +71,7 @@ review, production configuration check or full access-control proof was run.
 ## Data and privacy considerations
 
 The local app persists personal account/farm information and farmer-submitted
-crop records in SQLite. Optional disease report photos are kept under the
+crop records in SQLite. Optional reference photos are kept under the
 configured private upload directory and are served through an authorized
 route. Provider requests may transmit user farm coordinates to external
 weather/geocoding services. The code and docs should be accompanied by an

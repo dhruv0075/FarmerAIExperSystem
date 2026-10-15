@@ -18,9 +18,6 @@ The repository can support a careful technical description of:
   candidates and a balanced 2,200-row/22-class local dataset;
 - a stored crop-model benchmark result, clearly labeled as a development
   holdout whose score was used to select the winner;
-- code-level disease screening with an existing MobileNetV3 Small checkpoint,
-  while explicitly disclosing that training/evaluation provenance and
-  performance are unknown;
 - deterministic rules/calculations for lifecycle, activities, risk and
   explainable advisory generation; and
 - software tests executed in a stated environment.
@@ -38,7 +35,7 @@ and not geographic or temporal. Report the figure only as a **local
 development benchmark**, not as test-set evidence from a fully independent
 evaluation and not as field accuracy.
 
-The current software-suite result (183 passed, one Windows joblib core-count
+The current software-suite result (164 passed, one Windows joblib core-count
 warning) is engineering verification. It is not a model-performance result.
 
 ## Claims that are not supported
@@ -47,9 +44,7 @@ Do not state or imply:
 
 1. The crop classifier is accurate on farms, across India, or in a specified
    geography/season.
-2. The disease classifier has known accuracy, detects all relevant diseases,
-   is calibrated, or rejects unfamiliar images reliably.
-3. The market adapter currently supplies complete/live nationwide data or
+2. The market adapter currently supplies complete/live nationwide data or
    that its forecast is predictively accurate.
 4. The software improves yield, income, input efficiency, sustainability,
    decision quality, or farmer welfare.
@@ -73,11 +68,6 @@ Do not state or imply:
   population; document exclusion, duplicates and class support.
 - Report per-class metrics and uncertainty, calibration and failure analysis;
   compare simple baselines and justify feature/label semantics.
-- For disease screening, recover checkpoint lineage or train/reproduce from
-  a documented dataset with image-level deduplication and separate
-  train/calibration/held-out/real-world data. Measure the crop match policy,
-  calibration and robustness to non-PlantVillage imagery. Do not use sample
-  predictions as an accuracy proxy.
 - For market forecasts, use verified, sufficiently long time series, prevent
   temporal leakage, compare naïve/seasonal baselines and report errors across
   commodities and markets. Establish data feed reliability separately from

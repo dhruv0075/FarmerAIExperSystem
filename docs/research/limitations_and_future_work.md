@@ -45,25 +45,21 @@ blocker. None is softened.
 
 ## Feature limitations
 
-15. **Disease image screening is uncalibrated.** The supplied 38-class
-    PlantVillage checkpoint is integrated, but no labeled calibration,
-    independent held-out, or real-world evaluation manifest exists here.
-    The top class is shown only as an unverified suggestion; no disease-accuracy
-    score or diagnostic probability should be claimed.
-16. **No notification delivery mechanism.** Notifications are stored and shown
+15. **No notification delivery mechanism.** Notifications are stored and shown
     in-app only. No email, SMS or push delivery exists, and none is claimed.
-17. **Reminders are in-app only** for the same reason.
-18. **Profit estimates are withheld** where yield or cost references are
+16. **Reminders are in-app only** for the same reason.
+17. **Profit estimates are withheld** where yield or cost references are
     unverified. Recorded expenses and sales are exact; projections are labelled
     as estimates and never as guarantees.
-19. **SQLite on ephemeral storage.** Under serverless deployment the database
+18. **SQLite on ephemeral storage.** Under serverless deployment the database
     lives on a per-instance temporary filesystem and does not persist.
-20. **No multilingual support.**
-21. **No independent PDF export pipeline.**
+19. **Multilingual coverage is partial.** Some screens and dynamic content
+    remain untranslated.
+20. **No independent PDF export pipeline.**
 
 ## Testing limitations
 
-22. **Browser automation in this run.** Playwright 1.47.0 was installed into
+21. **Browser automation in this run.** Playwright 1.47.0 was installed into
     `.venv` and `scripts/browser_check.py` was executed successfully with exit
     code 0 (see `docs/research/experimental_results.md` E5). Its first execution
     failed because the script was stale — it referenced a `no_soil_test`
@@ -71,13 +67,13 @@ blocker. None is softened.
     run passed. One CDN request for the Bootstrap JS bundle returned
     `net::ERR_ABORTED`; this produced no JavaScript error and no HTTP error, and
     is reported rather than omitted.
-23. **No coverage measurement.** `coverage.py` is not installed in the
+22. **No coverage measurement.** `coverage.py` is not installed in the
     environment. Statement and branch coverage were not measured.
-24. **CSRF is disabled by default under `TESTING`.** CSRF enforcement is tested
+23. **CSRF is disabled by default under `TESTING`.** CSRF enforcement is tested
     explicitly by enabling `CSRF_ENABLED` in `tests/test_security.py`, which
     matches the production default where `CSRF_ENABLED` resolves to
     `not testing`.
-25. **Market integration tested with fixtures only**, never live records.
+24. **Market integration tested with fixtures only**, never live records.
 
 ## Future work, in priority order
 
@@ -86,17 +82,14 @@ blocker. None is softened.
 2. Expand the literature review to a documented systematic search.
 3. Establish live official market access and record real parsed records.
 4. Add `coverage.py` and measure coverage on the critical modules.
-5. Integrate a legitimate, evaluated disease dataset and model, or keep manual
-   reporting and say so.
-6. Conduct a farmer user study. This is the only way to evaluate usability or
+5. Conduct a farmer user study. This is the only way to evaluate usability or
    outcome claims, and it has never been done.
-7. Move to a persistent database if hosted deployment is intended.
+6. Move to a persistent database if hosted deployment is intended.
 
 ## What must never be claimed about this system
 
 - That it will increase a farmer's yield or income.
 - That a model confidence score is the probability of profit.
-- That any image has been diagnosed by AI.
 - That a reminder was delivered by email, SMS or push.
 - That market prices shown are live, unless a successful fetch is recorded in
   the same session.

@@ -1,9 +1,8 @@
 # Feature Audit v2
 
 Date: 2026-10-03. This is a historical snapshot, not a current UI or test
-verification. Later changes include the homepage visual redesign and a
-MobileNetV3 Small disease-screening checkpoint; the latest repository
-documentation audit is in `docs/research_audit/`. Classification below
+verification. Later changes include the homepage visual redesign; the latest
+repository documentation audit is in `docs/research_audit/`. Classification below
 records the implementation and checks known on the date above, not intended
 functionality. Navigation visibility is recorded separately from route
 availability.
@@ -30,10 +29,9 @@ availability.
 | Seven-day plan `/seven-day-plan` | PARTIAL | Route renders and has generated weather/action plan; all market/day scenarios not independently verified. | Retain as a compact outlook, not a chart-heavy dashboard. |
 | Activities `/activities` | WORKING | Browser created pending item, completed with note, reloaded, and left another pending; tests cover skipped, rescheduled and overdue. | Preserve and surface confirmation state consistently. |
 | Advisories `/advisories`, `/advisories/generate` | PARTIAL | Rules and saved activity integration exist; all rule combinations and agronomic thresholds are not field-validated. | Keep advice transparent and avoid definitive agronomic claims. |
-| Disease detection `/disease-detection` | PARTIAL | Separate upload-and-screen page runs the 38-class PlantVillage model; top class is an unverified suggestion, images are not saved, and full dataset browsing links to Hugging Face. | Keep suggestions non-diagnostic; obtain independent labeled calibration and held-out datasets before treating class results as reliable. |
-| Problem report `/report-problem` | WORKING | Saves farmer symptoms and optional private reference photos without model inference. | Keep symptom reporting separate from image screening. |
+| Problem report `/report-problem` | WORKING | Saves farmer symptoms and optional private reference photos. | Preserve private-photo ownership checks and symptom-record workflow. |
 | Private report image `/disease-image/<id>` | WORKING | Owner check and private storage; unauthorized/missing-ID tests pass. | Preserve. |
-| Report result `/disease-result/<id>` | PARTIAL | Displays symptoms, private reference image, and safe field checks; it does not display disease-model output. | Preserve separation; direct image screening to `/disease-detection`. |
+| Problem report result `/disease-result/<id>` | PARTIAL | Displays symptoms, private reference image, and conservative inspection guidance. | Preserve symptom report and private reference-photo access. |
 | Market `/market`, `/market/refresh` | BLOCKED_EXTERNAL / PARTIAL | The UI and cache states are tested. Historical diagnostic notes conflict on whether the provider connection reached TLS; neither establishes usable live price records. | Keep optional with graceful unavailable state; never fabricate prices. See `docs/api_integrations.md`. |
 | History `/history` | PARTIAL | Recommendations, cycles and advisories are scoped to current farmer; cross-user page test passes. Complete activity/report timestamp coverage is not exhaustive. | Retain; present concise chronological history. |
 | Settings `/settings` | WORKING | Profile update and password-change flow exist; disabled translation selector was removed. | Retain; strengthen hierarchy and retain security copy. |
@@ -57,7 +55,6 @@ availability.
 | What-if `/what-if` | HIDDEN / PARTIAL | Non-mutating agronomic scenarios exist; economic simulation is incomplete. | Keep out of core navigation. |
 | Expenses `/expenses`, `/add-expense`, `/add-sale` | HIDDEN / ACTIVITY-LINKED | Costs are recorded from completed activities; the legacy `/add-expense` POST redirects to Activities without writing. Sales remain separately recordable. | Use activity completion for expenses; keep totals/history available outside main nav. |
 | Farm report `/report` | HIDDEN / PARTIAL | Existing printable report route; full report types/export pipeline not complete. | Keep route; do not promise export formats not present. |
-| Disease AI | INTEGRATED / UNVALIDATED | A 38-class MobileNetV3 Small checkpoint and inference route are present. The UI may show a non-diagnostic closest-class suggestion only for a matching crop; checkpoint training lineage and independent evaluation are not established. | Preserve explicit uncertainty. Do not claim diagnostic accuracy or field reliability. |
 | Price forecasting | PLACEHOLDER / BLOCKED_EXTERNAL | No verified sufficient historical price observations. | No fabricated forecast or confidence. |
 | Error/404/500 pages | WORKING | Friendly templates; black-box invalid URL and simulated model failure are covered. | Preserve; ensure never display tracebacks. |
 
@@ -75,5 +72,5 @@ availability.
 
 - Core ML/weather/activity/report flows are WORKING at the boundaries tested.
 - Home, dashboard, lifecycle and shared UI are PARTIAL primarily because of presentation and limited interaction coverage; this phase targets those without altering route contracts.
-- Market access remains unverified; older diagnostics disagree on the failure stage and no usable live price records were established. Disease inference code and a checkpoint are present, but its output is an unverified suggestion and disease performance is unmeasured. Unsupported price/profit estimates remain unavailable.
+- Market access remains unverified; older diagnostics disagree on the failure stage and no usable live price records were established. Unsupported price/profit estimates remain unavailable.
 - Specialist pages remain accessible as legacy routes but are HIDDEN from primary navigation.

@@ -12,7 +12,6 @@ mean scientifically validated in the field.
 | Crop classifier uses seven soil/climate features and predicts one of 22 classes. | Dataset schema and [`crop_ml_service.py`](../../services/crop_ml_service.py); model card; `ml/model_metrics.json`. | **Verified in repository.** |
 | Crop held-out accuracy and macro F1 are 0.9955 for Random Forest. | Checked-in metrics JSON and training code. | **Reported benchmark**, not reproduced in this audit; selected using the same held-out split; dataset provenance unresolved. State all qualifications. |
 | Crop dataset is a representative national agricultural dataset. | No collection source, geography, license or dates established. | **Unsupported. Do not claim.** |
-| Disease model achieves a particular accuracy or detects field diseases reliably. | Checkpoint and 38 labels exist; no calibration/independent evaluation manifest or training lineage found. | **Unmeasured. Do not claim.** Model output is an unverified closed-set suggestion. |
 | Weather forecasts are measured on the farm. | Open-Meteo forecast fields and docs. No sensor data path established. | **False for current source.** Describe as modeled provider weather, not sensor observation. |
 | Market prices are live, complete, nationwide or operationally validated. | data.gov.in adapter limits fetch to 10 records; prior diagnostic timed out at HTTP-response stage after DNS/TCP/TLS. | **Unverified.** Distinguish configured code from verified provider records. |
 | Market forecast accuracy is known. | Regression computes MAE/RMSE only when a single market/variety has at least 20 distinct daily rows; no live history-backed result established. | **Not established.** Do not publish a forecast-quality claim. |
@@ -75,8 +74,6 @@ classifies the evidence:
 
 - **Researchable threat to validity:** no geographic/temporal holdout for the
   local crop classifier and unresolved dataset provenance.
-- **Direct product gap:** disease checkpoint training provenance and
-  independent evaluation not established.
 - **Operational evidence gap:** no current successful official market-data
   record sample established.
 - **Review limitation:** two papers cannot support claims about prevalence

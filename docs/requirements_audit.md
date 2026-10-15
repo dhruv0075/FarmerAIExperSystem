@@ -15,7 +15,6 @@ This is an existing-project repair, not a replacement architecture. COMPLETE bel
 | 43?45 | PARTIAL | Comparison and actual financial calculations work. Profit estimates disabled where yield/cost references are unverified. Economic what-if/comparison incomplete. |
 | 46?54 | PARTIAL | Selection requires separate lifecycle confirmation; activity create/complete/skip/reschedule/overdue and isolation tested. Advisory task duplicates prevented. Detailed urgency/evidence and all lifecycle boundaries not fully verified. |
 | 55?59 | PARTIAL | Daily/seven-day plans and recent-action suppression; no automatic day-3/day-6 irrigation. Nutrient unknown state implemented. Fertilizer knowledge needs reference validation before real-world application. |
-| 60?64 | PARTIAL | A supplied 38-class PlantVillage checkpoint and evaluation utility are integrated. Image reports remain explicitly uncertain because no labeled calibration/held-out dataset is supplied; no accuracy claim is made. |
 | 65 | PARTIAL | Heuristic risk dimensions and unknown states; index not scientifically validated. |
 | 66?70 | PARTIAL | Leaflet/community directory and submission persistence; generated vendor catalog excluded. Stock/prices unknown. No trusted real-time vendor inventory integration. |
 | 71?73 | BLOCKED BY EXTERNAL DATA/API | Price adapter exists; market coordinates/history absent. Transport-aware net opportunity cannot be calculated honestly without these inputs. Sell planner UI remains partial. |

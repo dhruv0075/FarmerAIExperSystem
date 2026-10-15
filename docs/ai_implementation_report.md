@@ -5,9 +5,9 @@
 
 ## Executive summary
 
-AgriWise AI is a decision-support web application. Its primary trained machine-learning feature is supervised crop classification: it predicts one of 22 crop labels from seven soil and climate measurements. A separate 38-class PlantVillage image model runs from the standalone Disease Detection page and displays its top class only as an unverified suggestion pending calibration and independent evaluation. Problem Report separately saves farmer-entered symptoms and reference photos without running image inference. Crop lifecycle guidance, nutrient checks, weather advisories, risk scores, and explanations are implemented mostly as explicit rules and calculations. A separate linear-regression price-trend forecast is attempted only when enough official market history is available.
+AgriWise AI is a decision-support web application. Its primary trained machine-learning feature is supervised crop classification: it predicts one of 22 crop labels from seven soil and climate measurements. Problem Report records farmer-entered symptoms and optional private reference photos. Crop lifecycle guidance, nutrient checks, weather advisories, risk scores, and explanations are implemented mostly as explicit rules and calculations. A separate linear-regression price-trend forecast is attempted only when enough official market history is available.
 
-The project does **not** contain a crop-yield model, an LLM/chatbot, or a process that automatically retrains classifiers from farmers' activity or harvest outcomes. Disease screening is not a confirmed diagnosis; the visible class is an unverified model suggestion, and its raw score is not accuracy or a calibrated probability.
+The project does **not** contain a crop-yield model, an LLM/chatbot, or a process that automatically retrains classifiers from farmers' activity or harvest outcomes.
 
 The model metrics describe performance on the supplied local dataset. The dataset's original provider, collection location/date, and license are not established in the repository, so these scores do not establish field accuracy or nationwide suitability.
 
@@ -21,7 +21,7 @@ The model metrics describe performance on the supplied local dataset. The datase
 | Crop and nutrient suitability | [`services/suitability_service.py`](../services/suitability_service.py), [`services/fertilizer_service.py`](../services/fertilizer_service.py) | Uses locally configured crop ranges, thresholds, weighted arithmetic scores, and fixed fertilizer reference data. These are rules/heuristics, not a model trained from examples. | Used by crop decision, fertilizer, activity, lifecycle, and profit-related service paths. |
 | Lifecycle and activity planning | [`services/lifecycle_service.py`](../services/lifecycle_service.py), [`services/activity_service.py`](../services/activity_service.py) | Uses crop-stage tables, configured durations, dates, and templates for suggested activities. | Lifecycle and activity routes in [`app.py`](../app.py). |
 | Market price forecast | [`services/market_forecast_service.py`](../services/market_forecast_service.py) | Fits a one-variable linear regression to time versus official modal-price observations, evaluates a chronological holdout, and bounds the projection. It refuses to forecast without at least 20 observations. | Market and sell-planner routes in [`app.py`](../app.py), subject to available official-data history. |
-| Disease image screening | [`services/disease_service.py`](../services/disease_service.py), [`agriwise_disease_model/disease_predictor.py`](../agriwise_disease_model/disease_predictor.py) | Loads the supplied MobileNetV3 Small 38-class PlantVillage checkpoint. Because no calibration or independent labeled evaluation is supplied, the top class appears only as an unverified suggestion and the raw model score is not treated as probability or accuracy. | `/disease-detection` validates and screens an image transiently without saving it or creating a report. The separate `/report-problem` flow stores symptoms/reference photos without model inference. |
+| Problem report | [`services/disease_service.py`](../services/disease_service.py) | Rule-based, non-diagnostic guidance from farmer-entered symptoms and context. Optional uploaded photos are private reference material. | `/report-problem` stores symptoms and an optional private reference photo. |
 | Weather context | [`services/weather_service.py`](../services/weather_service.py) | Fetches modeled current weather and forecasts from Open-Meteo, with a short-lived cache; it is not a farm sensor feed. | Weather and farm-plan routes; current weather/forecast can be passed to deterministic advice. |
 
 ### Important implementation distinction
@@ -122,9 +122,9 @@ The range is explicitly uncalibrated and is not a statistical confidence interva
 
 The lifecycle page and activity-list page lazily create configured activities for the current crop stage. Generation is idempotent for a crop cycle, stage, and activity title; it does not mark suggested work complete. A farmer must separately update an activity's status for it to count as completed history.
 
-### Disease and image reports
+### Problem reports and crop recommendations
 
-The app validates and privately stores supported image uploads and symptom details. If optional Torch/TorchVision dependencies and model artifacts are available, `analyze_crop_issue` runs the supplied 38-class checkpoint. The active predictor deliberately returns an uncertain result without disease labels or confidence until a calibrated policy is supported by independent data. No labeled disease calibration, held-out, or real-world evaluation manifest is supplied, so no disease-accuracy score can be reported. See [`disease_detection.md`](disease_detection.md) for the evaluator workflow and limitations.
+Problem Report records farmer-entered symptoms and may save a private reference photo. Crop recommendation continues to use the original `data/Crop_recommendation.csv` dataset through the crop-model training and inference services. Its benchmark and dataset-provenance limitations remain as documented in the crop model card.
 
 ## Reproduction and verification
 

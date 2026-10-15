@@ -99,37 +99,7 @@ model, metrics and confusion-matrix artifacts. See
   not encode all locally relevant constraints.
 - No inference on nationwide performance is justified.
 
-## 2. Disease image classification
-
-### What is present
-
-- Checkpoint: [`agriwise_disease_model/best_model.pth`](../../agriwise_disease_model/best_model.pth).
-- Class mapping: [`class_names.json`](../../agriwise_disease_model/class_names.json), 38 unique PlantVillage-style class labels.
-- Inference implementation: [`disease_predictor.py`](../../agriwise_disease_model/disease_predictor.py) constructs MobileNetV3 Small with a 38-output classifier, loads weights with `weights_only=True`, converts to RGB, resizes to 224×224, applies ImageNet mean/std normalization, and returns the closed-set top class and raw softmax score.
-- App service: [`screen_crop_image`](../../services/disease_service.py#L162) returns only a suggestion if the checkpoint's top class crop matches the selected/lifecycle crop. A mismatch or unsupported crop does not display a disease suggestion.
-- Routes: `/disease-detection` is a transient image-screening page; `/report-problem` persists symptom details and an optional private reference image separately. The latter is not a diagnostic inference route.
-
-### Dataset/evaluation status
-
-The project documentation identifies PlantVillage's external `color`
-configuration as a 54,306-image dataset; the full image collection is **not
-bundled**. The 38-class mapping is not the full image dataset.
-
-**Unknown:** exact training image IDs, training/validation/test partitions,
-deduplication protocol, training code/configuration, checkpoint provenance,
-and original training metrics. The repository does not contain a labeled
-calibration, independent held-out or real-world evaluation manifest.
-Disease accuracy, precision, recall, calibration, field robustness and
-out-of-distribution detection are **unmeasured**. Existing inference tests
-establish that code can exercise a configured model; they do not measure
-classification validity.
-
-The predictor is closed-set and has no validated OOD detector. The raw
-softmax output is uncalibrated. The UI correctly describes a closest-class
-suggestion, not diagnosis or accuracy. A model class mapping does not prove
-the checkpoint's training provenance.
-
-## 3. Conditional market-price regression
+## 2. Conditional market-price regression
 
 [`forecast_commodity_price`](../../services/market_forecast_service.py#L13)
 uses the official market adapter's parsed records, not the generated
@@ -177,9 +147,7 @@ retraining from farmers' activities, reports, expenses or sales.
 | SQLite farmer records | Farms, soil inputs, cycles, activities, expenses/sales, reports and more. | User-entered/operational state, not classifier training data. |
 | Open-Meteo | Modeled current conditions and forecast. | Weather context, not on-farm sensor measurements or supervised labels. |
 | `data.gov.in` / Agmarknet | External government price records. | Configured adapter; requests 10 records at a time; requires API key; a prior check timed out at HTTP response stage after DNS/TCP/TLS. Usable records remain unverified. |
-| PlantVillage | External 54,306-image `color` collection as documented. | Dataset not bundled; checkpoint training partition/provenance unverified. |
 | `ml/crop_model.pkl`, `ml/model_metrics.json`, `ml/confusion_matrix.png` | Derived crop classifier/evaluation artifacts. | Inference and evaluation outputs, not raw data. |
-| `agriwise_disease_model/best_model.pth`, `class_names.json` | Disease model weights and label order. | Inference artifact; training/evaluation evidence incomplete. |
 
 No automated pipeline was found that folds farmer records into the
 classification training datasets.
@@ -191,12 +159,9 @@ classification training datasets.
    for final evaluation.
 2. Reserve an untouched test set before model selection; report per-class
    metrics, confidence intervals where justified, calibration and errors.
-3. For disease screening, recover checkpoint training lineage or retrain
-   from separately documented train/calibration/held-out/real-world datasets;
-   test crop-mismatch and OOD policy independently.
-4. Evaluate price forecasts only after verified, sufficiently long and
+3. Evaluate price forecasts only after verified, sufficiently long and
    timestamped official-market series exist; compare with simple baselines
    and report a true temporal protocol.
-5. Validate rules and configured agronomic values with qualified local
+4. Validate rules and configured agronomic values with qualified local
    experts; distinguish expert-reviewed content from developer-authored
    heuristics.
