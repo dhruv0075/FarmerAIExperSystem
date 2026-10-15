@@ -25,7 +25,7 @@ This is an existing-project repair, not a replacement architecture. COMPLETE bel
 | 78 | MISSING | Feedback table exists but complete feedback submission/research workflow not implemented. |
 | 79?87 | PARTIAL | Rule facts/traces, ML analytics and transparency pages. Disease/market metrics correctly unavailable. Agronomic source validation remains incomplete. |
 | 88?90 | PARTIAL | Existing responsive UI preserved; Edge desktop/mobile smoke checks. Full multilingual infrastructure and complete interaction audit missing. |
-| 91?97 | PARTIAL | 24 domain tables, foreign keys/indexes; additive legacy migration with backup; secure random secret, CSRF, private image authorization, image validation. Exhaustive malformed-input coverage remains incomplete. |
+| 91?97 | PARTIAL | 23 domain tables in current `db.py`, foreign keys/indexes; additive legacy migration with backup; secure random secret, CSRF, private image authorization, image validation. Exhaustive malformed-input coverage remains incomplete. |
 | 98?105 | PARTIAL | Unified printable report and documentation; separate report types/PDF pipeline and field research evaluation incomplete. |
 | 106?125 | PARTIAL | Existing and additional regression tests plus headless Edge smoke test. Not all listed acceptance cases have tests. |
 | 126 | PARTIAL | Registration/manual farm setup through dashboard browser-tested; crop/activity/finance/problem flows tested with Flask client. Full 61-step manual journey not completed, particularly market/image-model steps. |

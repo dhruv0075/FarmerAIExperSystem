@@ -1,9 +1,11 @@
 # Experimental results
 
 Only results produced by an actual execution in this repository are recorded.
-Commands are given so any reader can reproduce them. Nothing is inferred.
+Commands are given so any reader can reproduce them. Results below are
+historical unless identified otherwise; the newest full-suite result is E7.
+Nothing is inferred.
 
-## E1 — Full automated test suite
+## E1 — Full automated test suite (historical)
 
 Command:
 
@@ -25,7 +27,7 @@ Baseline before this work session: **134 passed**. The delta is the 11 new
 tests in `tests/test_security.py`. No pre-existing test was modified, weakened
 or removed.
 
-## E2 — Security regression suite (new)
+## E2 — Security regression suite (historical targeted run)
 
 Command:
 
@@ -57,7 +59,7 @@ Selection criterion: held-out macro F1. Selected: Random Forest.
 unresolved provenance with no geographic or temporal holdout. They are not
 field accuracy and must not be reported as such.
 
-## E4 — Live weather adapter (incidental observation)
+## E4 — Live weather adapter (historical incidental observation, 2026-09-30)
 
 During a debugging step, `GET /api/weather` for a farm at 18.5, 73.8 returned
 HTTP 200 with a parsed Open-Meteo payload, `data_source` =
@@ -68,7 +70,7 @@ This is a single incidental observation, not a controlled test, and it is
 recorded as such. It does not establish reliability under timeout or outage;
 those paths are covered by unit tests with mocks.
 
-## E5 — Browser automation (headless Microsoft Edge via Playwright)
+## E5 — Browser automation (historical, headless Microsoft Edge via Playwright)
 
 Command:
 
@@ -77,8 +79,12 @@ Command:
 ```
 
 Environment: Playwright 1.47.0 installed into `.venv`; Microsoft Edge present on
-this machine. The script runs against a **disposable** SQLite database in a
-temporary directory on port 5056 and never touches `database.db`.
+this machine. The script creates its explicit test app against a temporary
+SQLite database on port 5056. However, it imports `app` before creating that
+app, and the module-level `app = create_app()` invokes initialization against
+the configured default database. The claim that this browser script never
+touches `database.db` is not established. This historical run predates the
+latest homepage redesign and does not verify the current home page.
 
 Result: **exit code 0**, i.e. the script's own assertions all held.
 
@@ -136,10 +142,33 @@ defect — the application was already correct and already covered by
 | Class-pooling ablation (agricultural vs horticultural separately) | PENDING | Requires per-crop yield labels not present |
 | Live market API success | BLOCKED | No successful HTTP response has ever been observed |
 | Price forecast error | PENDING | Requires 20+ verified historical observations |
-| Disease classification | BLOCKED | No dataset or model exists |
+| Disease classification performance | NOT MEASURED | A checkpoint and 38-class mapping exist; training lineage and independent labeled evaluation data are not established |
 | Farmer user study | NOT STARTED | Requires participants and ethics approval |
 | Browser automation run | **DONE** | Executed successfully; see E5 |
 | Coverage measurement | BLOCKED | `coverage.py` not installed |
 
 No accuracy figure, significance test, comparison or field result has been
 invented to fill any row above.
+
+## E7 — Full automated test suite (current audit run, 2026-10-15)
+
+Command:
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest -q --no-header -p no:cacheprovider
+```
+
+Result: **183 passed, 1 warning, 0 failed** in 117.80 seconds. The warning is
+joblib's Windows physical-core discovery warning; it falls back to logical
+cores. This is a software-suite result, not a live API test, model-accuracy
+evaluation, or browser verification.
+
+Side-effect qualification: `test_ml.py` passes model/metrics output paths
+under `tmp_path`, and no training command was run. But importing `app.py`
+creates a module-level Flask app and calls `db_init` for the configured
+database. During this run the configured path resolved to repository
+`database.db`. Its contents were not inspected; no pre-run metadata was
+captured, so whether its schema/data changed cannot be determined. The
+original blanket assertion that the full test run never touched this database
+is withdrawn. See [TESTING_AUDIT.md](../research_audit/TESTING_AUDIT.md) for
+details.

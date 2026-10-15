@@ -88,9 +88,14 @@ Decision Tree, trained on individual and combined datasets.
 
 **Metrics.** Standard classification performance on held-out data.
 
-**Reported findings.** The authors strongly recommend evaluating individual
-datasets separately per crop category rather than pooling agricultural and
-horticultural data.
+**Reported findings.** The accessible PubMed Central abstract states that
+XGBoost demonstrated the highest level of accuracy among the five evaluated
+models. It reports precision rates of 99.09% for agricultural crops, 99.3%
+for horticultural crops and 98.51% for the combined dataset, with AUC values
+of 1.0, 1.0 and 0.99, respectively. The authors strongly suggest evaluating
+the individual datasets separately by crop category rather than combining
+agricultural and horticultural datasets. These are author-reported abstract
+results, not metrics reproduced in this project.
 
 **Author-stated limitations.** The dataset is a Kaggle repository dataset; the
 authors do not establish its collection geography, sampling protocol or field
@@ -118,7 +123,7 @@ controlled comparison: different dataset, different split, different code.
 |---|---|---|---|
 | Task | Crop classification + XAI | Crop classification, pooled vs separate | Crop classification, 22 pooled classes |
 | Features | N, P, K + environment | NPK, pH, temperature, rainfall, humidity | N, P, K, temperature, humidity, pH, rainfall |
-| Best model | Gradient Boosting | Not established as a single winner in this review | Random Forest |
+| Best model | Gradient Boosting | XGBoost (per accessible abstract) | Random Forest |
 | Reported accuracy | 0.9927 | Not reproduced here | 0.9955 held-out |
 | Explainability | Yes, XAI layer | Not reported | Feature-contribution narrative + rule trace |
 | Weather integration | Static features | Static features | Live forecast + advisory rules |

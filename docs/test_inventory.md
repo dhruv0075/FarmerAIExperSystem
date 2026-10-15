@@ -1,25 +1,32 @@
 # Test inventory
 
-Every row records an actual executed suite or script, not an intention. "Not
-run" is stated explicitly where applicable.
+This file contains historical suite/browser records and the latest full test
+run recorded by the 2026-10-15 repository audit. Results are tied to their
+dates/commands; do not interpret an older run as current.
 
 ## Execution environment
 
 Python 3.12.4, Flask 3.0.3, scikit-learn 1.5.1, pandas 2.2.2, numpy 2.0.2,
-pytest 8.3.2. Platform: Windows, PowerShell. All tests use disposable SQLite
-databases under `tmp_path`; the farmer database `database.db` is never touched
-by any test.
+pytest 8.3.2. Platform: Windows, PowerShell. Many test-created application
+instances use disposable SQLite databases under `tmp_path`. However,
+importing `app.py` constructs its module-level Flask app and invokes
+`create_app()`, which initializes the configured default database. In the
+2026-10-15 audit environment that path was the repository's `database.db`.
+The audit did not inspect its contents; whether initialization/migrations
+changed existing data or schema cannot be established. Do not claim that the
+full suite never accesses the configured database.
 
 ## 1. Consolidated result
 
 | Suite | Command | Result |
 |---|---|---|
-| Full automated suite | `.venv\Scripts\python.exe -m pytest -q --no-header -p no:cacheprovider` | **145 passed, 1 warning, 0 failed** in 80.67s |
-| Security suite (new) | `.venv\Scripts\python.exe -m pytest tests/test_security.py -q --no-header -p no:cacheprovider` | **11 passed** in ~15s |
-| Browser automation | `.venv\Scripts\python.exe scripts\browser_check.py` | See "Browser automation" below |
+| Full automated suite (historical, 2026-10-14) | `.venv\Scripts\python.exe -m pytest -q --no-header -p no:cacheprovider` | **145 passed, 1 warning, 0 failed** in 80.67s |
+| Security suite (historical targeted run) | `.venv\Scripts\python.exe -m pytest tests/test_security.py -q --no-header -p no:cacheprovider` | **11 passed** in ~15s |
+| Browser automation (historical) | `.venv\Scripts\python.exe scripts\browser_check.py` | See "Browser automation" below; does not verify current homepage. |
+| Full automated suite (latest, 2026-10-15) | `.\.venv\Scripts\python.exe -m pytest -q --no-header -p no:cacheprovider` | **183 passed, 1 warning, 0 failed** in 117.80s. See side-effect disclosure above and [current audit](research_audit/TESTING_AUDIT.md). |
 
-Baseline before this work session: 134 passed. Delta: +11 security tests. No
-existing test was modified, weakened or deleted.
+The historical baseline/delta above describes the earlier repair session,
+not the 2026-10-15 run.
 
 The single warning is environmental (joblib cannot count physical cores on this
 Windows host) and is not an application defect.
@@ -28,7 +35,7 @@ Windows host) and is not an application defect.
 
 | File | Category | Purpose | Status |
 |---|---|---|---|
-| `tests/test_security.py` | Security, white-box, regression | Error disclosure, cross-user isolation, session invalidation, forged tokens, CSRF, traceback leakage | **11 passed (new)** |
+| `tests/test_security.py` | Security, white-box, regression | Error disclosure, cross-user isolation, session invalidation, forged tokens, CSRF, traceback leakage | **11 passed in historical targeted run; included in latest full suite** |
 | `tests/test_black_box.py` | Black-box, boundary, equivalence partition | Registration partitions, negative inputs, workflow state changes, upload validation, weather failure paths | Passed (pre-existing) |
 | `tests/test_reliability_repairs.py` | White-box, service-level | `validate_crop_inputs` boundaries, JSON API error contracts, market history scoping, expense validation, activity idempotency | Passed (pre-existing) |
 | `tests/test_integrity.py` | Data integrity, integration | Real HTML finance field names, invalid image rejection, resource submission persistence, CSRF | Passed (pre-existing) |
@@ -68,10 +75,10 @@ Windows host) and is not an application defect.
 | Accessibility automated audit | NOT RUN | No axe/Lighthouse integration present; accessibility changes are manual and reviewed by inspection only |
 | Performance benchmarks | NOT RUN | No load-testing tool present. No latency numbers are claimed anywhere in this repository |
 | Market live integration | BLOCKED | No successful live HTTP response has ever been observed |
-| Disease classification | BLOCKED | No dataset or model exists |
+| Disease classification performance | NOT MEASURED | A 38-class inference checkpoint is present, but training lineage and independent labeled evaluation data are not established. |
 | Farmer user study | NOT STARTED | Requires participants and ethics approval |
 
-## 5. Browser automation
+## 5. Browser automation (historical evidence)
 
 `scripts/browser_check.py` drives headless Microsoft Edge via Playwright against
 a disposable SQLite database on port 5056. It registers a synthetic account,
@@ -80,17 +87,22 @@ report problem, password change and session behaviour, then measures responsive
 layout at 1366 px, 768 px and 390 px. It records JavaScript errors, failed
 requests and HTTP errors into `artifacts/browser_results.json`.
 
-The script never touches the farmer database.
+The script creates its explicit test app against a temporary database.
+However, it imports `app` before that app factory call, and the module-level
+`app = create_app()` invokes initialization against the configured default
+database. Therefore the old claim that the script never touches the farmer
+database is not established; the current audit did not rerun the browser
+script. Isolate the configured data path before importing `app` before any
+future run.
 
-The actual result of the run performed in this work session is recorded in
-`CLINE_PROGRESS.md` and in `docs/research/experimental_results.md`. Earlier
-browser evidence in `docs/current_baseline.md` predates this session's changes
-and is not current evidence for the present working tree.
+The earlier browser run is recorded in `docs/research/experimental_results.md`.
+It predates the latest homepage redesign and is not current evidence for the
+present working tree.
 
 ## 6. Determinism notes
 
-- All tests use `tmp_path` SQLite databases, so no test depends on or mutates
-  `database.db`.
+- Most test-created app instances use `tmp_path` SQLite databases; module
+  import-time initialization can still use the configured default path.
 - External services are mocked with `monkeypatch`; no automated test calls
   Open-Meteo, Nominatim, BigDataCloud or data.gov.in.
 - One incidental live Open-Meteo call was observed during a manual debugging

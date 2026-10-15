@@ -4,9 +4,6 @@
 {% block content %}
 <div class="product-home-page">
 <section class="product-hero" aria-labelledby="hero-title">
-  <img class="product-hero__image" src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=2200&q=85" alt="Rows of cultivated farmland beneath a clear morning sky" fetchpriority="high">
-  <div class="product-hero__wash" aria-hidden="true"></div>
-  <div class="product-hero__scene" data-farm-scene="field" data-scene-state="loading" aria-hidden="true"><canvas></canvas></div>
   <div class="product-hero__content">
     <p class="product-eyebrow"><span></span> {{ t('home.eyebrow') }}</p>
     <h1 id="hero-title">{{ t('home.hero_title') }}</h1>
@@ -20,13 +17,22 @@
         <a class="product-button product-button--outline" href="{{ url_for('login') }}">{{ t('home.login') }}</a>
       {% endif %}
     </div>
-    <div class="product-hero__proof" aria-label="Product principles">
-      <span><i class="fa-solid fa-seedling" aria-hidden="true"></i> {{ t('home.crop_choices') }}</span>
-      <span><i class="fa-solid fa-cloud-sun" aria-hidden="true"></i> {{ t('home.local_weather') }}</span>
-      <span><i class="fa-solid fa-check-double" aria-hidden="true"></i> {{ t('home.confirmed_actions') }}</span>
+    <ul class="product-hero__proof" aria-label="{{ t('home.capabilities_title') }}">
+      <li><i class="fa-solid fa-seedling" aria-hidden="true"></i> {{ t('home.crop_choices') }}</li>
+      <li><i class="fa-solid fa-cloud-sun" aria-hidden="true"></i> {{ t('home.local_weather') }}</li>
+      <li><i class="fa-solid fa-check-double" aria-hidden="true"></i> {{ t('home.confirmed_actions') }}</li>
+    </ul>
+  </div>
+  <div class="product-hero__visual" role="img" aria-label="{{ t('home.field_context') }}. {{ t('home.weather_aware_planning') }}. {{ t('home.farmer_in_control') }}">
+    <div class="product-hero__visual-sun"></div>
+    <div class="product-hero__visual-hills"></div>
+    <div class="product-hero__visual-field"></div>
+    <div class="product-hero__visual-card">
+      <span class="product-hero__visual-label"><i class="fa-solid fa-location-dot" aria-hidden="true"></i> {{ t('home.field_context') }}</span>
+      <span class="product-hero__visual-title">{{ t('home.weather_aware_planning') }}</span>
+      <span class="product-hero__visual-note">{{ t('home.farmer_in_control') }}</span>
     </div>
   </div>
-  <div class="product-hero__caption"><span>{{ t('home.field_context') }}</span><span>{{ t('home.weather_aware_planning') }}</span><span>{{ t('home.farmer_in_control') }}</span></div>
 </section>
 
 <section class="product-section product-workflow" aria-labelledby="workflow-title">

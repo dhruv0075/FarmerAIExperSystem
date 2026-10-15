@@ -30,14 +30,14 @@
     <a class="skip-link" href="#main-content">{{ t('common.skip_to_main') }}</a>
     <div class="site-atmosphere" data-farm-scene="ambient" data-scene-state="loading" aria-hidden="true"><canvas></canvas></div>
     <!-- Top Navigation Bar -->
-    <header class="app-navbar">
+    <header class="app-navbar{% if not session.get('user_id') %} app-navbar--guest{% endif %}">
       <div class="app-navbar__brand d-flex align-items-center">
         {% if session.get('user_id') %}
           <button class="btn btn-sm btn-outline-secondary d-lg-none me-2" id="sidebarToggle" type="button">
             <i class="fa-solid fa-bars"></i>
           </button>
         {% endif %}
-        <a class="text-decoration-none d-flex align-items-center" href="{{ url_for('index') }}">
+        <a class="text-decoration-none d-flex align-items-center" href="{{ url_for('index') }}" aria-label="AgriWise AI">
           <div class="brand-badge"><i class="fa-solid fa-seedling"></i></div>
           <div>
             <span class="fs-5 fw-bold text-dark font-sans tracking-tight">AgriWise<span class="text-success">AI</span></span>

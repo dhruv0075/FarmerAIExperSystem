@@ -1,12 +1,18 @@
 # Feature Audit v2
 
-Date: 2026-10-03. Classification reflects current implementation and executed baseline checks, not intended functionality. Navigation visibility is recorded separately from route availability.
+Date: 2026-10-03. This is a historical snapshot, not a current UI or test
+verification. Later changes include the homepage visual redesign and a
+MobileNetV3 Small disease-screening checkpoint; the latest repository
+documentation audit is in `docs/research_audit/`. Classification below
+records the implementation and checks known on the date above, not intended
+functionality. Navigation visibility is recorded separately from route
+availability.
 
 ## Farmer and public product
 
 | Feature / route | Classification | User-visible status and evidence | Product action |
 |---|---|---|---|
-| Home `/` | PARTIAL | Loads; conveys decision-support scope, but current image-led Bootstrap layout lacks a distinctive product hierarchy and has no interactive visualization. | Redesign as focused product hero; retain clear CTA and honest workflow. |
+| Home `/` | UPDATED AFTER THIS AUDIT | The 2026-10-03 assessment described the prior image-led layout. A later uncommitted change replaced the homepage hero with a light field illustration and workflow cards; current browser verification was not repeated for this audit. | See the latest research-audit note; do not treat the old visual recommendation as current. |
 | About `/about` | PARTIAL | Static project overview; overlaps Research / AI Details. | Keep route for context; remove duplicate prominence from primary navigation. |
 | Registration `/register` | WORKING | Email normalization, generic duplicate/invalid response, password rules/hash, CSRF; black-box cases pass. | Preserve behavior; polish form presentation. |
 | Login `/login` | WORKING | Generic failure message; permanent session; account-bound session token. | Preserve security and improve visual continuity. |
@@ -28,7 +34,7 @@ Date: 2026-10-03. Classification reflects current implementation and executed ba
 | Problem report `/report-problem` | WORKING | Saves farmer symptoms and optional private reference photos without model inference. | Keep symptom reporting separate from image screening. |
 | Private report image `/disease-image/<id>` | WORKING | Owner check and private storage; unauthorized/missing-ID tests pass. | Preserve. |
 | Report result `/disease-result/<id>` | PARTIAL | Displays symptoms, private reference image, and safe field checks; it does not display disease-model output. | Preserve separation; direct image screening to `/disease-detection`. |
-| Market `/market`, `/market/refresh` | BLOCKED_EXTERNAL / PARTIAL | UI remains available and cache states are tested; live provider DNS succeeds but TCP connection is refused before HTTP/auth. No live price verified. | Keep optional with graceful unavailable state; never fabricate prices. |
+| Market `/market`, `/market/refresh` | BLOCKED_EXTERNAL / PARTIAL | The UI and cache states are tested. Historical diagnostic notes conflict on whether the provider connection reached TLS; neither establishes usable live price records. | Keep optional with graceful unavailable state; never fabricate prices. See `docs/api_integrations.md`. |
 | History `/history` | PARTIAL | Recommendations, cycles and advisories are scoped to current farmer; cross-user page test passes. Complete activity/report timestamp coverage is not exhaustive. | Retain; present concise chronological history. |
 | Settings `/settings` | WORKING | Profile update and password-change flow exist; disabled translation selector was removed. | Retain; strengthen hierarchy and retain security copy. |
 | Notifications `/notifications` | PARTIAL | Read/mark-all routes and topbar link work; event-generation coverage is incomplete. | Keep access, avoid claiming comprehensive notifications. |
@@ -51,7 +57,7 @@ Date: 2026-10-03. Classification reflects current implementation and executed ba
 | What-if `/what-if` | HIDDEN / PARTIAL | Non-mutating agronomic scenarios exist; economic simulation is incomplete. | Keep out of core navigation. |
 | Expenses `/expenses`, `/add-expense`, `/add-sale` | HIDDEN / ACTIVITY-LINKED | Costs are recorded from completed activities; the legacy `/add-expense` POST redirects to Activities without writing. Sales remain separately recordable. | Use activity completion for expenses; keep totals/history available outside main nav. |
 | Farm report `/report` | HIDDEN / PARTIAL | Existing printable report route; full report types/export pipeline not complete. | Keep route; do not promise export formats not present. |
-| Disease AI | PLACEHOLDER / intentionally unavailable | No validated image model is installed; no active diagnosis claim should be shown. | Do not expose as AI diagnosis. |
+| Disease AI | INTEGRATED / UNVALIDATED | A 38-class MobileNetV3 Small checkpoint and inference route are present. The UI may show a non-diagnostic closest-class suggestion only for a matching crop; checkpoint training lineage and independent evaluation are not established. | Preserve explicit uncertainty. Do not claim diagnostic accuracy or field reliability. |
 | Price forecasting | PLACEHOLDER / BLOCKED_EXTERNAL | No verified sufficient historical price observations. | No fabricated forecast or confidence. |
 | Error/404/500 pages | WORKING | Friendly templates; black-box invalid URL and simulated model failure are covered. | Preserve; ensure never display tracebacks. |
 
@@ -61,7 +67,7 @@ Date: 2026-10-03. Classification reflects current implementation and executed ba
 |---|---|---|---|
 | Shared visual system | PARTIAL | CSS variables and responsive shell exist, but pages still inherit Bootstrap components and inconsistent density. | Extend existing CSS tokens/components; do not replace Flask/Jinja architecture. |
 | Navigation | WORKING / PARTIAL | Core sidebar and clickable destinations pass browser check; active-state and information hierarchy can be improved. | Preserve routes, improve selection and mobile behavior. |
-| Authentication/security | WORKING | 116-test baseline includes auth, CSRF, cookie, ownership, stale-session and upload checks. | Do not weaken; rerun after UI changes. |
+| Authentication/security | WORKING (historical test snapshot) | The 116-test baseline was recorded for this 2026-10-03 audit and is not the current suite count. | Do not weaken; use current test inventory for later verification. |
 | Vercel writable paths | WORKING with limitation | Production import and repository-write guard pass; storage is per-instance `/tmp`. | Preserve path contract; document ephemeral persistence. |
 | External assets | PARTIAL | Fonts, Bootstrap, icons and map libraries use CDNs; final baseline browser had no failed resources. | Keep optional 3D lazy-loaded with static fallback; test failure path. |
 
@@ -69,5 +75,5 @@ Date: 2026-10-03. Classification reflects current implementation and executed ba
 
 - Core ML/weather/activity/report flows are WORKING at the boundaries tested.
 - Home, dashboard, lifecycle and shared UI are PARTIAL primarily because of presentation and limited interaction coverage; this phase targets those without altering route contracts.
-- Market access is BLOCKED_EXTERNAL in this environment. Disease inference and unsupported price/profit estimates remain intentionally unavailable.
+- Market access remains unverified; older diagnostics disagree on the failure stage and no usable live price records were established. Disease inference code and a checkpoint are present, but its output is an unverified suggestion and disease performance is unmeasured. Unsupported price/profit estimates remain unavailable.
 - Specialist pages remain accessible as legacy routes but are HIDDEN from primary navigation.

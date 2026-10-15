@@ -1,4 +1,10 @@
-# Engineering handover ? 2026-09-30
+# Historical engineering handover — 2026-09-30
+
+This is a dated snapshot, not the current status report. Some integration and
+test details below have since changed or conflict with other historical
+diagnostics. For current source-grounded status, see
+[`docs/research_audit/`](research_audit/README.md), especially its API,
+model/data and testing audits.
 
 AgriWise was repaired in place and is running locally. It is **not fully compliant with the original master specification**. See requirements_audit.md for COMPLETE/PARTIAL/MISSING/BLOCKED classifications; initially broken items are listed there. No farmer rows were reset or deleted. This report distinguishes runtime verification from unimplemented research ambitions.
 
@@ -6,8 +12,8 @@ AgriWise was repaired in place and is running locally. It is **not fully complia
 2. **Pages:** about, activities, advisories, compare_crops, crop_lifecycle, crop_recommendation, daily_plan, dashboard, data_transparency, disease_result, expenses, expert_system, farm_profile, farm_report, farm_setup, fertilizer, history, index, login, market, ml_analytics, notifications, profit_planner, recommendation_result, register, report_problem, research, resources, risk_analysis, sell_planner, settings, seven_day_plan, weather, what_if.
 3. **Implemented features:** authentication, farm setup/profile, crop ML, suitability/comparison, lifecycle, weather, rule reasoning, confirmed activities, symptom reports, community resources, actual finances, agronomic what-if, reports and transparency. Module completeness varies in the acceptance audit.
 4. **Actions tested:** registration, login/logout, setup redirect/manual save, crop prediction/selection, lifecycle creation, activity completion/skip/harvest/reschedule, expense/sale submission with actual HTML field names, resource submission, problem reporting, invalid-image rejection, CSRF rejection/acceptance, protected page reads. Every visible button has NOT been manually verified.
-5. **Database:** 24 domain tables, preserved SQLite data, foreign keys/indexes and additive legacy weather/advisory migration; schema documented in database_schema.md. Backup: artifacts/database_before_schema_repair.db.
-6. **APIs:** Open-Meteo and Nominatim live verified; data.gov.in minimal standalone request fails at TCP, before authentication. Leaflet uses OpenStreetMap tiles.
+5. **Database:** 23 `CREATE TABLE IF NOT EXISTS` statements in the current `db.py`; the older count of 24 was incorrect. The “preserved SQLite data” statement refers to the original 2026-09-30 handover and is not a current database integrity verification. Schema documented in database_schema.md.
+6. **APIs:** Open-Meteo and Nominatim were reported live verified at the time. Historical data.gov.in diagnostics conflict: one record says TCP failed before TLS, while another says DNS/TCP/TLS completed before the HTTP response timed out. Neither establishes an HTTP response or usable market records; current status remains unverified.
 7. **Dataset:** existing data/Crop_recommendation.csv; original provenance/license unverified.
 8. **Quality:** 2200 rows, 22 classes, 100/class; zero feature nulls, zero exact duplicates. Finite/range validation added. Geography, collection period, feature units and field representativeness unresolved.
 9. **Models trained:** Decision Tree, Random Forest, scaled KNN, Histogram Gradient Boosting.
@@ -17,8 +23,8 @@ AgriWise was repaired in place and is running locally. It is **not fully complia
 13. **Market integration:** supplied key stored only in ignored .env; API-key placement/query/SSL settings verified in standalone script, but key validity cannot be established without an HTTP response. Nonblocking single background refresh, bounded retry/cooldown, atomic official-response cache and fresh/cached/stale/unavailable statuses. Filter wiring tested with fixtures, not live records.
 14. **Price forecasting:** no verified historical observations; unavailable. Existing baseline changed to chronological holdout and minimum 20 observations.
 15. **Price metrics:** unavailable; no claimed forecast score from fabricated history.
-16. **Disease AI:** unavailable. Active flow saves manual symptoms/images and requests expert review; no invented diagnostic probability.
-17. **Disease dataset/metrics:** none verified or installed.
+16. **Disease AI:** the current repository contains a MobileNetV3 Small checkpoint, 38-class mapping and inference code. The standalone Disease Detection page may display an unverified same-crop suggestion. The separate Problem Report flow saves symptoms/reference images and is not that image-screening route. The 2026-09-30 “unavailable” statement is stale.
+17. **Disease dataset/metrics:** a full PlantVillage image dataset is not bundled. Exact checkpoint training data/split and training metrics are not established; no calibration or independent labeled evaluation manifest is present. Disease performance is unmeasured.
 18. **Expert groups:** wind/spraying, rainfall/harvest, irrigation/moisture, recent irrigation/fertilizer, humidity/heat, N/P/K. Facts, triggers and conflict explanations displayed. Agronomic thresholds remain unvalidated heuristics.
 19. **Activities:** persisted pending/completed/skipped; overdue derived; reschedule returns to pending with new date; owner-scoped updates and duplicate advisory-task prevention.
 20. **Action-aware example:** confirmed irrigation within recent interval suppresses repeat irrigation; pending/skipped events do not count as completed. Recent fertilizer suppresses immediate repeat advice.
@@ -28,13 +34,13 @@ AgriWise was repaired in place and is running locally. It is **not fully complia
 24. **Finance:** actual expenses, quantity/unit sales, revenue and net profit repaired/tested. Unsupported benchmark profit estimates disabled. Full crop-cycle accounting and economic simulation remain partial.
 25. **Competition:** DeHaat publicly describes crop/weather/input/market services; Plantix publicly describes photo-based crop health and expert community. Claims about their activity memory/integration remain Not Verified. See competitor_analysis.md.
 26. **Demonstrated differentiators:** persisted confirmed-action history, activity-sensitive rules, explainable facts, shared FarmState and unified daily plan. No superiority or scientific validation claimed.
-27. **Automated result:** final full run python -m pytest -q --tb=short.
-28. **Passed:** 32.
-29. **Failed:** 0 in that run.
+27. **Automated result (historical 2026-09-30 run):** `python -m pytest -q --tb=short`.
+28. **Passed:** 32 in that historical run.
+29. **Failed:** 0 in that historical run. The latest full suite result is 183 passed, 1 warning, 0 failed on 2026-10-15; see `docs/research_audit/TESTING_AUDIT.md`.
 30. **Manual end-to-end:** full 61-step manual scenario incomplete. Browser and Flask-client flows cover subsets; blocked market/disease steps cannot be represented as completed.
 31. **Browser:** headless Microsoft Edge registration/manual setup with CSRF enabled; 11 page checks including weather, daily/seven-day plans, resources, market, expenses, report and ML analytics; last recorded run had zero page JavaScript exceptions. Mobile dashboard screenshot inspected. No claim of exhaustive control/console/network validation.
 32. **Known internal limitations:** economic what-if, feedback workflow, notification event coverage, comprehensive future stage scheduling, multilingual support, independent report exports, exhaustive validation and research comparisons incomplete. Existing legacy services need further consolidation under coverage.
-33. **External limitations:** government TCP refusal/timeout; market coordinate/history coverage; legitimate disease dataset/model; original crop-dataset provenance; traceable crop cost/yield references.
+33. **External limitations:** official market-data availability/history, disease checkpoint evaluation lineage, original crop-dataset provenance, and traceable crop cost/yield references. Historical diagnostics disagree on the network stage for data.gov.in; see item 6 and `docs/api_integrations.md`.
 34. **Install:** python -m pip install -r requirements.txt.
 35. **Train:** python ml/train_model.py.
 36. **Run:** python app.py then http://127.0.0.1:5000. Current running session uses existing database and stable local secret.

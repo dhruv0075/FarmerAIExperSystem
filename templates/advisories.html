@@ -2,7 +2,7 @@
 {% block title %}{{ t('advisories.title') }} — AgriWise AI{% endblock %}
 {% block content %}
 <div class="card shadow-sm border-0 rounded-4 p-4">
-  <h2 class="mb-4">{{ t('advisories.title') }}</h2>
+  <h2 class="page-title mb-4">{{ t('advisories.title') }}</h2>
   {% if advisories %}
     {% for advisory in advisories %}
       <div class="alert alert-{{ 'danger' if advisory.severity == 'URGENT' else 'warning' if advisory.severity == 'WARNING' else 'info' if advisory.severity == 'INFO' else 'secondary' }} mb-3">

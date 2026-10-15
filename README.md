@@ -174,21 +174,24 @@ python -m pytest -q
 python scripts/browser_check.py
 ```
 
-The standalone diagnostic prints stages and exception types without credentials. Browser verification requires Playwright and Microsoft Edge. Government API currently fails at TCP connection, before TLS/authentication. Offline weather, generated market/vendor fixtures, fabricated disease probabilities, and unsupported profit estimates are not used as live evidence.
+The standalone diagnostic prints stages and exception types without credentials. Browser verification requires Playwright and Microsoft Edge. Earlier data.gov.in diagnostics conflict on whether the connection reached TLS; neither established an HTTP response or usable price records. Do not treat either as current status; see [API integration notes](docs/api_integrations.md). Offline weather, generated market/vendor fixtures, fabricated disease probabilities, and unsupported profit estimates are not used as live evidence.
 
 
-## Current status and verification (2026-10-14)
+## Historical status and verification (2026-10-14)
 
-The living task tracker is **[CLINE_PROGRESS.md](CLINE_PROGRESS.md)**. It records
+The earlier task tracker **[CLINE_PROGRESS.md](CLINE_PROGRESS.md)** recorded
 what is IMPLEMENTED, TESTED, VERIFIED and BLOCKED, with the evidence for each.
 
-Latest verified results:
+Results recorded for that earlier snapshot:
 
 - Full automated suite: **145 passed, 0 failed** (`python -m pytest -q`).
 - Security regression suite `tests/test_security.py`: **11 passed**.
 - Browser automation `scripts/browser_check.py`: **exit code 0**, 19 page checks
   HTTP 200, 0 JavaScript errors, 0 HTTP errors, WebGL scene `ready`.
 - Test inventory: [docs/test_inventory.md](docs/test_inventory.md).
+
+These are historical results and do not verify the current homepage redesign.
+The latest full test run is recorded below.
 
 Two information-disclosure defects were fixed in the JSON APIs so internal
 exception text is never returned to the client; both are covered by regression
@@ -215,3 +218,15 @@ No Pune, Maharashtra or India-wide accuracy claim is made or should be inferred.
 The optional 38-class disease-image screener is non-diagnostic until independent
 calibration and held-out evaluation are available. No disease-accuracy claim is
 made. There is no email, SMS or push notification delivery.
+
+## Audit update (2026-10-15)
+
+The full automated test suite was run with
+`.\.venv\Scripts\python.exe -m pytest -q --no-header -p no:cacheprovider`:
+**183 passed, 1 warning, 0 failed** in 117.80 seconds. The warning is joblib's
+Windows physical-core discovery fallback. Importing `app.py` also initializes
+the configured default database; during this run that path resolved to
+`database.db`. Its contents were not inspected and pre-run file metadata was
+not captured, so whether the test run changed existing schema/data is
+unknown. See [the research audit](docs/research_audit/README.md) before
+rerunning tests against the default data directory.
