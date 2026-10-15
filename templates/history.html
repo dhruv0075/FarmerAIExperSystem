@@ -1,10 +1,10 @@
 {% extends 'base.html' %}
-{% block title %}AgriWise AI | History{% endblock %}
+{% block title %}{{ t('history.title') }} — AgriWise AI{% endblock %}
 {% block content %}
 <div class="row g-4">
   <div class="col-lg-6">
     <div class="card shadow-sm border-0 rounded-4 p-4 h-100">
-      <h3 class="mb-3">Crop Recommendations</h3>
+      <h3 class="mb-3">{{ t('history.recommendations') }}</h3>
       {% if recommendations %}
         <div class="list-group">
           {% for item in recommendations %}
@@ -13,20 +13,20 @@
                 <strong>{{ item.recommended_crop }}</strong>
                 <span class="badge bg-success-subtle text-success">{{ item.confidence }}%</span>
               </div>
-              <small>Farmer-selected crop: <strong>{{ item.selected_crop or 'Not selected' }}</strong></small><br>
+              <small>{{ t('history.selected_crop') }}: <strong>{{ item.selected_crop or t('common.not_selected') }}</strong></small><br>
               <small class="text-muted">{{ item.created_at }}</small>
             </div>
           {% endfor %}
         </div>
       {% else %}
-        <p class="text-muted mb-0">No recommendations saved yet.</p>
+        <p class="text-muted mb-0">{{ t('history.no_recommendations') }}</p>
       {% endif %}
     </div>
   </div>
 
   <div class="col-lg-6">
     <div class="card shadow-sm border-0 rounded-4 p-4 h-100">
-      <h3 class="mb-3">Crop Cycles</h3>
+      <h3 class="mb-3">{{ t('history.crop_cycles') }}</h3>
       {% if cycles %}
         <div class="list-group">
           {% for cycle in cycles %}
@@ -40,10 +40,10 @@
           {% endfor %}
         </div>
       {% else %}
-        <p class="text-muted mb-0">No crop cycle created yet.</p>
+        <p class="text-muted mb-0">{{ t('history.no_cycles') }}</p>
       {% endif %}
     </div>
   </div>
 </div>
-<section class="content-section mt-4"><h2 class="h4">Advisory History</h2>{% for item in advisories %}<article class="mb-3"><strong>{{ item.title }}</strong><p>{{ item.message }}</p><small>{{ item.created_at }} ? {{ item.severity }}</small></article>{% else %}<p>No saved advisories.</p>{% endfor %}</section>
+<section class="content-section mt-4"><h2 class="h4">{{ t('history.advisory_history') }}</h2>{% for item in advisories %}<article class="mb-3"><strong>{{ item.title }}</strong><p>{{ item.message }}</p><small>{{ item.created_at }} · {{ item.severity }}</small></article>{% else %}<p>{{ t('history.no_advisories') }}</p>{% endfor %}</section>
 {% endblock %}

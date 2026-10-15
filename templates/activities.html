@@ -3,60 +3,60 @@
 {% block content %}
 <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4">
   <div>
-    <p class="eyebrow mb-1">Closed-loop decision support</p>
-    <h1 class="h2 mb-1">Farm Activities</h1>
-    <p class="text-muted mb-0">Recommendations stay pending until you confirm what happened.</p>
+    <p class="eyebrow mb-1">{{ t('activities.eyebrow') }}</p>
+    <h1 class="h2 mb-1">{{ t('activities.heading') }}</h1>
+    <p class="text-muted mb-0">{{ t('activities.subtitle') }}</p>
   </div>
-  <span class="badge text-bg-light border">{{ farm.farm_name if farm else 'Farm not configured' }}</span>
+  <span class="badge text-bg-light border">{{ farm.farm_name if farm else t('common.farm_not_configured') }}</span>
 </div>
 
 <section class="content-section mb-4" aria-labelledby="activity-filters">
-  <h2 id="activity-filters" class="h5 mb-3">Filter activity log</h2>
+  <h2 id="activity-filters" class="h5 mb-3">{{ t('activities.filter') }}</h2>
   <form class="row g-2 align-items-end" method="get"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-    <div class="col-sm-6 col-lg-2"><label class="form-label" for="status">Status</label><select class="form-select" id="status" name="status"><option value="">All</option>{% for value in ['pending','completed','skipped','overdue'] %}<option value="{{ value }}" {{ 'selected' if filters.get('status') == value else '' }}>{{ value|title }}</option>{% endfor %}</select></div>
-    <div class="col-sm-6 col-lg-2"><label class="form-label" for="type">Activity type</label><select class="form-select" id="type" name="type"><option value="">All</option>{% for value in ['Irrigation','Fertilizer','Field inspection','Harvest','Weather','Disease Risk'] %}<option value="{{ value }}" {{ 'selected' if filters.get('type') == value else '' }}>{{ value }}</option>{% endfor %}</select></div>
-    <div class="col-sm-6 col-lg-2"><label class="form-label" for="crop">Crop</label><input class="form-control" id="crop" name="crop" value="{{ filters.get('crop', '') }}" placeholder="Exact crop name"></div>
-    <div class="col-sm-6 col-lg-2"><label class="form-label" for="from">Recommended from</label><input class="form-control" id="from" name="from" type="date" value="{{ filters.get('from', '') }}"></div>
-    <div class="col-sm-6 col-lg-2"><label class="form-label" for="to">Recommended to</label><input class="form-control" id="to" name="to" type="date" value="{{ filters.get('to', '') }}"></div>
-    <div class="col-sm-6 col-lg-2 d-flex gap-2"><button class="btn btn-success" type="submit">Apply</button><a class="btn btn-outline-secondary" href="{{ url_for('activities_page') }}">Reset</a></div>
+    <div class="col-sm-6 col-lg-2"><label class="form-label" for="status">{{ t('activities.status') }}</label><select class="form-select" id="status" name="status"><option value="">{{ t('activities.all') }}</option>{% for value in ['pending','completed','skipped','overdue'] %}<option value="{{ value }}" {{ 'selected' if filters.get('status') == value else '' }}>{{ t('activities.status_' ~ value) }}</option>{% endfor %}</select></div>
+    <div class="col-sm-6 col-lg-2"><label class="form-label" for="type">{{ t('activities.activity_type') }}</label><select class="form-select" id="type" name="type"><option value="">{{ t('activities.all') }}</option>{% for value in ['Irrigation','Fertilizer','Field inspection','Harvest','Weather','Disease Risk'] %}<option value="{{ value }}" {{ 'selected' if filters.get('type') == value else '' }}>{{ value }}</option>{% endfor %}</select></div>
+    <div class="col-sm-6 col-lg-2"><label class="form-label" for="crop">{{ t('activities.crop') }}</label><input class="form-control" id="crop" name="crop" value="{{ filters.get('crop', '') }}" placeholder="{{ t('activities.exact_crop') }}"></div>
+    <div class="col-sm-6 col-lg-2"><label class="form-label" for="from">{{ t('activities.recommended_from') }}</label><input class="form-control" id="from" name="from" type="date" value="{{ filters.get('from', '') }}"></div>
+    <div class="col-sm-6 col-lg-2"><label class="form-label" for="to">{{ t('activities.recommended_to') }}</label><input class="form-control" id="to" name="to" type="date" value="{{ filters.get('to', '') }}"></div>
+    <div class="col-sm-6 col-lg-2 d-flex gap-2"><button class="btn btn-success" type="submit">{{ t('common.apply') }}</button><a class="btn btn-outline-secondary" href="{{ url_for('activities_page') }}">{{ t('common.reset') }}</a></div>
   </form>
 </section>
 
 <details class="content-section mb-4">
-  <summary class="h5 mb-0">Add a farm activity</summary>
+  <summary class="h5 mb-0">{{ t('activities.add_activity') }}</summary>
   <form class="row g-3 mt-1" method="post" action="{{ url_for('create_activity') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-    <div class="col-md-4"><label class="form-label" for="activity-title">Activity name</label><input class="form-control" id="activity-title" name="title" required maxlength="160"></div>
-    <div class="col-md-3"><label class="form-label" for="activity-type">Type</label><select class="form-select" id="activity-type" name="activity_type"><option>Field inspection</option><option>Irrigation</option><option>Fertilizer</option><option>Harvest</option><option>Weather</option></select></div>
-    <div class="col-md-2"><label class="form-label" for="activity-due">Due date</label><input class="form-control" id="activity-due" name="due_date" type="date" value="{{ today if today is defined else '' }}"></div>
-    <div class="col-md-3"><label class="form-label" for="activity-description">Details</label><input class="form-control" id="activity-description" name="description" maxlength="500"></div>
-    <div class="col-12"><button class="btn btn-success" type="submit">Add as pending</button></div>
+    <div class="col-md-4"><label class="form-label" for="activity-title">{{ t('activities.activity_name') }}</label><input class="form-control" id="activity-title" name="title" required maxlength="160"></div>
+    <div class="col-md-3"><label class="form-label" for="activity-type">{{ t('activities.type') }}</label><select class="form-select" id="activity-type" name="activity_type"><option>Field inspection</option><option>Irrigation</option><option>Fertilizer</option><option>Harvest</option><option>Weather</option></select></div>
+    <div class="col-md-2"><label class="form-label" for="activity-due">{{ t('activities.due_date') }}</label><input class="form-control" id="activity-due" name="due_date" type="date" value="{{ today if today is defined else '' }}"></div>
+    <div class="col-md-3"><label class="form-label" for="activity-description">{{ t('activities.details') }}</label><input class="form-control" id="activity-description" name="description" maxlength="500"></div>
+    <div class="col-12"><button class="btn btn-success" type="submit">{{ t('common.add_pending') }}</button></div>
   </form>
 </details>
 
-<section class="content-section" aria-label="Activities">
+<section class="content-section" aria-label="{{ t('activities.heading') }}">
   {% if activities %}
   <div class="table-responsive">
     <table class="table table-hover align-middle mb-0">
-      <thead><tr><th>Activity</th><th>Crop / stage</th><th>Due</th><th>Priority</th><th>Status</th><th>Farmer confirmation</th></tr></thead>
+      <thead><tr><th>{{ t('activities.activity') }}</th><th>{{ t('activities.crop_stage') }}</th><th>{{ t('activities.due') }}</th><th>{{ t('activities.priority') }}</th><th>{{ t('activities.status') }}</th><th>{{ t('activities.farmer_confirmation') }}</th></tr></thead>
       <tbody>
       {% for item in activities %}
         <tr>
-          <td><strong>{{ item.title }}</strong><div class="small text-muted">{{ item.activity_type }}{% if item.description %} · {{ item.description }}{% endif %}</div>{% if item.reason %}<div class="small mt-1">Reason: {{ item.reason }}</div>{% endif %}</td>
-          <td>{{ item.crop_name or 'Not linked' }}<div class="small text-muted">{{ item.crop_stage or 'Stage not recorded' }}</div></td>
-          <td>{{ item.due_date }}<div class="small text-muted">Recommended {{ item.recommended_date }}</div></td>
+          <td><strong>{{ item.title }}</strong><div class="small text-muted">{{ item.activity_type }}{% if item.description %} · {{ item.description }}{% endif %}</div>{% if item.reason %}<div class="small mt-1">{{ t('activities.reason') }}: {{ item.reason }}</div>{% endif %}</td>
+          <td>{{ item.crop_name or t('activities.not_linked') }}<div class="small text-muted">{{ item.crop_stage or t('activities.stage_not_recorded') }}</div></td>
+          <td>{{ item.due_date }}<div class="small text-muted">{{ t('activities.recommended') }} {{ item.recommended_date }}</div></td>
           <td>{{ item.priority|title }}</td>
-          <td><span class="badge {{ 'text-bg-danger' if item.display_status == 'OVERDUE' else 'text-bg-success' if item.status == 'COMPLETED' else 'text-bg-secondary' if item.status == 'SKIPPED' else 'text-bg-warning' }}">{{ item.display_status|title }}</span>{% if item.completed_at %}<div class="small text-muted mt-1">{{ item.completed_at[:16] }}</div>{% endif %}</td>
+          <td><span class="badge {{ 'text-bg-danger' if item.display_status == 'OVERDUE' else 'text-bg-success' if item.status == 'COMPLETED' else 'text-bg-secondary' if item.status == 'SKIPPED' else 'text-bg-warning' }}">{{ t('activities.status_' ~ item.display_status|lower) }}</span>{% if item.completed_at %}<div class="small text-muted mt-1">{{ item.completed_at[:16] }}</div>{% endif %}</td>
           <td>
             <form class="d-flex flex-column gap-2" method="post" action="{{ url_for('update_activity_status', activity_id=item.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-              <input class="form-control form-control-sm" name="farmer_note" maxlength="1000" value="{{ item.farmer_note or '' }}" placeholder="Optional note" aria-label="Farmer note">
-              <input class="form-control form-control-sm" name="amount_spent" type="number" min="0.01" step="0.01" value="{{ '%.2f'|format(item.expense_amount) if item.expense_amount else '' }}" placeholder="Money spent (₹, optional)" aria-label="Money spent in rupees, optional">
-              <small class="text-muted">Saved only when marked completed.</small>
+              <input class="form-control form-control-sm" name="farmer_note" maxlength="1000" value="{{ item.farmer_note or '' }}" placeholder="{{ t('activities.optional_note') }}" aria-label="{{ t('activities.farmer_note') }}">
+              <input class="form-control form-control-sm" name="amount_spent" type="number" min="0.01" step="0.01" value="{{ '%.2f'|format(item.expense_amount) if item.expense_amount else '' }}" placeholder="{{ t('activities.money_spent') }}" aria-label="{{ t('activities.money_spent') }}">
+              <small class="text-muted">{{ t('activities.saved_when_completed') }}</small>
               <div class="d-flex flex-wrap gap-1">
-                <button class="btn btn-sm btn-success" name="status" value="COMPLETED" type="submit">Completed</button>
-                <button class="btn btn-sm btn-outline-secondary" name="status" value="SKIPPED" type="submit">Skipped</button>
-                <input type="date" name="rescheduled_date" aria-label="New due date" class="form-control form-control-sm">
-                <button class="btn btn-sm btn-outline-primary" name="status" value="RESCHEDULED" type="submit">Reschedule</button>
-                {% if item.status != 'PENDING' %}<button class="btn btn-sm btn-outline-warning" name="status" value="PENDING" type="submit">Pending</button>{% endif %}
+                <button class="btn btn-sm btn-success" name="status" value="COMPLETED" type="submit">{{ t('activities.status_completed') }}</button>
+                <button class="btn btn-sm btn-outline-secondary" name="status" value="SKIPPED" type="submit">{{ t('activities.status_skipped') }}</button>
+                <input type="date" name="rescheduled_date" aria-label="{{ t('activities.new_due_date') }}" class="form-control form-control-sm">
+                <button class="btn btn-sm btn-outline-primary" name="status" value="RESCHEDULED" type="submit">{{ t('activities.reschedule') }}</button>
+                {% if item.status != 'PENDING' %}<button class="btn btn-sm btn-outline-warning" name="status" value="PENDING" type="submit">{{ t('activities.status_pending') }}</button>{% endif %}
               </div>
             </form>
           </td>
@@ -66,7 +66,7 @@
     </table>
   </div>
   {% else %}
-    <div class="empty-state"><i class="fa-solid fa-clipboard-check" aria-hidden="true"></i><h2 class="h5 mt-3">No activities match this view</h2><p class="text-muted mb-0">Generate advisories or add an activity to start a confirmed farm-action history.</p></div>
+    <div class="empty-state"><i class="fa-solid fa-clipboard-check" aria-hidden="true"></i><h2 class="h5 mt-3">{{ t('activities.no_activities') }}</h2><p class="text-muted mb-0">{{ t('activities.empty_text') }}</p></div>
   {% endif %}
 </section>
 {% endblock %}

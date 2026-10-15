@@ -1,17 +1,17 @@
 {% extends "base.html" %}
 
-{% block title %}Farm Expenses & Realized Profit — AgriWise AI{% endblock %}
+{% block title %}{{ t('expenses.page_title') }} — AgriWise AI{% endblock %}
 
 {% block content %}
 <div class="container-fluid px-0">
   <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
     <div>
-      <h2 class="h3 fw-bold mb-1"><i class="fa-solid fa-indian-rupee-sign text-warning me-2"></i>Farm Expenses & Financial Tracking</h2>
-      <p class="text-muted small mb-0">Expenses are recorded from completed activities. Sales receipts track realized revenue and cost efficiency.</p>
+      <h2 class="h3 fw-bold mb-1"><i class="fa-solid fa-indian-rupee-sign text-warning me-2"></i>{{ t('expenses.heading') }}</h2>
+      <p class="text-muted small mb-0">{{ t('expenses.subtitle') }}</p>
     </div>
     <div class="d-flex gap-2">
       <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#addSaleModal">
-        <i class="fa-solid fa-cart-shopping me-1"></i>Record Sale
+        <i class="fa-solid fa-cart-shopping me-1"></i>{{ t('expenses.record_sale') }}
       </button>
     </div>
   </div>
@@ -23,7 +23,7 @@
         <div class="stat-icon red"><i class="fa-solid fa-receipt"></i></div>
         <div>
           <div class="stat-value text-danger">₹{{ financials.total_actual_cost|int }}</div>
-          <div class="stat-label">Total Actual Costs Logged</div>
+          <div class="stat-label">{{ t('expenses.total_actual_costs') }}</div>
         </div>
       </div>
     </div>
@@ -32,7 +32,7 @@
         <div class="stat-icon green"><i class="fa-solid fa-hand-holding-dollar"></i></div>
         <div>
           <div class="stat-value text-success">₹{{ financials.total_actual_revenue|int }}</div>
-          <div class="stat-label">Realized Sales Revenue</div>
+          <div class="stat-label">{{ t('expenses.realized_revenue') }}</div>
         </div>
       </div>
     </div>
@@ -45,7 +45,7 @@
           <div class="stat-value {% if financials.total_actual_profit >= 0 %}text-success{% else %}text-danger{% endif %}">
             ₹{{ financials.total_actual_profit|int }}
           </div>
-          <div class="stat-label">Net Realized Profit</div>
+          <div class="stat-label">{{ t('expenses.net_profit') }}</div>
         </div>
       </div>
     </div>
@@ -54,7 +54,7 @@
         <div class="stat-icon purple"><i class="fa-solid fa-wheat-awn"></i></div>
         <div>
           <div class="stat-value">{{ financials.total_quantity_sold }} <small class="fs-6">Qtl</small></div>
-          <div class="stat-label">Produce Sold (Quintal Equivalent)</div>
+          <div class="stat-label">{{ t('expenses.produce_sold') }}</div>
         </div>
       </div>
     </div>
@@ -65,8 +65,8 @@
     <div class="col-lg-6">
       <div class="card shadow-sm border-0 h-100">
         <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-          <h5 class="mb-0 fw-bold"><i class="fa-solid fa-chart-pie text-muted me-2"></i>Expense Category Breakdown</h5>
-          <span class="badge bg-light text-dark border">{{ financials.expense_count }} items</span>
+          <h5 class="mb-0 fw-bold"><i class="fa-solid fa-chart-pie text-muted me-2"></i>{{ t('expenses.category_breakdown') }}</h5>
+          <span class="badge bg-light text-dark border">{{ financials.expense_count }} {{ t('expenses.items') }}</span>
         </div>
         <div class="card-body p-0">
           {% if financials.category_breakdown %}
@@ -74,9 +74,9 @@
               <table class="table table-hover align-middle mb-0">
                 <thead class="table-light small text-uppercase text-muted">
                   <tr>
-                    <th>Category</th>
-                    <th>Total Amount</th>
-                    <th>Share %</th>
+                    <th>{{ t('expenses.category') }}</th>
+                    <th>{{ t('expenses.total_amount') }}</th>
+                    <th>{{ t('expenses.share_percent') }}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -99,7 +99,7 @@
             </div>
           {% else %}
             <div class="p-4 text-center text-muted">
-              <p class="mb-0">No expenses recorded yet. Mark an activity completed and enter any money spent to track its cost.</p>
+              <p class="mb-0">{{ t('expenses.no_expenses') }}</p>
             </div>
           {% endif %}
         </div>
@@ -110,7 +110,7 @@
     <div class="col-lg-6">
       <div class="card shadow-sm border-0 h-100">
         <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-          <h5 class="mb-0 fw-bold"><i class="fa-solid fa-clock-rotate-left text-muted me-2"></i>Recent Expense Entries</h5>
+          <h5 class="mb-0 fw-bold"><i class="fa-solid fa-clock-rotate-left text-muted me-2"></i>{{ t('expenses.recent_expenses') }}</h5>
         </div>
         <div class="card-body p-0">
           {% if expenses %}
@@ -130,7 +130,7 @@
             </div>
           {% else %}
             <div class="p-4 text-center text-muted">
-              <p class="mb-0">No recent transactions.</p>
+              <p class="mb-0">{{ t('expenses.no_recent_transactions') }}</p>
             </div>
           {% endif %}
         </div>
@@ -141,8 +141,8 @@
   <!-- Recorded Sales Transactions Table -->
   <div class="card shadow-sm border-0 mb-4">
     <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-      <h5 class="mb-0 fw-bold"><i class="fa-solid fa-cart-shopping text-success me-2"></i>Recorded Sales Realizations</h5>
-      <span class="badge bg-light text-dark border">{{ financials.sales_count }} sales</span>
+      <h5 class="mb-0 fw-bold"><i class="fa-solid fa-cart-shopping text-success me-2"></i>{{ t('expenses.sales_records') }}</h5>
+      <span class="badge bg-light text-dark border">{{ financials.sales_count }} {{ t('expenses.sales') }}</span>
     </div>
     <div class="card-body p-0">
       {% if sales %}
@@ -150,13 +150,13 @@
           <table class="table table-hover align-middle mb-0">
             <thead class="table-light small text-uppercase text-muted">
               <tr>
-                <th>Date</th>
-                <th>Commodity</th>
-                <th>Quantity</th>
-                <th>Price / Unit</th>
-                <th>Total Realized</th>
-                <th>Market / Buyer</th>
-                <th>Notes</th>
+                <th>{{ t('expenses.date') }}</th>
+                <th>{{ t('expenses.commodity') }}</th>
+                <th>{{ t('expenses.quantity') }}</th>
+                <th>{{ t('expenses.price_per_unit') }}</th>
+                <th>{{ t('expenses.total_realized') }}</th>
+                <th>{{ t('expenses.market_buyer') }}</th>
+                <th>{{ t('expenses.notes') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -167,7 +167,7 @@
                   <td>{{ s.quantity_sold }} {{ s.unit }}</td>
                   <td>₹{{ s.price_per_unit|int }}</td>
                   <td class="fw-bold text-success">₹{{ s.total_amount|int }}</td>
-                  <td>{{ s.market_name or s.buyer_name or 'Local Trade' }}</td>
+                  <td>{{ s.market_name or s.buyer_name or t('expenses.local_trade') }}</td>
                   <td><small class="text-muted">{{ s.notes or '--' }}</small></td>
                 </tr>
               {% endfor %}
@@ -177,7 +177,7 @@
       {% else %}
         <div class="p-4 text-center text-muted">
           <i class="fa-solid fa-hand-holding-dollar fs-3 text-muted mb-2"></i>
-          <p class="mb-0">No sales transactions logged for the current cycle. Click "Record Sale" once harvest output is marketed.</p>
+          <p class="mb-0">{{ t('expenses.no_sales') }}</p>
         </div>
       {% endif %}
     </div>
@@ -190,48 +190,48 @@
     <div class="modal-content">
       <form method="POST" action="{{ url_for('add_sale') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
         <div class="modal-header">
-          <h5 class="modal-title fw-bold"><i class="fa-solid fa-cart-shopping text-success me-2"></i>Record Harvest Sale</h5>
+          <h5 class="modal-title fw-bold"><i class="fa-solid fa-cart-shopping text-success me-2"></i>{{ t('expenses.record_harvest_sale') }}</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
           <div class="mb-3">
-            <label class="form-label small fw-semibold">Commodity Sold</label>
+            <label class="form-label small fw-semibold">{{ t('expenses.commodity_sold') }}</label>
             <input type="text" class="form-control" name="commodity" value="{{ crop_name }}" required>
           </div>
           <div class="row g-2 mb-3">
             <div class="col-6">
-              <label class="form-label small fw-semibold">Quantity Sold</label>
+              <label class="form-label small fw-semibold">{{ t('expenses.quantity_sold') }}</label>
               <input type="number" step="0.1" min="0.1" class="form-control" name="quantity_sold" id="saleQty" placeholder="e.g. 25" required>
             </div>
             <div class="col-6">
-              <label class="form-label small fw-semibold">Unit</label>
+              <label class="form-label small fw-semibold">{{ t('expenses.unit') }}</label>
               <select class="form-select" name="unit">
-                <option value="Quintal" selected>Quintal</option>
-                <option value="Kg">Kilogram</option>
-                <option value="Ton">Metric tonne</option>
+                <option value="Quintal" selected>{{ t('expenses.quintal') }}</option>
+                <option value="Kg">{{ t('expenses.kilogram') }}</option>
+                <option value="Ton">{{ t('expenses.metric_tonne') }}</option>
               </select>
             </div>
           </div>
           <div class="mb-3">
-            <label class="form-label small fw-semibold">Price per Unit (₹)</label>
+            <label class="form-label small fw-semibold">{{ t('expenses.price_per_unit_rupees') }}</label>
             <input type="number" step="0.01" min="0" class="form-control" name="price_per_unit" id="salePrice" placeholder="e.g. 2450.00" required>
           </div>
           <div class="mb-3">
-            <label class="form-label small fw-semibold">Total Revenue (₹)</label>
-            <input type="number" step="0.01" min="0" class="form-control fw-bold text-success" name="total_amount" id="saleTotal" placeholder="Auto-calculated">
+            <label class="form-label small fw-semibold">{{ t('expenses.total_revenue_rupees') }}</label>
+            <input type="number" step="0.01" min="0" class="form-control fw-bold text-success" name="total_amount" id="saleTotal" placeholder="{{ t('expenses.auto_calculated') }}">
           </div>
           <div class="mb-3">
-            <label class="form-label small fw-semibold">Market / Buyer Name</label>
-            <input type="text" class="form-control" name="market_name" placeholder="e.g. Pune APMC Market Yard">
+            <label class="form-label small fw-semibold">{{ t('expenses.market_buyer_name') }}</label>
+            <input type="text" class="form-control" name="market_name" placeholder="{{ t('expenses.market_buyer_placeholder') }}">
           </div>
           <div class="mb-3">
-            <label class="form-label small fw-semibold">Sale Date</label>
+            <label class="form-label small fw-semibold">{{ t('expenses.sale_date') }}</label>
             <input type="date" class="form-control" name="sale_date" value="{{ today_str }}" required>
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn btn-success btn-sm px-4">Save Sale Record</button>
+          <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">{{ t('common.cancel') }}</button>
+          <button type="submit" class="btn btn-success btn-sm px-4">{{ t('expenses.save_sale_record') }}</button>
         </div>
       </form>
     </div>

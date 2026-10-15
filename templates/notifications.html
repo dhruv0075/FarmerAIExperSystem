@@ -1,18 +1,18 @@
 {% extends "base.html" %}
 
-{% block title %}Notifications & Alerts — AgriWise AI{% endblock %}
+{% block title %}{{ t('notifications.title') }} — AgriWise AI{% endblock %}
 
 {% block content %}
 <div class="container-fluid px-0" style="max-width: 860px;">
   <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
     <div>
-      <h2 class="h3 fw-bold mb-1"><i class="fa-regular fa-bell text-success me-2"></i>Notifications & Critical Alerts</h2>
-      <p class="text-muted small mb-0">System alerts, overdue task warnings, extreme weather triggers, and market opportunities.</p>
+      <h2 class="h3 fw-bold mb-1"><i class="fa-regular fa-bell text-success me-2"></i>{{ t('notifications.title') }}</h2>
+      <p class="text-muted small mb-0">{{ t('notifications.subtitle') }}</p>
     </div>
     {% if notifications %}
       <form method="POST" action="{{ url_for('mark_all_notifications_read') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
         <button type="submit" class="btn btn-outline-secondary btn-sm">
-          <i class="fa-solid fa-check-double me-1"></i>Mark All Read
+          <i class="fa-solid fa-check-double me-1"></i>{{ t('notifications.mark_all_read') }}
         </button>
       </form>
     {% endif %}
@@ -40,7 +40,7 @@
                   <div class="d-flex align-items-center gap-2 mb-1">
                     <strong class="text-dark">{{ n.title }}</strong>
                     {% if not n.is_read %}
-                      <span class="badge bg-success" style="font-size:0.6rem;">New</span>
+                      <span class="badge bg-success" style="font-size:0.6rem;">{{ t('notifications.new') }}</span>
                     {% endif %}
                   </div>
                   <p class="text-secondary small mb-1">{{ n.message }}</p>
@@ -50,11 +50,11 @@
 
               <div class="d-flex align-items-center gap-2">
                 {% if n.link_url %}
-                  <a href="{{ n.link_url }}" class="btn btn-sm btn-outline-primary" style="font-size:0.75rem;">View</a>
+                  <a href="{{ n.link_url }}" class="btn btn-sm btn-outline-primary" style="font-size:0.75rem;">{{ t('notifications.view') }}</a>
                 {% endif %}
                 {% if not n.is_read %}
                   <form method="POST" action="{{ url_for('mark_notification_read_route', notification_id=n.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-                    <button type="submit" class="btn btn-sm btn-light border text-muted" title="Mark as read">
+                    <button type="submit" class="btn btn-sm btn-light border text-muted" title="{{ t('notifications.mark_read') }}">
                       <i class="fa-solid fa-check"></i>
                     </button>
                   </form>
@@ -66,8 +66,8 @@
       {% else %}
         <div class="p-5 text-center text-muted">
           <i class="fa-regular fa-bell-slash fs-1 mb-3 text-secondary"></i>
-          <h5 class="fw-bold">No Notifications</h5>
-          <p class="mb-0 small">You are all caught up! Automated advisories, weather warnings, and task reminders will appear here.</p>
+          <h5 class="fw-bold">{{ t('notifications.empty_title') }}</h5>
+          <p class="mb-0 small">{{ t('notifications.empty_copy') }}</p>
         </div>
       {% endif %}
     </div>

@@ -27,11 +27,11 @@
   </head>
   <body class="{% block body_class %}{% endblock %}">
     <!-- Keyboard users can bypass repeated navigation. -->
-    <a class="skip-link" href="#main-content">Skip to main content</a>
+    <a class="skip-link" href="#main-content">{{ t('common.skip_to_main') }}</a>
     <div class="site-atmosphere" data-farm-scene="ambient" data-scene-state="loading" aria-hidden="true"><canvas></canvas></div>
     <!-- Top Navigation Bar -->
-    <header class="app-navbar d-flex align-items-center justify-content-between">
-      <div class="d-flex align-items-center">
+    <header class="app-navbar">
+      <div class="app-navbar__brand d-flex align-items-center">
         {% if session.get('user_id') %}
           <button class="btn btn-sm btn-outline-secondary d-lg-none me-2" id="sidebarToggle" type="button">
             <i class="fa-solid fa-bars"></i>
@@ -41,35 +41,35 @@
           <div class="brand-badge"><i class="fa-solid fa-seedling"></i></div>
           <div>
             <span class="fs-5 fw-bold text-dark font-sans tracking-tight">AgriWise<span class="text-success">AI</span></span>
-            <span class="badge bg-light text-success border border-success-subtle ms-2 d-none d-sm-inline-block font-sans" style="font-size:0.65rem;">Closed-Loop Farm Intelligence</span>
+            <span class="badge bg-light text-success border border-success-subtle ms-2 d-none d-sm-inline-block font-sans" style="font-size:0.65rem;">{{ t('common.brand_tagline') }}</span>
           </div>
         </a>
       </div>
 
       <!-- Center location badge if farm exists -->
       {% if g.current_farm %}
-        <div class="d-none d-md-flex align-items-center px-3 py-1 bg-light rounded-pill border border-secondary-subtle small text-secondary">
+        <div class="app-navbar__location d-none d-md-flex align-items-center px-3 py-1 bg-light rounded-pill border border-secondary-subtle small text-secondary">
           <i class="fa-solid fa-location-dot text-success me-2"></i>
-          <span class="fw-semibold text-dark me-1">{{ g.current_farm.farm_name }}</span>
-          <span>({{ g.current_farm.location_name or 'Location not set' }})</span>
+          <span class="app-navbar__farm-name fw-semibold text-dark me-1">{{ g.current_farm.farm_name }}</span>
+          <span class="app-navbar__farm-location">({{ g.current_farm.location_name or t('common.location_not_set') }})</span>
         </div>
       {% endif %}
 
       <!-- Right Profile & Notifications -->
-      <div class="d-flex align-items-center gap-2">
-        <form method="POST" action="{{ url_for('set_language') }}" class="d-flex align-items-center gap-1">
+      <div class="app-navbar__actions d-flex align-items-center gap-2">
+        <form method="POST" action="{{ url_for('set_language') }}" class="app-language-form d-flex align-items-center gap-1">
           <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
           <input type="hidden" name="next" value="{{ request.path }}">
           <label for="app-language" class="visually-hidden">{{ t('language.label') }}</label>
           <select id="app-language" name="language" class="form-select form-select-sm" aria-label="{{ t('language.label') }}">
-            <option value="en" {% if current_language == 'en' %}selected{% endif %}>English</option>
-            <option value="mr" {% if current_language == 'mr' %}selected{% endif %}>मराठी</option>
-            <option value="hi" {% if current_language == 'hi' %}selected{% endif %}>हिन्दी</option>
+            <option value="en" {% if current_language == 'en' %}selected{% endif %}>{{ t('language.english') }}</option>
+            <option value="mr" {% if current_language == 'mr' %}selected{% endif %}>{{ t('language.marathi') }}</option>
+            <option value="hi" {% if current_language == 'hi' %}selected{% endif %}>{{ t('language.hindi') }}</option>
           </select>
           <button class="btn btn-sm btn-outline-success" type="submit">{{ t('language.save') }}</button>
         </form>
         {% if session.get('user_id') %}
-          <a href="{{ url_for('notifications_page') }}" class="btn btn-light position-relative rounded-circle p-2 text-secondary" title="Notifications" aria-label="Notifications">
+          <a href="{{ url_for('notifications_page') }}" class="btn btn-light position-relative rounded-circle p-2 text-secondary" title="{{ t('nav.notifications') }}" aria-label="{{ t('nav.notifications') }}">
             <i class="fa-regular fa-bell" aria-hidden="true"></i>
             {% if g.unread_notifications and g.unread_notifications > 0 %}
               <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size:0.65rem;">
@@ -80,19 +80,19 @@
           <div class="dropdown">
             <button class="btn btn-light dropdown-toggle d-flex align-items-center gap-2 border" type="button" data-bs-toggle="dropdown" aria-expanded="false">
               <i class="fa-regular fa-circle-user text-success fs-5"></i>
-              <span class="d-none d-sm-inline font-sans fw-medium small">{{ g.current_user.name if g.current_user else 'Farmer' }}</span>
+              <span class="d-none d-sm-inline font-sans fw-medium small">{{ g.current_user.name if g.current_user else t('common.farmer') }}</span>
             </button>
             <ul class="dropdown-menu dropdown-menu-end shadow-sm">
               <li><h6 class="dropdown-header">{{ g.current_user.email if g.current_user else '' }}</h6></li>
-              <li><a class="dropdown-item" href="{{ url_for('farm_profile') }}"><i class="fa-solid fa-tractor me-2 text-muted"></i>My Farm Profile</a></li>
-              <li><a class="dropdown-item" href="{{ url_for('settings_page') }}"><i class="fa-solid fa-gear me-2 text-muted"></i>Settings</a></li>
+              <li><a class="dropdown-item" href="{{ url_for('farm_profile') }}"><i class="fa-solid fa-tractor me-2 text-muted"></i>{{ t('nav.farm_setup') }}</a></li>
+              <li><a class="dropdown-item" href="{{ url_for('settings_page') }}"><i class="fa-solid fa-gear me-2 text-muted"></i>{{ t('common.settings') }}</a></li>
               <li><hr class="dropdown-divider"></li>
-              <li><form method="POST" action="{{ url_for('logout') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="dropdown-item text-danger" type="submit"><i class="fa-solid fa-right-from-bracket me-2"></i>Logout</button></form></li>
+              <li><form method="POST" action="{{ url_for('logout') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="dropdown-item text-danger" type="submit"><i class="fa-solid fa-right-from-bracket me-2"></i>{{ t('nav.logout') }}</button></form></li>
             </ul>
           </div>
         {% else %}
-          <a href="{{ url_for('login') }}" class="btn btn-sm btn-outline-success fw-medium">Farmer Login</a>
-          <a href="{{ url_for('register') }}" class="btn btn-sm btn-success fw-medium">Create Account</a>
+          <a href="{{ url_for('login') }}" class="btn btn-sm btn-outline-success fw-medium">{{ t('nav.farmer_login') }}</a>
+          <a href="{{ url_for('register') }}" class="btn btn-sm btn-success fw-medium">{{ t('nav.create_account') }}</a>
         {% endif %}
       </div>
     </header>
@@ -104,16 +104,16 @@
         <aside class="app-sidebar" id="appSidebar">
           <div class="sidebar-nav">
             
-            <a class="sidebar-link {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}"><i class="fa-solid fa-gauge-high"></i> Dashboard</a>
-            <a class="sidebar-link {% if request.endpoint == 'farm_profile' %}active{% endif %}" href="{{ url_for('farm_profile') }}"><i class="fa-solid fa-tractor"></i> Farm Setup</a>
-            <a class="sidebar-link {% if request.endpoint == 'crop_recommendation' %}active{% endif %}" href="{{ url_for('crop_recommendation') }}"><i class="fa-solid fa-seedling"></i> Crop Recommendation</a>
-            <a class="sidebar-link {% if request.endpoint == 'lifecycle_page' %}active{% endif %}" href="{{ url_for('lifecycle_page') }}"><i class="fa-solid fa-calendar"></i> Crop Lifecycle</a>
-            <a class="sidebar-link {% if request.endpoint == 'activities_page' %}active{% endif %}" href="{{ url_for('activities_page') }}"><i class="fa-solid fa-list-check"></i> Activities</a>
-            <a class="sidebar-link {% if request.endpoint == 'expenses_page' %}active{% endif %}" href="{{ url_for('expenses_page') }}"><i class="fa-solid fa-wallet"></i> Expenses</a>
-            <a class="sidebar-link {% if request.endpoint == 'weather_page' %}active{% endif %}" href="{{ url_for('weather_page') }}"><i class="fa-solid fa-cloud-sun"></i> Weather</a>
-            <a class="sidebar-link {% if request.endpoint == 'disease_detection_page' %}active{% endif %}" href="{{ url_for('disease_detection_page') }}"><i class="fa-solid fa-microscope"></i> Disease Detection</a>
-            <a class="sidebar-link {% if request.endpoint == 'report_problem_page' %}active{% endif %}" href="{{ url_for('report_problem_page') }}"><i class="fa-solid fa-clipboard"></i> Problem Report</a>
-            <form method="POST" action="{{ url_for('logout') }}" class="m-0"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="sidebar-link w-100 border-0 bg-transparent text-start" type="submit"><i class="fa-solid fa-right-from-bracket"></i> Logout</button></form>
+            <a class="sidebar-link {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}"><i class="fa-solid fa-gauge-high"></i> {{ t('nav.dashboard') }}</a>
+            <a class="sidebar-link {% if request.endpoint == 'farm_profile' %}active{% endif %}" href="{{ url_for('farm_profile') }}"><i class="fa-solid fa-tractor"></i> {{ t('nav.farm_setup') }}</a>
+            <a class="sidebar-link {% if request.endpoint == 'crop_recommendation' %}active{% endif %}" href="{{ url_for('crop_recommendation') }}"><i class="fa-solid fa-seedling"></i> {{ t('nav.crop_recommendation') }}</a>
+            <a class="sidebar-link {% if request.endpoint == 'lifecycle_page' %}active{% endif %}" href="{{ url_for('lifecycle_page') }}"><i class="fa-solid fa-calendar"></i> {{ t('nav.lifecycle') }}</a>
+            <a class="sidebar-link {% if request.endpoint == 'activities_page' %}active{% endif %}" href="{{ url_for('activities_page') }}"><i class="fa-solid fa-list-check"></i> {{ t('nav.activities') }}</a>
+            <a class="sidebar-link {% if request.endpoint == 'expenses_page' %}active{% endif %}" href="{{ url_for('expenses_page') }}"><i class="fa-solid fa-wallet"></i> {{ t('nav.expenses') }}</a>
+            <a class="sidebar-link {% if request.endpoint == 'weather_page' %}active{% endif %}" href="{{ url_for('weather_page') }}"><i class="fa-solid fa-cloud-sun"></i> {{ t('nav.weather') }}</a>
+            <a class="sidebar-link {% if request.endpoint == 'disease_detection_page' %}active{% endif %}" href="{{ url_for('disease_detection_page') }}"><i class="fa-solid fa-microscope"></i> {{ t('nav.disease_detection') }}</a>
+            <a class="sidebar-link {% if request.endpoint == 'report_problem_page' %}active{% endif %}" href="{{ url_for('report_problem_page') }}"><i class="fa-solid fa-clipboard"></i> {{ t('nav.problem_report') }}</a>
+            <form method="POST" action="{{ url_for('logout') }}" class="m-0"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="sidebar-link w-100 border-0 bg-transparent text-start" type="submit"><i class="fa-solid fa-right-from-bracket"></i> {{ t('nav.logout') }}</button></form>
 
           </div>
         </aside>

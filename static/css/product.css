@@ -60,6 +60,9 @@ a:hover { color: #a55e32; }
 [data-farm-scene='ambient'][data-scene-state='fallback'] { background: radial-gradient(ellipse at 16% 20%, rgba(76,139,91,.28), transparent 36%), radial-gradient(ellipse at 82% 72%, rgba(202,151,74,.22), transparent 34%); }
 
 .app-navbar {
+  display: grid;
+  grid-template-columns: minmax(0, max-content) minmax(0, 1fr) max-content;
+  column-gap: clamp(.6rem, 1.5vw, 1.5rem);
   min-height: 70px;
   padding: .72rem clamp(1rem, 3vw, 2.5rem);
   position: sticky;
@@ -69,6 +72,31 @@ a:hover { color: #a55e32; }
   box-shadow: 0 3px 18px rgba(27, 48, 39, .07);
   backdrop-filter: blur(12px);
 }
+.app-navbar__brand { grid-column: 1; min-width: 0; }
+.app-navbar__location {
+  grid-column: 2;
+  justify-self: center;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.app-navbar__farm-name,
+.app-navbar__farm-location {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.app-navbar__farm-name { flex: 0 1 auto; }
+.app-navbar__farm-location { min-width: 0; }
+.app-navbar__actions {
+  grid-column: 3;
+  min-width: 0;
+  flex-wrap: nowrap;
+}
+.app-language-form { flex: 0 0 auto; }
+.app-language-form .form-select { width: auto; min-width: 7.5rem; }
+.app-language-form button { flex: 0 0 auto; white-space: nowrap; }
 .brand-badge {
   position: relative;
   isolation: isolate;
@@ -339,7 +367,14 @@ a:hover { color: #a55e32; }
   .dashboard-insight__evidence { padding: 1rem 0 0; border-top: 1px solid #bfcec2; border-left: 0; }
 }
 @media (max-width: 767px) {
-  .app-navbar { min-height: 62px; padding: .6rem .8rem; }
+  .app-navbar {
+    grid-template-columns: minmax(0, 1fr) 0 max-content;
+    min-height: 62px;
+    padding: .6rem .8rem;
+  }
+  .app-navbar__actions { gap: .35rem !important; }
+  .app-language-form { gap: .25rem !important; }
+  .app-language-form .form-select { min-width: 6.25rem; padding-right: 1.7rem; }
   .app-content { padding: 1rem; }
   .product-hero { min-height: 680px; padding: 3.5rem 1.25rem 5.5rem; align-items: center; }
   .product-hero__image { object-position: 58% center; }

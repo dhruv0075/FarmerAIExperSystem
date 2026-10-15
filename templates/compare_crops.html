@@ -1,28 +1,28 @@
 {% extends 'base.html' %}
-{% block title %}Compare Crops — AgriWise AI{% endblock %}
+{% block title %}{{ t('compare.title') }} — AgriWise AI{% endblock %}
 
 {% block content %}
 <div class="container-fluid px-0">
   <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
     <div>
       <span class="badge bg-success-subtle text-success px-3 py-1 rounded-pill fw-semibold mb-1">
-        <i class="fa-solid fa-code-compare me-1"></i>Comparative Agronomy &amp; Economics
+        <i class="fa-solid fa-code-compare me-1"></i>{{ t('compare.kicker') }}
       </span>
-      <h1 class="h3 fw-bold mb-1">Crop Comparison Analysis</h1>
+      <h1 class="h3 fw-bold mb-1">{{ t('compare.title') }}</h1>
       <p class="text-muted small mb-0">
-        Evaluate 2 or 3 crops side-by-side across soil requirements, climate suitability, water demand, and economic potential.
+        {{ t('compare.subtitle') }}
       </p>
     </div>
   </div>
 
   <div class="card border-0 shadow-sm mb-4">
     <div class="card-header bg-white py-3 border-bottom">
-      <h5 class="mb-0 fw-bold"><i class="fa-solid fa-check-double text-success me-2"></i>Select 2 or 3 Crops to Compare</h5>
+      <h5 class="mb-0 fw-bold"><i class="fa-solid fa-check-double text-success me-2"></i>{{ t('compare.select_title') }}</h5>
     </div>
     <div class="card-body p-4">
       <form method="POST" action="{{ url_for('compare_crops_page') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
         <div class="mb-4">
-          <label class="form-label small fw-semibold text-muted text-uppercase mb-2">Select Target Crops:</label>
+          <label class="form-label small fw-semibold text-muted text-uppercase mb-2">{{ t('compare.select_crops') }}</label>
           <div class="d-flex flex-wrap gap-2">
             {% for crop in crops %}
               <div class="form-check form-check-inline border rounded-2 px-3 py-1 bg-light">
@@ -33,18 +33,18 @@
           </div>
         </div>
 
-        <h6 class="fw-bold text-success mb-3"><i class="fa-solid fa-sliders me-2"></i>Field Baseline Conditions</h6>
+        <h6 class="fw-bold text-success mb-3"><i class="fa-solid fa-sliders me-2"></i>{{ t('compare.field_baseline') }}</h6>
         <div class="row g-3 mb-4">
-          {% for key, label in [('nitrogen','Nitrogen (N) kg/ha'),('phosphorus','Phosphorus (P) kg/ha'),('potassium','Potassium (K) kg/ha'),('ph','Soil pH'),('temperature','Temperature °C'),('humidity','Humidity %'),('rainfall','Seasonal Rainfall mm')] %}
+          {% for key in ['nitrogen','phosphorus','potassium','ph','temperature','humidity','rainfall'] %}
             <div class="col-sm-6 col-md-3">
-              <label class="form-label small fw-semibold" for="{{ key }}">{{ label }}</label>
+              <label class="form-label small fw-semibold" for="{{ key }}">{{ t('compare.field_' ~ key) }}</label>
               <input class="form-control form-control-sm" id="{{ key }}" name="{{ key }}" type="number" step="any" value="{{ values.get(key, '') if values else '' }}" required>
             </div>
           {% endfor %}
         </div>
 
         <button class="btn btn-success px-4 shadow-sm" type="submit">
-          <i class="fa-solid fa-scale-balanced me-2"></i>Compare Selected Crops
+          <i class="fa-solid fa-scale-balanced me-2"></i>{{ t('compare.compare_button') }}
         </button>
       </form>
     </div>
@@ -53,7 +53,7 @@
   {% if results %}
     <div class="card border-0 shadow-sm mb-4">
       <div class="card-header bg-white py-3 border-bottom">
-        <h5 class="mb-0 fw-bold"><i class="fa-solid fa-chart-column text-success me-2"></i>Comparative Suitability &amp; Feature Scores</h5>
+        <h5 class="mb-0 fw-bold"><i class="fa-solid fa-chart-column text-success me-2"></i>{{ t('compare.results_title') }}</h5>
       </div>
       <div class="card-body p-4">
         <div class="row g-4">
@@ -62,18 +62,18 @@
               <div class="card h-100 border rounded-3 p-3 bg-light">
                 <div class="d-flex justify-content-between align-items-center mb-2">
                   <h4 class="fw-bold mb-0 text-capitalize text-success">{{ item.crop }}</h4>
-                  <span class="badge bg-success fs-6">{{ item.dataset_fit }} / 100 dataset-fit</span>
+                  <span class="badge bg-success fs-6 dataset-fit">{{ item.dataset_fit }} / 100 {{ t('compare.dataset_fit') }}</span>
 
                 </div>
                 <div class="progress mb-3" style="height: 8px;">
                   <div class="progress-bar bg-success" style="width: {{ item.dataset_fit }}%"></div>
                 </div>
 
-                <h6 class="fw-bold small mb-2 text-muted text-uppercase">Dimension Scores:</h6>
+                <h6 class="fw-bold small mb-2 text-muted text-uppercase">{{ t('compare.dimension_scores') }}</h6>
                 <div class="list-group list-group-flush small bg-transparent">
                   {% for name, score in item.feature_scores.items() %}
                     <div class="list-group-item d-flex justify-content-between align-items-center px-0 bg-transparent py-1">
-                      <span class="text-capitalize">{{ name }}</span>
+                      <span class="text-capitalize">{{ t('compare.dimension_' ~ name) }}</span>
                       <strong>{{ score }}%</strong>
                     </div>
                   {% endfor %}

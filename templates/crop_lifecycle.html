@@ -3,9 +3,9 @@
 {% block content %}
 <div class="lifecycle-page">
   <header class="lifecycle-heading">
-    <p class="product-kicker">Crop lifecycle</p>
-    <h1>Growth, with the dates in view.</h1>
-    <p>Stage timing is estimated from the sowing date and configured crop durations. Confirm field conditions before acting.</p>
+    <p class="product-kicker">{{ t('lifecycle.kicker') }}</p>
+    <h1>{{ t('lifecycle.title') }}</h1>
+    <p>{{ t('lifecycle.description') }}</p>
   </header>
 
   {% if cycle %}
@@ -14,46 +14,46 @@
       <canvas></canvas>
     </div>
     <div class="lifecycle-stage-copy">
-      <p class="product-kicker">Current estimated stage</p>
+      <p class="product-kicker">{{ t('lifecycle.current_stage') }}</p>
       <h2 id="lifecycle-crop-title">{{ cycle.crop_name|title }} · {{ cycle.current_stage }}</h2>
-      <p>Sown {{ cycle.sowing_date }} · Estimated harvest {{ cycle.expected_harvest_date }}</p>
+      <p>{{ t('lifecycle.sown') }} {{ cycle.sowing_date }} · {{ t('lifecycle.harvest') }} {{ cycle.expected_harvest_date }}</p>
       <div class="lifecycle-progress" role="progressbar" aria-label="Estimated crop progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ cycle.progress|round|int }}"><span style="width: {{ cycle.progress }}%"></span></div>
-      <p class="small mt-2">{{ cycle.progress|round|int }}% estimated · {{ cycle.days_until_next_stage }} days to {{ cycle.next_stage }}</p>
-      <p class="small text-muted mb-0">This estimate is not a field-observed growth measurement.</p>
+      <p class="small mt-2">{{ cycle.progress|round|int }}% {{ t('lifecycle.progress')|lower }} · {{ cycle.days_until_next_stage }} {{ t('common.days') }} {{ t('lifecycle.days_to_stage') }} {{ cycle.next_stage }}</p>
+      <p class="small text-muted mb-0">{{ t('lifecycle.not_a_measurement') }}</p>
     </div>
   </section>
 
   <section class="lifecycle-track" aria-labelledby="stage-timeline-title">
-    <h2 id="stage-timeline-title">Crop stage timeline</h2>
+    <h2 id="stage-timeline-title">{{ t('lifecycle.timeline') }}</h2>
     <ol class="lifecycle-track__steps">
       {% for stage in cycle.stage_timeline %}
       <li class="lifecycle-track__step {{ 'is-current' if stage.status == 'CURRENT' else 'is-complete' if stage.status == 'COMPLETED' else '' }}" {% if stage.status == 'CURRENT' %}aria-current="step"{% endif %}>
-        <strong>{{ stage.name }}</strong><small>{{ stage.status|title }} · {{ stage.duration_days }} configured days</small>
+        <strong>{{ stage.name }}</strong><small>{{ t('lifecycle.' ~ stage.status|lower) }} · {{ stage.duration_days }} {{ t('lifecycle.configured_days') }}</small>
       </li>
       {% endfor %}
     </ol>
   </section>
 
   <section class="dashboard-panel lifecycle-tasks" aria-labelledby="stage-tasks-title">
-    <p class="dashboard-section-label">Optional actions</p><h2 id="stage-tasks-title">Tasks for this stage</h2>
+    <p class="dashboard-section-label">{{ t('lifecycle.optional_actions') }}</p><h2 id="stage-tasks-title">{{ t('lifecycle.tasks_stage') }}</h2>
     {% for item in cycle.activities %}
-    <div class="dashboard-activity"><strong>{{ item }}</strong><form method="post" action="{{ url_for('create_activity') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="title" value="{{ item }}"><input type="hidden" name="activity_type" value="Field inspection"><input type="hidden" name="description" value="Recommended for the {{ cycle.current_stage }} stage."><input type="hidden" name="due_date" value="{{ today }}"><button class="btn btn-sm btn-outline-success" type="submit">Add as pending</button></form></div>
-    {% else %}<p class="dashboard-empty">No stage-specific tasks are listed for this crop.</p>{% endfor %}
+    <div class="dashboard-activity"><strong>{{ item }}</strong><form method="post" action="{{ url_for('create_activity') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="title" value="{{ item }}"><input type="hidden" name="activity_type" value="Field inspection"><input type="hidden" name="description" value="Recommended for the {{ cycle.current_stage }} stage."><input type="hidden" name="due_date" value="{{ today }}"><button class="btn btn-sm btn-outline-success" type="submit">{{ t('common.add_pending') }}</button></form></div>
+    {% else %}<p class="dashboard-empty">{{ t('lifecycle.no_stage_tasks') }}</p>{% endfor %}
   </section>
   {% else %}
   <section class="lifecycle-empty" aria-labelledby="no-cycle-title">
-    <p class="product-kicker">No active crop cycle</p>
-    <h2 id="no-cycle-title">Start with the crop you planted.</h2>
-    <p>Choose a supported crop and enter its actual sowing date to see an estimated stage timeline.</p>
+    <p class="product-kicker">{{ t('lifecycle.no_active_cycle') }}</p>
+    <h2 id="no-cycle-title">{{ t('lifecycle.start_with_crop') }}</h2>
+    <p>{{ t('lifecycle.choose_supported_crop') }}</p>
   </section>
   {% endif %}
 
   <section class="lifecycle-start" aria-labelledby="start-cycle-title">
-    <h2 id="start-cycle-title">{% if cycle %}Start another crop cycle{% else %}Start a crop cycle{% endif %}</h2>
+    <h2 id="start-cycle-title">{% if cycle %}{{ t('lifecycle.start_another_cycle') }}{% else %}{{ t('lifecycle.start_cycle') }}{% endif %}</h2>
     <form method="POST" class="row g-3 align-items-end"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-      <div class="col-md-6"><label class="form-label" for="crop-name">Crop</label><select name="crop_name" id="crop-name" class="form-select" required>{% for crop in all_crops %}<option value="{{ crop }}" {{ 'selected' if crop|lower == selected_crop|lower else '' }}>{{ crop|title }}</option>{% endfor %}</select></div>
-      <div class="col-md-4"><label class="form-label" for="sowing-date">Actual sowing date</label><input type="date" id="sowing-date" name="sowing_date" class="form-control" max="{{ today }}" required></div>
-      <div class="col-md-2"><button type="submit" class="btn btn-success w-100">Start cycle</button></div>
+      <div class="col-md-6"><label class="form-label" for="crop-name">{{ t('lifecycle.crop_label') }}</label><select name="crop_name" id="crop-name" class="form-select" required>{% for crop in all_crops %}<option value="{{ crop }}" {{ 'selected' if crop|lower == selected_crop|lower else '' }}>{{ crop|title }}</option>{% endfor %}</select></div>
+      <div class="col-md-4"><label class="form-label" for="sowing-date">{{ t('lifecycle.sowing_date') }}</label><input type="date" id="sowing-date" name="sowing_date" class="form-control" max="{{ today }}" required></div>
+      <div class="col-md-2"><button type="submit" class="btn btn-success w-100">{{ t('lifecycle.start_cycle') }}</button></div>
     </form>
   </section>
 </div>

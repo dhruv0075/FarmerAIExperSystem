@@ -1,9 +1,8 @@
 """Small file-backed translation helpers for the Flask/Jinja application."""
 
 import json
-from functools import lru_cache
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, Tuple
 
 
 LOCALE_DIRECTORY = Path(__file__).resolve().parents[1] / "locales"
@@ -15,13 +14,25 @@ SUPPORTED_LANGUAGES = {
 DEFAULT_LANGUAGE = "en"
 
 
-@lru_cache(maxsize=len(SUPPORTED_LANGUAGES))
+_RESOURCE_CACHE: Dict[str, Tuple[int, int, Dict[str, Any]]] = {}
+
+
 def _load_resource(language: str) -> Dict[str, Any]:
     resource_path = LOCALE_DIRECTORY / f"{language}.json"
+    metadata = resource_path.stat()
+    cached = _RESOURCE_CACHE.get(language)
+    if cached and cached[:2] == (metadata.st_mtime_ns, metadata.st_size):
+        return cached[2]
+
     with resource_path.open(encoding="utf-8") as resource_file:
         resource = json.load(resource_file)
     if not isinstance(resource, dict):
         raise ValueError(f"Translation resource for {language} must be a JSON object.")
+    _RESOURCE_CACHE[language] = (
+        metadata.st_mtime_ns,
+        metadata.st_size,
+        resource,
+    )
     return resource
 
 

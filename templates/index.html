@@ -8,53 +8,53 @@
   <div class="product-hero__wash" aria-hidden="true"></div>
   <div class="product-hero__scene" data-farm-scene="field" data-scene-state="loading" aria-hidden="true"><canvas></canvas></div>
   <div class="product-hero__content">
-    <p class="product-eyebrow"><span></span> Grounded in your farm, guided by evidence</p>
-    <h1 id="hero-title">AgriWise AI</h1>
-    <p class="product-hero__tagline">Understand field conditions. Review a crop recommendation. Track the lifecycle.</p>
-    <p class="product-hero__description">Use farm inputs and a trained crop classifier to review crop suggestions, then track estimated crop stages and keep farm records. Farmer records do not automatically retrain the model.</p>
+    <p class="product-eyebrow"><span></span> {{ t('home.eyebrow') }}</p>
+    <h1 id="hero-title">{{ t('home.hero_title') }}</h1>
+    <p class="product-hero__tagline">{{ t('home.tagline') }}</p>
+    <p class="product-hero__description">{{ t('home.description') }}</p>
     <div class="product-hero__actions">
       {% if session.get('user_id') %}
-        <a class="product-button product-button--light" href="{{ url_for('dashboard') }}">Open Dashboard <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+        <a class="product-button product-button--light" href="{{ url_for('dashboard') }}">{{ t('home.open_dashboard') }} <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
       {% else %}
-        <a class="product-button product-button--light" href="{{ url_for('register') }}">Start Farming Smarter <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
-        <a class="product-button product-button--outline" href="{{ url_for('login') }}">Login</a>
+        <a class="product-button product-button--light" href="{{ url_for('register') }}">{{ t('home.start_farming_smarter') }} <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+        <a class="product-button product-button--outline" href="{{ url_for('login') }}">{{ t('home.login') }}</a>
       {% endif %}
     </div>
     <div class="product-hero__proof" aria-label="Product principles">
-      <span><i class="fa-solid fa-seedling" aria-hidden="true"></i> Crop choices</span>
-      <span><i class="fa-solid fa-cloud-sun" aria-hidden="true"></i> Local weather</span>
-      <span><i class="fa-solid fa-check-double" aria-hidden="true"></i> Confirmed actions</span>
+      <span><i class="fa-solid fa-seedling" aria-hidden="true"></i> {{ t('home.crop_choices') }}</span>
+      <span><i class="fa-solid fa-cloud-sun" aria-hidden="true"></i> {{ t('home.local_weather') }}</span>
+      <span><i class="fa-solid fa-check-double" aria-hidden="true"></i> {{ t('home.confirmed_actions') }}</span>
     </div>
   </div>
-  <div class="product-hero__caption"><span>Field context</span><span>Weather-aware planning</span><span>Farmer in control</span></div>
+  <div class="product-hero__caption"><span>{{ t('home.field_context') }}</span><span>{{ t('home.weather_aware_planning') }}</span><span>{{ t('home.farmer_in_control') }}</span></div>
 </section>
 
 <section class="product-section product-workflow" aria-labelledby="workflow-title">
-  <div class="product-section__heading"><div><p class="product-kicker">Closed-loop farming workflow</p><h2 id="workflow-title">From field understanding to crop lifecycle tracking.</h2></div></div>
+  <div class="product-section__heading"><div><p class="product-kicker">{{ t('home.workflow_title') }}</p><h2 id="workflow-title">{{ t('home.workflow_title') }}</h2></div></div>
   <ol class="workflow-steps">
-    <li><span>01</span><div><h3>Understand the farm</h3><p>Capture field data, soil inputs and local conditions before choosing a crop.</p></div></li>
-    <li><span>02</span><div><h3>Review crop suggestions</h3><p>Use a trained classifier to compare crop options from the submitted soil and climate inputs.</p></div></li>
-    <li><span>03</span><div><h3>Track the crop lifecycle</h3><p>Monitor crop stages and use the crop-specific timing plan through the season.</p></div></li>
-    <li><span>04</span><div><h3>Keep farm records</h3><p>Record actions and outcomes for your farm history. These records do not automatically retrain the crop model.</p></div></li>
+    <li><span>01</span><div><h3>{{ t('home.step_understand') }}</h3><p>{{ t('home.step_understand_desc') }}</p></div></li>
+    <li><span>02</span><div><h3>{{ t('home.step_review') }}</h3><p>{{ t('home.step_review_desc') }}</p></div></li>
+    <li><span>03</span><div><h3>{{ t('home.step_track') }}</h3><p>{{ t('home.step_track_desc') }}</p></div></li>
+    <li><span>04</span><div><h3>{{ t('home.step_records') }}</h3><p>{{ t('home.step_records_desc') }}</p></div></li>
   </ol>
 </section>
 
 <section class="product-proof-band">
-  <div><span class="product-proof-band__index">01</span><h2>Crop recommendation is guided by farm reality.</h2></div>
-  <p>The system uses farm inputs to suggest crop options and tracks the active cycle through estimated stages. Confirmed actions can inform rule-based advisories but do not retrain the crop classifier.</p>
+  <div><span class="product-proof-band__index">01</span><h2>{{ t('home.proof_title') }}</h2></div>
+  <p>{{ t('home.proof_description') }}</p>
   {% if session.get('user_id') %}
-    <a class="product-button product-button--dark" href="{{ url_for('dashboard') }}">Continue to your farm <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+    <a class="product-button product-button--dark" href="{{ url_for('dashboard') }}">{{ t('home.continue_to_farm') }} <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
   {% else %}
-    <a class="product-button product-button--dark" href="{{ url_for('register') }}">Start with your farm <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
+    <a class="product-button product-button--dark" href="{{ url_for('register') }}">{{ t('home.start_with_your_farm') }} <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
   {% endif %}
 </section>
 
 <section class="product-section product-capabilities" aria-labelledby="capabilities-title">
-  <div class="product-section__heading"><div><p class="product-kicker">Built around the crop cycle</p><h2 id="capabilities-title">Practical, crop-specific guidance for the field.</h2></div></div>
+  <div class="product-section__heading"><div><p class="product-kicker">{{ t('home.capabilities_title') }}</p><h2 id="capabilities-title">{{ t('home.capabilities_title') }}</h2></div></div>
   <div class="capability-list">
-    <article><span>01</span><div><h3>Farm understanding</h3><p>Use the farm profile and soil inputs to create a real context before recommending a crop.</p></div><i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></article>
-    <article><span>02</span><div><h3>Crop recommendation</h3><p>Review crop suggestions from the trained classifier using submitted soil and climate inputs.</p></div><i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></article>
-    <article><span>03</span><div><h3>Lifecycle + farm history</h3><p>Track estimated crop stages and record actions. Farm history is not used to automatically train the classifier.</p></div><i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></article>
+    <article><span>01</span><div><h3>{{ t('home.capability_1') }}</h3><p>{{ t('home.capability_1_desc') }}</p></div><i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></article>
+    <article><span>02</span><div><h3>{{ t('home.capability_2') }}</h3><p>{{ t('home.capability_2_desc') }}</p></div><i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></article>
+    <article><span>03</span><div><h3>{{ t('home.capability_3') }}</h3><p>{{ t('home.capability_3_desc') }}</p></div><i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></article>
   </div>
 </section>
 </div>

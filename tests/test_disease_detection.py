@@ -170,6 +170,34 @@ def test_standalone_detection_shows_suggestion_without_saving_problem_report(tmp
         assert connection.execute("SELECT COUNT(*) FROM disease_predictions").fetchone()[0] == 0
 
 
+def test_detection_uses_lifecycle_crop_without_asking_or_accepting_an_override(tmp_path):
+    application, client, _ = setup_client(tmp_path)
+    application.config["DISEASE_PREDICTOR"] = raw_model_prediction
+    client.post("/lifecycle", data={
+        "crop_name": "tomato",
+        "sowing_date": "2020-01-01",
+    })
+
+    page = client.get("/disease-detection")
+
+    assert page.status_code == 200
+    assert b'value="Tomato"' not in page.data
+    assert b'name="crop"' not in page.data
+    assert b"Using the crop selected in your current crop lifecycle." in page.data
+
+    response = client.post(
+        "/disease-detection",
+        data={
+            "crop": "Potato",
+            "photo": (io.BytesIO(image_bytes()), "leaf.png", "image/png"),
+        },
+    )
+
+    assert response.status_code == 200
+    assert b"Closest model match: Tomato" in response.data
+    assert b"no matching crop class" not in response.data
+
+
 def test_standalone_detection_blocks_unsupported_rice_crop(tmp_path):
     application, client, database = setup_client(tmp_path)
     application.config["DISEASE_PREDICTOR"] = raw_model_prediction

@@ -1,33 +1,33 @@
 {% extends "base.html" %}
 
-{% block title %}Farm Setup Wizard — AgriWise AI{% endblock %}
+{% block title %}{{ t('farm_setup.title') }} — AgriWise AI{% endblock %}
 
 {% block content %}
 <div class="container py-3" style="max-width: 860px;">
   <!-- Wizard Header -->
   <div class="text-center mb-4">
-    <span class="badge bg-success-subtle text-success px-3 py-2 rounded-pill fw-semibold mb-2">Step 1 of 2: Digital Farm Initialization</span>
-    <h2 class="display-6 fw-bold">Welcome to AgriWise AI</h2>
-    <p class="text-muted">Let's configure your digital farm representation to enable location-aware and weather-adaptive agricultural intelligence.</p>
+    <span class="badge bg-success-subtle text-success px-3 py-2 rounded-pill fw-semibold mb-2">{{ t('farm_setup.step_one') }}</span>
+    <h2 class="display-6 fw-bold">{{ t('farm_setup.welcome') }}</h2>
+    <p class="text-muted">{{ t('farm_setup.setup_intro') }}</p>
   </div>
 
   <form method="POST" action="{{ url_for('farm_setup') }}" id="farmSetupForm"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
     <!-- CARD 1: LOCATION DETERMINATION -->
     <div class="card mb-4 border-0 shadow-sm" id="locationStepCard">
       <div class="card-header bg-white py-3 border-bottom">
-        <h5 class="mb-0 fw-bold"><i class="fa-solid fa-map-location-dot text-success me-2"></i>Farm Location Detection</h5>
+        <h5 class="mb-0 fw-bold"><i class="fa-solid fa-map-location-dot text-success me-2"></i>{{ t('farm_setup.farm_location') }}</h5>
       </div>
       <div class="card-body p-4">
         <!-- Question: At the farm? -->
         <div id="locationQuestionSection" class="text-center py-3">
-          <h4 class="fw-semibold mb-3">Are you currently at your farm?</h4>
-          <p class="text-muted mb-4">Using real GPS coordinates allows AgriWise AI to retrieve pinpoint local weather and regional mandi prices.</p>
+          <h4 class="fw-semibold mb-3">{{ t('farm_setup.currently_at_farm') }}</h4>
+          <p class="text-muted mb-4">{{ t('farm_setup.gps_help') }}</p>
           <div class="d-flex justify-content-center gap-3 flex-wrap">
             <button type="button" class="btn btn-success btn-lg px-4 shadow-sm" id="btnDetectLocation">
-              <i class="fa-solid fa-crosshairs me-2"></i>YES — Detect My Farm Location
+              <i class="fa-solid fa-crosshairs me-2"></i>{{ t('farm_setup.yes_detect') }}
             </button>
             <button type="button" class="btn btn-outline-secondary btn-lg px-4" id="btnManualLocation">
-              <i class="fa-regular fa-map me-2"></i>NO — Select on Map / Enter Manually
+              <i class="fa-regular fa-map me-2"></i>{{ t('farm_setup.no_manual') }}
             </button>
           </div>
         </div>
@@ -35,29 +35,29 @@
         <!-- Detection in progress indicator -->
         <div id="detectionLoading" class="text-center py-4 d-none">
           <div class="spinner-border text-success mb-3" style="width: 3rem; height: 3rem;" role="status"></div>
-          <h5 class="fw-semibold">Acquiring High-Precision Geolocation...</h5>
-          <p class="text-muted small">Please allow location access in your browser.</p>
+          <h5 class="fw-semibold">{{ t('farm_setup.acquiring_location') }}</h5>
+          <p class="text-muted small">{{ t('farm_setup.allow_browser') }}</p>
         </div>
 
         <!-- Detected Location Confirmation Box -->
         <div id="detectedLocationResult" class="d-none mt-3 p-3 bg-light rounded-3 border border-success-subtle">
           <div class="d-flex justify-content-between align-items-center mb-2">
-            <span class="badge bg-success"><i class="fa-solid fa-check me-1"></i>Coordinates Acquired</span>
+            <span class="badge bg-success"><i class="fa-solid fa-check me-1"></i>{{ t('farm_setup.location_acquired') }}</span>
             <button type="button" class="btn btn-sm btn-link text-decoration-none text-success" id="btnEditDetectedLocation">
-              <i class="fa-solid fa-pen-to-square me-1"></i>Edit Location
+              <i class="fa-solid fa-pen-to-square me-1"></i>{{ t('farm_setup.edit_location') }}
             </button>
           </div>
           <div class="row g-2 small">
-            <div class="col-sm-6"><strong>Village / Locality:</strong> <span id="dispVillage">Detecting...</span></div>
-            <div class="col-sm-6"><strong>Taluka / Sub-district:</strong> <span id="dispTaluka">Detecting...</span></div>
-            <div class="col-sm-6"><strong>District:</strong> <span id="dispDistrict">Detecting...</span></div>
-            <div class="col-sm-6"><strong>State:</strong> <span id="dispState">Detecting...</span></div>
-            <div class="col-sm-6"><strong>Coordinates:</strong> <span id="dispCoords">--</span></div>
-            <div class="col-sm-6"><strong>Provider:</strong> <span id="dispSource" class="badge bg-secondary-subtle text-secondary">Nominatim</span></div>
+            <div class="col-sm-6"><strong>{{ t('farm_setup.village') }}:</strong> <span id="dispVillage">{{ t('farm_setup.detecting') }}</span></div>
+            <div class="col-sm-6"><strong>{{ t('farm_setup.taluka') }}:</strong> <span id="dispTaluka">{{ t('farm_setup.detecting') }}</span></div>
+            <div class="col-sm-6"><strong>{{ t('farm_setup.district') }}:</strong> <span id="dispDistrict">{{ t('farm_setup.detecting') }}</span></div>
+            <div class="col-sm-6"><strong>{{ t('farm_setup.state') }}:</strong> <span id="dispState">{{ t('farm_setup.detecting') }}</span></div>
+            <div class="col-sm-6"><strong>{{ t('farm_setup.coordinates') }}:</strong> <span id="dispCoords">--</span></div>
+            <div class="col-sm-6"><strong>{{ t('farm_setup.provider') }}:</strong> <span id="dispSource" class="badge bg-secondary-subtle text-secondary">Nominatim</span></div>
           </div>
           <div class="mt-3 text-center">
             <button type="button" class="btn btn-sm btn-success px-4" id="btnConfirmLocation">
-              <i class="fa-solid fa-circle-check me-1"></i>Yes, This Is My Farm Location
+              <i class="fa-solid fa-circle-check me-1"></i>{{ t('farm_setup.yes_this_is_farm') }}
             </button>
           </div>
         </div>
@@ -65,22 +65,22 @@
         <!-- Interactive Map and Manual Input Section -->
         <div id="mapSelectionSection" class="d-none mt-4">
           <div class="alert alert-info py-2 small mb-3">
-            <i class="fa-solid fa-info-circle me-1"></i>Click anywhere on the map or drag the marker to pin your exact farm location.
+            <i class="fa-solid fa-info-circle me-1"></i>{{ t('farm_setup.map_help') }}
           </div>
           <div id="farmMap" style="height: 300px; border-radius: 12px; border: 1px solid #ced4da;" class="mb-3"></div>
           
           <div class="row g-3">
             <div class="col-md-6">
-              <label class="form-label small fw-semibold">Latitude</label>
+              <label class="form-label small fw-semibold">{{ t('farm_setup.latitude') }}</label>
               <input type="number" step="any" class="form-control form-control-sm" id="inputLatitude" name="latitude" value="{{ default_lat if default_lat is not none else '' }}" required>
             </div>
             <div class="col-md-6">
-              <label class="form-label small fw-semibold">Longitude</label>
+              <label class="form-label small fw-semibold">{{ t('farm_setup.longitude') }}</label>
               <input type="number" step="any" class="form-control form-control-sm" id="inputLongitude" name="longitude" value="{{ default_lon if default_lon is not none else '' }}" required>
             </div>
             <div class="col-12">
-              <label class="form-label small fw-semibold">Location / Village Name</label>
-              <input type="text" class="form-control" id="inputLocationName" name="location_name" placeholder="e.g. Haveli, Pune, Maharashtra" value="{{ default_location or '' }}" required>
+              <label class="form-label small fw-semibold">{{ t('farm_setup.location_name') }}</label>
+              <input type="text" class="form-control" id="inputLocationName" name="location_name" placeholder="{{ t('farm_setup.location_placeholder') }}" value="{{ default_location or '' }}" required>
             </div>
           </div>
         </div>
@@ -90,111 +90,111 @@
     <!-- CARD 2: FARM PROFILE DETAILS -->
     <div class="card mb-4 border-0 shadow-sm">
       <div class="card-header bg-white py-3 border-bottom">
-        <h5 class="mb-0 fw-bold"><i class="fa-solid fa-tractor text-success me-2"></i>Farm Characteristics</h5>
+        <h5 class="mb-0 fw-bold"><i class="fa-solid fa-tractor text-success me-2"></i>{{ t('farm_setup.farm_characteristics') }}</h5>
       </div>
       <div class="card-body p-4">
         <div class="row g-3">
           <div class="col-md-6">
-            <label class="form-label fw-semibold">Farm Name <span class="text-danger">*</span></label>
-            <input type="text" class="form-control" name="farm_name" placeholder="e.g. Green Valley Farm" required>
+            <label class="form-label fw-semibold">{{ t('farm_setup.farm_name') }} <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" name="farm_name" placeholder="{{ t('farm_setup.farm_name_placeholder') }}" required>
           </div>
 
           <div class="col-md-3 col-6">
-            <label class="form-label fw-semibold">Farm Area <span class="text-danger">*</span></label>
+            <label class="form-label fw-semibold">{{ t('farm_setup.farm_area') }} <span class="text-danger">*</span></label>
             <input type="number" step="0.1" min="0.1" class="form-control" name="area" value="2.5" required>
           </div>
 
           <div class="col-md-3 col-6">
-            <label class="form-label fw-semibold">Area Unit</label>
+            <label class="form-label fw-semibold">{{ t('farm_setup.area_unit') }}</label>
             <select class="form-select" name="area_unit">
-              <option value="acre" selected>Acre</option>
-              <option value="hectare">Hectare</option>
+              <option value="acre" selected>{{ t('farm_setup.acre') }}</option>
+              <option value="hectare">{{ t('farm_setup.hectare') }}</option>
             </select>
           </div>
 
           <div class="col-md-4">
-            <label class="form-label fw-semibold">Farm Type</label>
+            <label class="form-label fw-semibold">{{ t('farm_setup.farm_type') }}</label>
             <select class="form-select" name="farm_type">
-              <option value="Irrigated" selected>Irrigated</option>
-              <option value="Rain-fed">Rain-fed</option>
-              <option value="Mixed">Mixed</option>
+              <option value="Irrigated" selected>{{ t('farm_setup.irrigated') }}</option>
+              <option value="Rain-fed">{{ t('farm_setup.rain_fed') }}</option>
+              <option value="Mixed">{{ t('farm_setup.mixed') }}</option>
             </select>
           </div>
 
           <div class="col-md-4">
-            <label class="form-label fw-semibold">Soil Type</label>
+            <label class="form-label fw-semibold">{{ t('farm_setup.soil_type') }}</label>
             <select class="form-select" name="soil_type">
-              <option value="Black" selected>Black Soil (Regur)</option>
-              <option value="Red">Red Soil</option>
-              <option value="Alluvial">Alluvial Soil</option>
-              <option value="Sandy">Sandy Loam</option>
-              <option value="Loamy">Loamy Soil</option>
-              <option value="Clay">Clay Soil</option>
-              <option value="Other / Unknown">Other / Unknown</option>
+              <option value="Black" selected>{{ t('farm_setup.black_soil') }}</option>
+              <option value="Red">{{ t('farm_setup.red_soil') }}</option>
+              <option value="Alluvial">{{ t('farm_setup.alluvial_soil') }}</option>
+              <option value="Sandy">{{ t('farm_setup.sandy_loam') }}</option>
+              <option value="Loamy">{{ t('farm_setup.loamy_soil') }}</option>
+              <option value="Clay">{{ t('farm_setup.clay_soil') }}</option>
+              <option value="Other / Unknown">{{ t('farm_setup.other_unknown') }}</option>
             </select>
           </div>
 
           <div class="col-md-4">
-            <label class="form-label fw-semibold">Water Availability</label>
+            <label class="form-label fw-semibold">{{ t('farm_setup.water_availability') }}</label>
             <select class="form-select" name="water_availability">
-              <option value="High">High (Perennial Source)</option>
-              <option value="Medium" selected>Medium (Adequate for 2 cycles)</option>
-              <option value="Limited">Limited / Low</option>
-              <option value="Seasonal">Seasonal / Rain-Dependent</option>
+              <option value="High">{{ t('farm_setup.water_high') }}</option>
+              <option value="Medium" selected>{{ t('farm_setup.water_medium') }}</option>
+              <option value="Limited">{{ t('farm_setup.water_limited') }}</option>
+              <option value="Seasonal">{{ t('farm_setup.water_seasonal') }}</option>
             </select>
           </div>
 
           <div class="col-md-4">
-            <label class="form-label fw-semibold">Primary Water Source</label>
+            <label class="form-label fw-semibold">{{ t('farm_setup.primary_water_source') }}</label>
             <select class="form-select" name="water_source">
-              <option value="Well" selected>Open Well</option>
-              <option value="Borewell">Borewell</option>
-              <option value="Canal">Irrigation Canal</option>
-              <option value="River">River / Stream</option>
-              <option value="Pond">Farm Pond</option>
-              <option value="Rain-dependent">Rain-dependent</option>
-              <option value="Other">Other</option>
+              <option value="Well" selected>{{ t('farm_setup.open_well') }}</option>
+              <option value="Borewell">{{ t('farm_setup.borewell') }}</option>
+              <option value="Canal">{{ t('farm_setup.irrigation_canal') }}</option>
+              <option value="River">{{ t('farm_setup.river') }}</option>
+              <option value="Pond">{{ t('farm_setup.farm_pond') }}</option>
+              <option value="Rain-dependent">{{ t('farm_setup.rain_dependent') }}</option>
+              <option value="Other">{{ t('farm_setup.other') }}</option>
             </select>
           </div>
 
           <div class="col-md-4">
-            <label class="form-label fw-semibold">Irrigation Method</label>
+            <label class="form-label fw-semibold">{{ t('farm_setup.irrigation_method') }}</label>
             <select class="form-select" name="irrigation_type">
-              <option value="Drip" selected>Drip Irrigation</option>
-              <option value="Sprinkler">Sprinkler System</option>
-              <option value="Flood">Surface Flood</option>
-              <option value="Furrow">Furrow Irrigation</option>
-              <option value="Rain-fed">Rain-fed (No Equipment)</option>
+              <option value="Drip" selected>{{ t('farm_setup.drip') }}</option>
+              <option value="Sprinkler">{{ t('farm_setup.sprinkler') }}</option>
+              <option value="Flood">{{ t('farm_setup.surface_flood') }}</option>
+              <option value="Furrow">{{ t('farm_setup.furrow') }}</option>
+              <option value="Rain-fed">{{ t('farm_setup.rain_fed_no_equipment') }}</option>
             </select>
           </div>
 
           <div class="col-md-4">
-            <label class="form-label fw-semibold">Risk Preference</label>
+            <label class="form-label fw-semibold">{{ t('farm_setup.risk_preference') }}</label>
             <select class="form-select" name="risk_preference">
-              <option value="Low risk">Low Risk (Focus on Stable Food Crops)</option>
-              <option value="Balanced" selected>Balanced (Optimal Profit vs Risk)</option>
-              <option value="Higher profit potential">Higher Profit Potential (Cash & Horticulture)</option>
+              <option value="Low risk">{{ t('farm_setup.low_risk') }}</option>
+              <option value="Balanced" selected>{{ t('farm_setup.balanced_risk') }}</option>
+              <option value="Higher profit potential">{{ t('farm_setup.high_profit') }}</option>
             </select>
           </div>
 
           <div class="col-md-4">
-            <label class="form-label fw-semibold">Previous Crop</label>
-            <input type="text" class="form-control" name="previous_crop" placeholder="e.g. Wheat, Soybean">
+            <label class="form-label fw-semibold">{{ t('farm_setup.previous_crop') }}</label>
+            <input type="text" class="form-control" name="previous_crop" placeholder="{{ t('farm_setup.previous_crop_placeholder') }}">
           </div>
 
           <div class="col-md-4">
-            <label class="form-label fw-semibold">Previous Harvest Date</label>
+            <label class="form-label fw-semibold">{{ t('farm_setup.previous_harvest_date') }}</label>
             <input type="date" class="form-control" name="previous_harvest_date">
           </div>
 
           <div class="col-md-4">
-            <label class="form-label fw-semibold">Crop Preference</label>
+            <label class="form-label fw-semibold">{{ t('farm_setup.crop_preference') }}</label>
             <select class="form-select" name="preferred_crop_type">
-              <option value="No preference" selected>No Preference (Let AI Suggest)</option>
-              <option value="Food crop">Food Grains & Cereals</option>
-              <option value="Cash crop">Cash / Commercial Crop</option>
-              <option value="Vegetable">Vegetables</option>
-              <option value="Fruit">Fruit / Orchard Crop</option>
+              <option value="No preference" selected>{{ t('farm_setup.no_preference') }}</option>
+              <option value="Food crop">{{ t('farm_setup.food_crop') }}</option>
+              <option value="Cash crop">{{ t('farm_setup.cash_crop') }}</option>
+              <option value="Vegetable">{{ t('farm_setup.vegetable_crop') }}</option>
+              <option value="Fruit">{{ t('farm_setup.fruit_crop') }}</option>
             </select>
           </div>
         </div>
@@ -204,33 +204,33 @@
     <!-- CARD 3: REQUIRED SOIL TEST INFORMATION -->
     <div class="card mb-4 border-0 shadow-sm">
       <div class="card-header bg-white py-3 border-bottom">
-        <h5 class="mb-0 fw-bold"><i class="fa-solid fa-vial text-success me-2"></i>Soil & Nutrient Baseline</h5>
+        <h5 class="mb-0 fw-bold"><i class="fa-solid fa-vial text-success me-2"></i>{{ t('farm_setup.soil_baseline') }}</h5>
       </div>
       <div class="card-body p-4">
         <div class="alert alert-info py-2 small mb-3">
           <i class="fa-solid fa-circle-info me-1"></i>
-          Enter measured values from a Soil Health Card or lab report. Soil type alone cannot determine N, P, K, or pH; do not guess these values.
+          {{ t('farm_setup.measured_soil_help') }}
         </div>
 
         <div class="row g-3">
           <div class="col-md-3 col-6">
-            <label class="form-label small fw-semibold">Nitrogen (N) <span class="text-muted">(kg/ha)</span> <span class="text-danger">*</span></label>
+            <label class="form-label small fw-semibold">{{ t('farm_setup.nitrogen') }} (N) <span class="text-muted">(kg/ha)</span> <span class="text-danger">*</span></label>
             <input type="number" step="0.1" min="0" class="form-control" name="nitrogen" value="{{ soil.nitrogen if soil and soil.nitrogen is not none else '' }}" required>
           </div>
           <div class="col-md-3 col-6">
-            <label class="form-label small fw-semibold">Phosphorus (P) <span class="text-muted">(kg/ha)</span> <span class="text-danger">*</span></label>
+            <label class="form-label small fw-semibold">{{ t('farm_setup.phosphorus') }} (P) <span class="text-muted">(kg/ha)</span> <span class="text-danger">*</span></label>
             <input type="number" step="0.1" min="0" class="form-control" name="phosphorus" value="{{ soil.phosphorus if soil and soil.phosphorus is not none else '' }}" required>
           </div>
           <div class="col-md-3 col-6">
-            <label class="form-label small fw-semibold">Potassium (K) <span class="text-muted">(kg/ha)</span> <span class="text-danger">*</span></label>
+            <label class="form-label small fw-semibold">{{ t('farm_setup.potassium') }} (K) <span class="text-muted">(kg/ha)</span> <span class="text-danger">*</span></label>
             <input type="number" step="0.1" min="0" class="form-control" name="potassium" value="{{ soil.potassium if soil and soil.potassium is not none else '' }}" required>
           </div>
           <div class="col-md-3 col-6">
-            <label class="form-label small fw-semibold">Soil pH <span class="text-muted">(0 - 14)</span> <span class="text-danger">*</span></label>
+            <label class="form-label small fw-semibold">{{ t('farm_setup.soil_ph') }} <span class="text-muted">(0 - 14)</span> <span class="text-danger">*</span></label>
             <input type="number" step="0.1" min="0" max="14" class="form-control" name="ph" value="{{ soil.ph if soil and soil.ph is not none else '' }}" required>
           </div>
           <div class="col-md-4 col-6">
-            <label class="form-label small fw-semibold">Soil Moisture <span class="text-muted">(%)</span> (Optional)</label>
+            <label class="form-label small fw-semibold">{{ t('farm_setup.soil_moisture') }} <span class="text-muted">(%)</span> ({{ t('common.optional') }})</label>
             <input type="number" step="0.1" min="0" max="100" class="form-control" name="moisture" value="{{ soil.moisture if soil and soil.moisture is not none else '' }}">
           </div>
         </div>
@@ -240,7 +240,7 @@
     <!-- Submit Section -->
     <div class="text-center mb-5">
       <button type="submit" class="btn btn-success btn-lg px-5 shadow-sm">
-        <i class="fa-solid fa-floppy-disk me-2"></i>Complete Setup & Initialize Digital Farm
+        <i class="fa-solid fa-floppy-disk me-2"></i>{{ t('farm_setup.complete_setup') }}
       </button>
     </div>
   </form>
@@ -301,7 +301,7 @@
   // Geolocation Detection
   document.getElementById('btnDetectLocation').addEventListener('click', function() {
     if (!navigator.geolocation) {
-      alert('Geolocation is not supported by your browser.');
+      alert({{ t('farm_setup.geolocation_unsupported')|tojson }});
       showManualMap();
       return;
     }
@@ -329,21 +329,21 @@
         })
         .then(r => r.json()).then(payload => payload.location || {})
         .then(data => {
-          document.getElementById('dispVillage').innerText = data.village || data.town || 'Recorded';
-          document.getElementById('dispTaluka').innerText = data.taluka || data.district || 'Recorded';
-          document.getElementById('dispDistrict').innerText = data.district || 'Recorded';
-          document.getElementById('dispState').innerText = data.state || 'Recorded';
+          document.getElementById('dispVillage').innerText = data.village || data.town || {{ t('farm_setup.recorded')|tojson }};
+          document.getElementById('dispTaluka').innerText = data.taluka || data.district || {{ t('farm_setup.recorded')|tojson }};
+          document.getElementById('dispDistrict').innerText = data.district || {{ t('farm_setup.recorded')|tojson }};
+          document.getElementById('dispState').innerText = data.state || {{ t('farm_setup.recorded')|tojson }};
           document.getElementById('dispSource').innerText = data.source || 'OpenStreetMap';
           document.getElementById('inputLocationName').value = data.formatted_address || `${data.town || data.village}, ${data.district}, ${data.state}`;
         })
         .catch(() => {
-          document.getElementById('dispVillage').innerText = 'Recorded via GPS';
+          document.getElementById('dispVillage').innerText = {{ t('farm_setup.recorded_via_gps')|tojson }};
           document.getElementById('inputLocationName').value = `Farm at (${lat.toFixed(4)}, ${lon.toFixed(4)})`;
         });
       },
       function(err) {
         document.getElementById('detectionLoading').classList.add('d-none');
-        alert('Could not obtain your GPS coordinates (' + err.message + '). Please pick your farm on the map.');
+        alert({{ t('farm_setup.gps_error')|tojson }} + ' (' + err.message + ')');
         showManualMap();
       },
       { timeout: 10000, enableHighAccuracy: true }
@@ -364,7 +364,7 @@
   document.getElementById('btnConfirmLocation').addEventListener('click', function() {
     this.classList.remove('btn-success');
     this.classList.add('btn-outline-success');
-    this.innerHTML = '<i class="fa-solid fa-check-double me-1"></i>Location Confirmed';
+    this.innerHTML = '<i class="fa-solid fa-check-double me-1"></i>' + {{ t('farm_setup.location_confirmed')|tojson }};
   });
 
 </script>

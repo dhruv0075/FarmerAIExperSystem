@@ -1,81 +1,79 @@
 {% extends 'base.html' %}
-{% block title %}AI Crop Planning & Suitability — AgriWise AI{% endblock %}
+{% block title %}{{ t('recommendation.title') }} — AgriWise AI{% endblock %}
 
 {% block content %}
 <div class="container py-2" style="max-width: 900px;">
   <div class="mb-4">
     <span class="badge bg-success-subtle text-success px-3 py-1 rounded-pill fw-semibold mb-1">
-      <i class="fa-solid fa-seedling me-1"></i>Crop recommendation
+      <i class="fa-solid fa-seedling me-1"></i>{{ t('recommendation.recommendations') }}
     </span>
-    <h2 class="h3 fw-bold mb-1">AI Crop Recommendation & Planning</h2>
-    <p class="text-muted small mb-0">
-      Use measured soil values and climate inputs with the trained crop classifier. Review model limitations before making planting decisions.
-    </p>
+    <h2 class="h3 fw-bold mb-1">{{ t('recommendation.title') }}</h2>
+    <p class="text-muted small mb-0">{{ t('recommendation.subtitle') }}</p>
   </div>
 
   <div class="card border-0 shadow-sm mb-4">
     <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
-      <h5 class="mb-0 fw-bold"><i class="fa-solid fa-sliders text-success me-2"></i>Soil & Ambient Microclimate Parameters</h5>
+      <h5 class="mb-0 fw-bold"><i class="fa-solid fa-sliders text-success me-2"></i>{{ t('recommendation.parameters') }}</h5>
       <button type="button" class="btn btn-sm btn-outline-success" id="btnAutofillWeather">
-        <i class="fa-solid fa-cloud-sun me-1"></i>Autofill Live Weather from Farm Location
+        <i class="fa-solid fa-cloud-sun me-1"></i>{{ t('recommendation.autofill_weather') }}
       </button>
     </div>
     <div class="card-body p-4">
       <form method="POST" action="{{ url_for('crop_recommendation') }}" id="cropForm"><input type="hidden" name="csrf_token" value="{{ csrf_token }}">
         <!-- 1. SOIL NUTRIENTS -->
-        <h6 class="fw-bold text-success mb-3"><i class="fa-solid fa-vial me-2"></i>1. Soil Chemistry & Macronutrients (kg/ha)</h6>
+        <h6 class="fw-bold text-success mb-3"><i class="fa-solid fa-vial me-2"></i>{{ t('recommendation.soil_chemistry') }}</h6>
         <div class="row g-3 mb-4">
           <div class="col-md-3 col-6">
-            <label class="form-label small fw-semibold">Nitrogen (N) <span class="text-danger">*</span></label>
+            <label class="form-label small fw-semibold">{{ t('recommendation.nitrogen') }} <span class="text-danger">*</span></label>
             <input type="number" step="0.1" name="nitrogen" class="form-control" value="{{ soil.nitrogen if soil and soil.nitrogen is not none else '' }}" required>
-            <small class="text-muted" style="font-size: 0.7rem;">Normal: 20 - 120 kg/ha</small>
+            <small class="text-muted" style="font-size: 0.7rem;">{{ t('recommendation.normal_range', min=20, max=120) }}</small>
           </div>
           <div class="col-md-3 col-6">
-            <label class="form-label small fw-semibold">Phosphorus (P) <span class="text-danger">*</span></label>
+            <label class="form-label small fw-semibold">{{ t('recommendation.phosphorus') }} <span class="text-danger">*</span></label>
             <input type="number" step="0.1" name="phosphorus" class="form-control" value="{{ soil.phosphorus if soil and soil.phosphorus is not none else '' }}" required>
-            <small class="text-muted" style="font-size: 0.7rem;">Normal: 15 - 80 kg/ha</small>
+            <small class="text-muted" style="font-size: 0.7rem;">{{ t('recommendation.normal_range', min=15, max=80) }}</small>
           </div>
           <div class="col-md-3 col-6">
-            <label class="form-label small fw-semibold">Potassium (K) <span class="text-danger">*</span></label>
+            <label class="form-label small fw-semibold">{{ t('recommendation.potassium') }} <span class="text-danger">*</span></label>
             <input type="number" step="0.1" name="potassium" class="form-control" value="{{ soil.potassium if soil and soil.potassium is not none else '' }}" required>
-            <small class="text-muted" style="font-size: 0.7rem;">Normal: 20 - 100 kg/ha</small>
+            <small class="text-muted" style="font-size: 0.7rem;">{{ t('recommendation.normal_range', min=20, max=100) }}</small>
           </div>
           <div class="col-md-3 col-6">
-            <label class="form-label small fw-semibold">Soil pH <span class="text-danger">*</span></label>
+            <label class="form-label small fw-semibold">{{ t('recommendation.ph') }} <span class="text-danger">*</span></label>
             <input type="number" step="0.1" min="0" max="14" name="ph" class="form-control" value="{{ soil.ph if soil and soil.ph is not none else '' }}" required>
-            <small class="text-muted" style="font-size: 0.7rem;">Neutral: 6.0 - 7.5</small>
+            <small class="text-muted" style="font-size: 0.7rem;">{{ t('recommendation.neutral_ph_range') }}</small>
           </div>
           <div class="col-md-6 col-12">
-            <label class="form-label small fw-semibold">Soil Moisture (%) <span class="text-muted">(Optional sensor reading)</span></label>
+            <label class="form-label small fw-semibold">{{ t('recommendation.moisture') }} <span class="text-muted">({{ t('common.optional_sensor_reading') }})</span></label>
             <input type="number" step="0.1" min="0" max="100" name="moisture" class="form-control" value="{{ soil.moisture if soil and soil.moisture is not none else '' }}" placeholder="e.g. 35">
-            <small class="text-muted" style="font-size: 0.7rem;">Leave blank if measured sensor data is not available.</small>
+            <small class="text-muted" style="font-size: 0.7rem;">{{ t('recommendation.moisture_help') }}</small>
           </div>
         </div>
 
         <!-- 2. WEATHER & CLIMATE -->
-        <h6 class="fw-bold text-primary mb-3"><i class="fa-solid fa-cloud-sun-rain me-2"></i>2. Climate & Season Conditions</h6>
+        <h6 class="fw-bold text-primary mb-3"><i class="fa-solid fa-cloud-sun-rain me-2"></i>{{ t('recommendation.climate') }}</h6>
         <div class="row g-3 mb-4">
           <div class="col-md-4">
-            <label class="form-label small fw-semibold">Temperature (°C) <span class="text-danger">*</span></label>
+            <label class="form-label small fw-semibold">{{ t('recommendation.input_temperature') }} <span class="text-danger">*</span></label>
             <input type="number" step="0.1" id="inputTemp" name="temperature" class="form-control" value="{{ soil.temperature if soil and soil.temperature is not none else '' }}" required>
           </div>
           <div class="col-md-4">
-            <label class="form-label small fw-semibold">Relative Humidity (%) <span class="text-danger">*</span></label>
+            <label class="form-label small fw-semibold">{{ t('recommendation.input_humidity') }} <span class="text-danger">*</span></label>
             <input type="number" step="0.1" min="0" max="100" id="inputHum" name="humidity" class="form-control" value="{{ soil.humidity if soil and soil.humidity is not none else '' }}" required>
           </div>
           <div class="col-md-4">
-            <label class="form-label small fw-semibold">Seasonal Rainfall (mm) <span class="text-danger">*</span></label>
+            <label class="form-label small fw-semibold">{{ t('recommendation.input_rainfall') }} <span class="text-danger">*</span></label>
             <input type="number" step="0.1" id="inputRain" name="rainfall" class="form-control" value="{{ soil.rainfall if soil and soil.rainfall is not none else '' }}" required>
           </div>
         </div>
 
         <div class="alert alert-info py-2 small mb-4">
-          <i class="fa-solid fa-circle-info me-1"></i><strong>Closed-Loop Persistence:</strong> Running this recommendation will save the latest soil condition snapshot to your farm records.
+          <i class="fa-solid fa-circle-info me-1"></i><strong>{{ t('recommendation.persistence_title') }}</strong> {{ t('recommendation.persistence_copy') }}
         </div>
 
         <div class="text-center">
           <button type="submit" class="btn btn-success btn-lg px-5 shadow-sm">
-            <i class="fa-solid fa-wand-magic-sparkles me-2"></i>Recommend Crops
+            <i class="fa-solid fa-wand-magic-sparkles me-2"></i>{{ t('recommendation.recommend_crops') }}
           </button>
         </div>
       </form>
@@ -83,11 +81,11 @@
   </div>
   <div class="recommendation-loader" id="recommendationLoader" role="status" aria-live="polite" aria-atomic="true" aria-hidden="true" hidden>
     <div class="recommendation-loader__panel">
-      <p class="recommendation-loader__eyebrow">AgriWise AI · Field analysis</p>
+      <p class="recommendation-loader__eyebrow">AgriWise AI · {{ t('recommendation.field_analysis') }}</p>
       <div class="recommendation-loader__scene" data-farm-scene="loader" data-scene-state="loading" aria-hidden="true"><canvas></canvas></div>
-      <h2>Finding the right crop for your field</h2>
-      <p>Matching your soil nutrients, moisture and climate conditions.</p>
-      <div class="recommendation-loader__progress" role="progressbar" aria-label="Analyzing crop suitability"><span></span></div>
+      <h2>{{ t('recommendation.loader_title') }}</h2>
+      <p>{{ t('recommendation.loader_text') }}</p>
+      <div class="recommendation-loader__progress" role="progressbar" aria-label="{{ t('recommendation.analyzing_suitability') }}"><span></span></div>
     </div>
   </div>
 </div>
@@ -117,13 +115,13 @@ if (cropForm && recommendationLoader) {
 document.getElementById('btnAutofillWeather').addEventListener('click', function() {
   const btn = this;
   btn.disabled = true;
-  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Fetching Open-Meteo...';
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>{{ t("recommendation.fetching_weather") }}';
 
   fetch("{{ url_for('api_weather') }}")
     .then(r => r.json())
     .then(data => {
       btn.disabled = false;
-      btn.innerHTML = '<i class="fa-solid fa-cloud-sun me-1"></i>Autofill Live Weather from Farm Location';
+      btn.innerHTML = '<i class="fa-solid fa-cloud-sun me-1"></i>{{ t("recommendation.autofill_weather") }}';
       if (data.success && data.weather && data.weather.current) {
         const c = data.weather.current;
         if (c.temperature !== undefined) document.getElementById('inputTemp').value = c.temperature;
@@ -140,7 +138,7 @@ document.getElementById('btnAutofillWeather').addEventListener('click', function
     .catch(err => {
       btn.disabled = false;
       btn.innerHTML = '<i class="fa-solid fa-cloud-sun me-1"></i>Autofill Live Weather from Farm Location';
-      alert('Error fetching weather data: ' + err);
+      alert('{{ t("recommendation.weather_fetch_error") }} ' + err);
     });
 });
 </script>

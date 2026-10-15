@@ -1118,6 +1118,10 @@ def create_app(test_config=None) -> Flask:
     @app.route("/disease-detection", methods=["GET", "POST"])
     @login_required
     def disease_detection_page():
+        user = get_current_user()
+        farm = get_user_farm(user["id"]) if user else None
+        cycle = get_latest_cycle(farm["id"]) if farm else None
+        lifecycle_crop = cycle["crop_name"] if cycle else ""
         class_names = []
         class_mapping_available = True
         class_file = BASE_DIR / "agriwise_disease_model" / "class_names.json"
@@ -1148,9 +1152,10 @@ def create_app(test_config=None) -> Flask:
         error_message = None
         screening = None
         image_preview = None
-        selected_crop = ""
+        selected_crop = lifecycle_crop
         if request.method == "POST":
-            selected_crop = (request.form.get("crop") or "").strip()
+            if not lifecycle_crop:
+                selected_crop = (request.form.get("crop") or "").strip()
             image_file = request.files.get("photo")
             if not class_mapping_available:
                 error_message = "detection.error_class_mapping"
@@ -1198,6 +1203,7 @@ def create_app(test_config=None) -> Flask:
             screening=screening,
             image_preview=image_preview,
             selected_crop=selected_crop,
+            lifecycle_crop=bool(lifecycle_crop),
             crop_options=crop_options,
             dataset_classes=dataset_classes,
             error_message=error_message,

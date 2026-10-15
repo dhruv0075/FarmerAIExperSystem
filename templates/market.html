@@ -1,27 +1,27 @@
 {% extends 'base.html' %}
-{% block title %}Market Prices - AgriWise AI{% endblock %}
+{% block title %}{{ t('market.title') }} — AgriWise AI{% endblock %}
 {% block content %}
-<h1 class="h3">Market Prices</h1>
-<p class="text-muted">Small official data samples from data.gov.in / DMI. Prices are reported per quintal.</p>
+<h1 class="h3">{{ t('market.title') }}</h1>
+<p class="text-muted">{{ t('market.subtitle') }}</p>
 <form method="get" class="row g-3 mb-4">
 {% for field in ['commodity', 'state', 'district', 'market'] %}
-<div class="col-sm-6 col-lg-3"><label class="form-label" for="{{ field }}">{{ field|title }}</label><input id="{{ field }}" name="{{ field }}" class="form-control" value="{{ selected_commodity if field == 'commodity' else request.args.get(field, '') }}"></div>
+<div class="col-sm-6 col-lg-3"><label class="form-label" for="{{ field }}">{{ t('market.filter_' ~ field) }}</label><input id="{{ field }}" name="{{ field }}" class="form-control" value="{{ selected_commodity if field == 'commodity' else request.args.get(field, '') }}"></div>
 {% endfor %}
-<div><button class="btn btn-outline-success">View cached prices</button></div>
+<div><button class="btn btn-outline-success">{{ t('market.view_cached') }}</button></div>
 </form>
-<p>Source: <a href="{{ market_data.source_url }}">data.gov.in / DMI</a><br>Last successful fetch: {{ market_data.fetch_timestamp or 'Not available' }}<br>Status: <strong>{{ market_data.refresh_status }}</strong></p>
+<p>{{ t('market.source') }}: <a href="{{ market_data.source_url }}">data.gov.in / DMI</a><br>{{ t('market.last_fetch') }}: {{ market_data.fetch_timestamp or t('common.not_available') }}<br>{{ t('market.status') }}: <strong>{{ market_data.refresh_status }}</strong></p>
 <form method="post" action="{{ url_for('refresh_market_page') }}" class="mb-4">
 <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
 {% for field in ['commodity', 'state', 'district', 'market'] %}<input type="hidden" name="{{ field }}" value="{{ selected_commodity if field == 'commodity' else request.args.get(field, '') }}">{% endfor %}
-<button class="btn btn-success" {% if market_data.refresh_in_progress or market_data.retry_after_seconds %}disabled{% endif %}>Refresh Market Data</button>
-{% if market_data.retry_after_seconds %}<small>Try again in {{ market_data.retry_after_seconds }} seconds.</small>{% endif %}
+<button class="btn btn-success" {% if market_data.refresh_in_progress or market_data.retry_after_seconds %}disabled{% endif %}>{{ t('market.refresh_data') }}</button>
+{% if market_data.retry_after_seconds %}<small>{{ t('market.try_again_in', seconds=market_data.retry_after_seconds) }}</small>{% endif %}
 </form>
 {% if not market_data.found %}
-<div class="alert alert-info">{{ market_data.message or 'Market data temporarily unavailable.' }} Other farm features remain available.</div>
+<div class="alert alert-info">{{ market_data.message or t('market.temporarily_unavailable') }} {{ t('market.other_features_available') }}</div>
 {% else %}
-<div class="table-responsive"><table class="table"><thead><tr><th>Market</th><th>Reported date</th><th>Minimum</th><th>Modal</th><th>Maximum</th></tr></thead><tbody>
-{% for item in market_data.markets %}<tr><td>{{ item.market_name }}</td><td>{{ item.price_date }}{% if item.is_stale %} (stale observation){% endif %}</td><td>{{ item.min_price }}</td><td>{{ item.modal_price }}</td><td>{{ item.max_price }}</td></tr>{% endfor %}
+<div class="table-responsive"><table class="table"><thead><tr><th>{{ t('market.market') }}</th><th>{{ t('market.reported_date') }}</th><th>{{ t('market.minimum') }}</th><th>{{ t('market.modal') }}</th><th>{{ t('market.maximum') }}</th></tr></thead><tbody>
+{% for item in market_data.markets %}<tr><td>{{ item.market_name }}</td><td>{{ item.price_date }}{% if item.is_stale %} ({{ t('market.stale_observation') }}){% endif %}</td><td>{{ item.min_price }}</td><td>{{ item.modal_price }}</td><td>{{ item.max_price }}</td></tr>{% endfor %}
 </tbody></table></div>
-<p class="small text-muted">This limited sample is not a complete market survey. Confirm prices with the market before selling.</p>
+<p class="small text-muted">{{ t('market.limited_sample_warning') }}</p>
 {% endif %}
 {% endblock %}

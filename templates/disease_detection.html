@@ -20,13 +20,18 @@
         <div class="row g-3 align-items-end">
           <div class="col-md-6">
             <label class="form-label fw-semibold" for="disease-crop">{{ t('detection.crop_label') }}</label>
-            <input class="form-control" id="disease-crop" name="crop" list="disease-crop-options" value="{{ selected_crop }}" maxlength="80" required>
-            <datalist id="disease-crop-options">
-              {% for crop in crop_options %}
-                <option value="{{ crop }}">
-              {% endfor %}
-            </datalist>
-            <div class="form-text">{{ t('detection.crop_help') }}</div>
+            {% if lifecycle_crop %}
+              <div class="form-control bg-light" id="disease-crop" aria-readonly="true">{{ selected_crop|title }}</div>
+              <div class="form-text">{{ t('detection.crop_from_lifecycle') }}</div>
+            {% else %}
+              <input class="form-control" id="disease-crop" name="crop" list="disease-crop-options" value="{{ selected_crop }}" maxlength="80" required>
+              <datalist id="disease-crop-options">
+                {% for crop in crop_options %}
+                  <option value="{{ crop }}">
+                {% endfor %}
+              </datalist>
+              <div class="form-text">{{ t('detection.crop_help') }}</div>
+            {% endif %}
           </div>
           <div class="col-md-6">
             <label class="form-label fw-semibold" for="disease-photo">{{ t('detection.photo_label') }}</label>
